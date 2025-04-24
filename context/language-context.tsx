@@ -15,14 +15,17 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>((languageSettings.defaultLanguage as Language) || "en")
+  const defaultLang = (languageSettings.defaultLanguage as Language) || "en"
+  const [language, setLanguage] = useState<Language>(defaultLang)
   const [isRTL, setIsRTL] = useState<boolean>(false)
 
   useEffect(() => {
     // Check if there's a saved language preference
-    const savedLanguage = localStorage.getItem("language") as Language
-    if (savedLanguage) {
-      setLanguage(savedLanguage)
+    if (typeof window !== "undefined") {
+      const savedLanguage = localStorage.getItem("language") as Language
+      if (savedLanguage) {
+        setLanguage(savedLanguage)
+      }
     }
   }, [])
 
@@ -31,19 +34,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setIsRTL(language === "ar")
 
     // Update HTML dir attribute
-    document.documentElement.dir = language === "ar" ? "rtl" : "ltr"
+    if (typeof document !== "undefined") {
+      document.documentElement.dir = language === "ar" ? "rtl" : "ltr"
 
-    // Update font family based on language
-    if (language === "ar") {
-      document.documentElement.classList.add("font-cairo")
-      document.documentElement.classList.remove("font-inter")
-    } else {
-      document.documentElement.classList.add("font-inter")
-      document.documentElement.classList.remove("font-cairo")
+      // Update font family based on language
+      if (language === "ar") {
+        document.documentElement.classList.add("font-cairo")
+        document.documentElement.classList.remove("font-inter")
+      } else {
+        document.documentElement.classList.add("font-inter")
+        document.documentElement.classList.remove("font-cairo")
+      }
+
+      // Save language preference
+      localStorage.setItem("language", language)
     }
-
-    // Save language preference
-    localStorage.setItem("language", language)
   }, [language])
 
   return <LanguageContext.Provider value={{ language, setLanguage, isRTL }}>{children}</LanguageContext.Provider>

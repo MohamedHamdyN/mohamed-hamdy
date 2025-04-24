@@ -1,45 +1,46 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { toggleSettings } from "@/admin/toggle"
 
 export function middleware(request: NextRequest) {
   // Simple middleware that doesn't rely on any external files
   const url = request.nextUrl.clone()
 
+  // Get toggle settings from environment variables
+  const websiteEnabled = process.env.DISABLE_WEBSITE !== "true"
+  const servicesEnabled = process.env.DISABLE_SERVICES !== "true"
+  const aboutEnabled = process.env.DISABLE_ABOUT !== "true"
+  const contactEnabled = process.env.DISABLE_CONTACT !== "true"
+  const resumeEnabled = process.env.DISABLE_RESUME !== "true"
+  const projectsEnabled = process.env.DISABLE_PROJECTS !== "true"
+
   // If website is disabled, redirect all routes to home page
-  if (!toggleSettings.website && url.pathname !== "/") {
+  if (!websiteEnabled && url.pathname !== "/") {
     url.pathname = "/"
     return NextResponse.redirect(url)
   }
 
   // Check environment variables directly
-  if (
-    url.pathname.startsWith("/services") &&
-    (process.env.DISABLE_SERVICES === "true" || !toggleSettings.services_page)
-  ) {
+  if (url.pathname.startsWith("/services") && !servicesEnabled) {
     url.pathname = "/"
     return NextResponse.redirect(url)
   }
 
-  if (url.pathname.startsWith("/about") && (process.env.DISABLE_ABOUT === "true" || !toggleSettings.about_page)) {
+  if (url.pathname.startsWith("/about") && !aboutEnabled) {
     url.pathname = "/"
     return NextResponse.redirect(url)
   }
 
-  if (url.pathname.startsWith("/contact") && (process.env.DISABLE_CONTACT === "true" || !toggleSettings.contact_page)) {
+  if (url.pathname.startsWith("/contact") && !contactEnabled) {
     url.pathname = "/"
     return NextResponse.redirect(url)
   }
 
-  if (url.pathname.startsWith("/resume") && (process.env.DISABLE_RESUME === "true" || !toggleSettings.website)) {
+  if (url.pathname.startsWith("/resume") && !resumeEnabled) {
     url.pathname = "/"
     return NextResponse.redirect(url)
   }
 
-  if (
-    url.pathname.startsWith("/projects") &&
-    (process.env.DISABLE_PROJECTS === "true" || !toggleSettings.projects_page)
-  ) {
+  if (url.pathname.startsWith("/projects") && !projectsEnabled) {
     url.pathname = "/"
     return NextResponse.redirect(url)
   }

@@ -6,7 +6,7 @@ import { translations } from "@/lib/translations"
 export function useTranslations() {
   const { language } = useLanguage()
 
-  // استخدام الترجمات المناسبة حسب اللغة المحددة
-  // مع الرجوع إلى اللغة الإنجليزية كاحتياطي
+  // Return translations based on the selected language
+  // Fallback to English if the selected language is not available
   return translations[language] || translations.en
 }

@@ -3,7 +3,6 @@ import { Inter, Cairo } from "next/font/google"
 import { ThemeProvider } from "@/context/theme-context"
 import { LanguageProvider } from "@/context/language-context"
 import { profile } from "@/admin/profile"
-import { toggleSettings } from "@/admin/toggle"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import FloatingActionButton from "@/components/shared/FloatingActionButton"
@@ -70,8 +69,8 @@ export const metadata: Metadata = {
     images: [profile.ogImage || "/logo.png"],
   },
   icons: {
-    icon: profile.favicon || "/favicon.ico",
-    apple: profile.favicon || "/favicon.ico",
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
   },
   verification: {
     google: "google-site-verification-code", // Replace with your verification code
@@ -94,27 +93,26 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Check if website is enabled from environment variable
+  const websiteEnabled = process.env.DISABLE_WEBSITE !== "true"
+
   return (
     <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
       <head>
-        <link rel="icon" href={profile.favicon || "/favicon.ico"} />
+        <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#000000" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
       </head>
       <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <LanguageProvider>
             <ErrorBoundary>
               <SkipToContent />
-              {toggleSettings.website && <Header />}
-              <main className={toggleSettings.website ? "pt-16" : ""} id="main-content">
+              {websiteEnabled && <Header />}
+              <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
                 {children}
               </main>
-              {toggleSettings.website && <Footer />}
+              {websiteEnabled && <Footer />}
               <FloatingActionButton />
               <SpeedInsights />
             </ErrorBoundary>

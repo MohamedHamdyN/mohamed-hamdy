@@ -64,7 +64,6 @@
     "vue": "latest",
     "vue-router": "latest",
     "framer-motion": "latest",
-    "tailwindcss": "latest",
     "nodemailer": "latest",
     "react-intersection-observer": "latest",
     "@vercel/speed-insights": "latest"

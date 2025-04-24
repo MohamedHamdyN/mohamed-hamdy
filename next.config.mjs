@@ -19,7 +19,6 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  // تحسين الإخراج
   poweredByHeader: false,
   reactStrictMode: true,
 }

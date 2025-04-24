@@ -8,10 +8,7 @@ import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
-// Add this import at the top with the other imports
-import { toggleSettings } from "@/admin/toggle"
 
-// In the Hero component, add a check for website toggle
 export default function Hero() {
   const t = useTranslations()
   const { isRTL } = useLanguage()
@@ -19,9 +16,18 @@ export default function Hero() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [loopNum, setLoopNum] = useState(0)
   const [delta, setDelta] = useState(150) // Faster initial typing speed
+  const [websiteEnabled, setWebsiteEnabled] = useState(true)
 
   const period = 2000 // Wait time after typing
   const nameRef = useRef<HTMLSpanElement>(null)
+
+  // Check if website is enabled
+  useEffect(() => {
+    // This is a client-side check, so it's safe to use process.env here
+    if (typeof window !== "undefined") {
+      setWebsiteEnabled(process.env.DISABLE_WEBSITE !== "true")
+    }
+  }, [])
 
   // Ensure we have default values for all properties
   const textArray = [
@@ -90,7 +96,7 @@ export default function Hero() {
   }
 
   // Simplified version when website is disabled
-  if (!toggleSettings.website) {
+  if (!websiteEnabled) {
     return (
       <div className="relative isolate overflow-hidden bg-[#020617] min-h-screen flex items-center">
         {/* Background gradient effect */}
@@ -260,7 +266,6 @@ export default function Hero() {
   // Regular version when website is enabled
   return (
     <div className="relative isolate overflow-hidden bg-background">
-      {/* Rest of the original component code */}
       {/* Background gradient effect */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-[10%] w-[500px] h-[500px] bg-primary/10 rounded-full filter blur-3xl opacity-30 animate-blob"></div>

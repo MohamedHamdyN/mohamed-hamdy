@@ -7,7 +7,7 @@ export const toggleSettings = {
   projects_page: true,
   services_page: true,
   about_page: true,
-  contact_page: false,
+  contact_page: true,
 
   // Home page section toggles
   projects_home: true,
@@ -15,7 +15,7 @@ export const toggleSettings = {
   about_home: true,
   skills: true,
   why_work_with_me: true,
-  clients: false,
+  clients: true,
   contact_home: true,
 
   // Services page toggles
