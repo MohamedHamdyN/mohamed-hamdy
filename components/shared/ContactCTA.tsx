@@ -3,16 +3,11 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useTranslations } from "@/hooks/useTranslations"
 import { ArrowRight } from "lucide-react"
 
 export default function ContactCTA() {
-  // Hardcoded translations
-  const translations = {
-    contact: {
-      title: "Contact Me",
-      description: "Get in touch for collaborations or inquiries",
-    },
-  }
+  const t = useTranslations()
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-background/50 relative overflow-hidden">
@@ -38,7 +33,7 @@ export default function ContactCTA() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              {translations.contact.title || "Contact Me"}
+              {t?.contact?.title || "Contact Me"}
             </motion.h2>
             <motion.p
               className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-10"
@@ -47,13 +42,13 @@ export default function ContactCTA() {
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              {translations.contact.description || "Get in touch for collaborations or inquiries"}
+              {t?.contact?.description || "Get in touch for collaborations or inquiries"}
             </motion.p>
             <Link href="/contact">
               <Button size="lg" className="group relative overflow-hidden px-8 py-3 bg-primary hover:bg-primary/90">
                 <span className="absolute bottom-0 left-0 w-full h-0.5 bg-white origin-left transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
                 <span className="flex items-center gap-2">
-                  {translations.contact.title || "Contact Me"}
+                  {t?.contact?.title || "Contact Me"}
                   <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
               </Button>

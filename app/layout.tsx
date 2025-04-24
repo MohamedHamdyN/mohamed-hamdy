@@ -2,6 +2,8 @@ import "./globals.css"
 import { Inter, Cairo } from "next/font/google"
 import { ThemeProvider } from "@/context/theme-context"
 import { LanguageProvider } from "@/context/language-context"
+import { profile } from "@/admin/profile"
+import { toggleSettings } from "@/admin/toggle"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import FloatingActionButton from "@/components/shared/FloatingActionButton"
@@ -28,11 +30,14 @@ const cairo = Cairo({
 
 // Define metadata for better SEO
 export const metadata: Metadata = {
-  title: "Mohamed Hamdy | Data Analyst",
-  description: "Professional portfolio for Mohamed Hamdy, Data Analyst and Financial Accountant",
-  keywords: ["data analyst", "financial accountant", "data visualization", "analytics", "Mohamed Hamdy", "portfolio"],
-  authors: [{ name: "Mohamed Hamdy" }],
-  creator: "Mohamed Hamdy",
+  title: {
+    template: `%s | ${profile.name || "Portfolio"}`,
+    default: `${profile.name || "Portfolio"} | ${profile.title || "Data Analyst"}`,
+  },
+  description: profile.shortBio || "Professional portfolio",
+  keywords: ["data analyst", "financial accountant", "data visualization", "analytics", profile.name || "portfolio"],
+  authors: [{ name: profile.name || "Author" }],
+  creator: profile.name || "Creator",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://yourwebsite.com"),
   alternates: {
     canonical: "/",
@@ -45,28 +50,28 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_SITE_URL || "https://yourwebsite.com",
-    title: "Mohamed Hamdy | Data Analyst",
-    description: "Professional portfolio for Mohamed Hamdy, Data Analyst and Financial Accountant",
-    siteName: "Mohamed Hamdy | Portfolio",
+    title: `${profile.name || "Portfolio"} | ${profile.title || "Data Analyst"}`,
+    description: profile.shortBio || "Professional portfolio",
+    siteName: `${profile.name || "Portfolio"} | Portfolio`,
     images: [
       {
-        url: "/logo.png",
+        url: profile.ogImage || "/logo.png",
         width: 1200,
         height: 630,
-        alt: "Mohamed Hamdy",
+        alt: profile.name || "Portfolio",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mohamed Hamdy | Data Analyst",
-    description: "Professional portfolio for Mohamed Hamdy, Data Analyst and Financial Accountant",
-    creator: "Mohamed Hamdy",
-    images: ["/logo.png"],
+    title: `${profile.name || "Portfolio"} | ${profile.title || "Data Analyst"}`,
+    description: profile.shortBio || "Professional portfolio",
+    creator: profile.name || "Creator",
+    images: [profile.ogImage || "/logo.png"],
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: profile.favicon || "/favicon.ico",
+    apple: profile.favicon || "/favicon.ico",
   },
   verification: {
     google: "google-site-verification-code", // Replace with your verification code
@@ -89,13 +94,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Hardcode website enabled
-  const websiteEnabled = true
-
   return (
     <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href={profile.favicon || "/favicon.ico"} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#000000" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -108,11 +110,11 @@ export default function RootLayout({
           <LanguageProvider>
             <ErrorBoundary>
               <SkipToContent />
-              {websiteEnabled && <Header />}
-              <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
+              {toggleSettings.website && <Header />}
+              <main className={toggleSettings.website ? "pt-16" : ""} id="main-content">
                 {children}
               </main>
-              {websiteEnabled && <Footer />}
+              {toggleSettings.website && <Footer />}
               <FloatingActionButton />
               <SpeedInsights />
             </ErrorBoundary>

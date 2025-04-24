@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react"
 
+/**
+ * Hook to detect if the current device is mobile
+ * @returns Boolean indicating if the device is mobile
+ */
 export function useMobile() {
   const [isMobile, setIsMobile] = useState(false)
 

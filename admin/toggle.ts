@@ -1,7 +1,7 @@
 // Toggle settings for website sections and pages
 export const toggleSettings = {
   // Main website toggle (when off, only shows hero section)
-  website: false,
+  website: true,
 
   // Page toggles (when off, removes from navigation and disables access)
   projects_page: true,

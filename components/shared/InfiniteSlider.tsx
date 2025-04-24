@@ -3,11 +3,12 @@
 import { useRef, useState, useEffect } from "react"
 import { motion, useInView, useAnimation } from "framer-motion"
 import * as LucideIcons from "lucide-react"
+import { PuzzlePiece } from "@/components/shared/CustomIcons"
+import { useMobile } from "@/hooks/use-mobile"
 
 interface SliderItem {
   id: number
-  title?: string
-  name?: string
+  title: string
   description: string
   icon: string
   color: string
@@ -36,7 +37,7 @@ export default function InfiniteSlider({
   const isInView = useInView(containerRef, { once: false, amount: 0.2 })
   const controls = useAnimation()
   const [isPaused, setIsPaused] = useState(false)
-  const isMobile = false // Simplified for now
+  const isMobile = useMobile()
 
   // Filter enabled items
   const enabledItems = items.filter((item) => item.enabled !== false)
@@ -67,6 +68,10 @@ export default function InfiniteSlider({
   }, [controls, isInView, isPaused, reverseDirection])
 
   const getIcon = (iconName: string) => {
+    if (iconName === "PuzzlePiece") {
+      return <PuzzlePiece className="h-6 w-6" aria-hidden="true" />
+    }
+
     const Icon = LucideIcons[iconName as keyof typeof LucideIcons]
     if (Icon) {
       return <Icon className="h-6 w-6" aria-hidden="true" />
@@ -143,13 +148,11 @@ export default function InfiniteSlider({
                   whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                   tabIndex={0}
                   role="article"
-                  aria-label={`${item.title || item.name}: ${item.description}`}
+                  aria-label={`${item.title}: ${item.description}`}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`${item.color} bg-background/80 p-2 rounded-lg`}>{getIcon(item.icon)}</div>
-                    <h3 className="text-lg font-bold group-hover:text-primary transition-colors">
-                      {item.title || item.name}
-                    </h3>
+                    <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{item.title}</h3>
                   </div>
                   <p className="text-muted-foreground text-sm">{item.description}</p>
                 </motion.div>

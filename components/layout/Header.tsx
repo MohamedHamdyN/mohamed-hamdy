@@ -5,23 +5,22 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
+import { useLanguage } from "@/context/language-context"
+import { useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
+import { profile } from "@/admin/profile"
+import { toggleSettings } from "@/admin/toggle"
+import { languageSettings } from "@/admin/profile"
 import Image from "next/image"
 import SkipToContent from "./SkipToContent"
-
-// Hardcode profile and language settings
-const profile = {
-  name: "Mohamed Hamdy",
-  logo: "",
-  resumeUrl: "#",
-}
 
 export default function Header() {
   const [mounted, setMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { theme, setTheme } = useTheme()
-  const [language, setLanguage] = useState("en")
+  const { language, setLanguage, isRTL } = useLanguage()
+  const t = useTranslations()
   const pathname = usePathname()
 
   useEffect(() => setMounted(true), [])
@@ -33,24 +32,13 @@ export default function Header() {
     setLanguage(language === "en" ? "ar" : "en")
   }
 
-  // Hardcoded translations
-  const translations = {
-    nav: {
-      home: "Home",
-      projects: "Projects",
-      about: "About",
-      services: "Services",
-      contact: "Contact",
-    },
-  }
-
-  // Create navigation items
+  // Create navigation items based on toggle settings
   const navItems = [
-    { name: translations.nav.home, href: "/", enabled: true },
-    { name: translations.nav.projects, href: "/projects", enabled: true },
-    { name: translations.nav.about, href: "/about", enabled: true },
-    { name: translations.nav.services, href: "/services", enabled: true },
-    { name: translations.nav.contact, href: "/contact", enabled: true },
+    { name: t.nav.home, href: "/", enabled: true },
+    { name: t.nav.projects, href: "/projects", enabled: toggleSettings.projects_page },
+    { name: t.nav.about, href: "/about", enabled: toggleSettings.about_page },
+    { name: t.nav.services, href: "/services", enabled: toggleSettings.services_page },
+    { name: t.nav.contact, href: "/contact", enabled: toggleSettings.contact_page },
   ].filter((item) => item.enabled)
 
   return (
@@ -127,13 +115,15 @@ export default function Header() {
               </button>
             )}
 
-            <button
-              onClick={toggleLanguage}
-              className="p-2 rounded-full bg-black/10 dark:bg-white/5 backdrop-blur-sm hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
-              aria-label={language === "en" ? "Switch to Arabic" : "Switch to English"}
-            >
-              <span className="font-bold text-sm">{language === "en" ? "ع" : "EN"}</span>
-            </button>
+            {languageSettings.enableLanguageToggle && (
+              <button
+                onClick={toggleLanguage}
+                className="p-2 rounded-full bg-black/10 dark:bg-white/5 backdrop-blur-sm hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
+                aria-label={language === "en" ? "Switch to Arabic" : "Switch to English"}
+              >
+                <span className="font-bold text-sm">{language === "en" ? "ع" : "EN"}</span>
+              </button>
+            )}
 
             <button
               className="lg:hidden rounded-full p-2 bg-black/10 dark:bg-white/5 text-primary backdrop-blur-sm hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
