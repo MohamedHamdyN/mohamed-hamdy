@@ -103,6 +103,9 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#000000" />
         <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
+        {/* إضافة preconnect لتحسين الأداء */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

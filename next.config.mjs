@@ -27,8 +27,38 @@ const nextConfig = {
         ],
       },
       {
-        source: '/(.*)\\.(js|css|svg|png|jpg|jpeg|gif|ico|json)',
+        source: '/(.*)\\.js',
         headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/(.*)\\.css',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/css; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/(.*)\\.svg',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'image/svg+xml',
+          },
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
@@ -37,6 +67,9 @@ const nextConfig = {
       },
     ];
   },
+  // تحسين تحميل الملفات الثابتة
+  poweredByHeader: false,
+  generateEtags: true,
 };
 
 export default nextConfig;
