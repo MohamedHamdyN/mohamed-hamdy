@@ -1,25 +1,23 @@
-import { toggleSettings } from "@/admin/toggle"
-import { notFound } from "next/navigation"
-import ContactForm from "@/components/contact/ContactForm"
-import ContactInfo from "@/components/contact/ContactInfo"
+import type { Metadata } from "next"
+import { profile } from "@/admin/profile"
 import ContactHero from "@/components/contact/ContactHero"
+import ContactInfo from "@/components/contact/ContactInfo"
 import ContactCircle from "@/components/contact/ContactCircle"
 
-export default function ContactPage() {
-  // If contact page is disabled, return 404
-  if (!toggleSettings.contact_page) {
-    notFound()
-  }
+export const metadata: Metadata = {
+  title: "Contact",
+  description: `Get in touch with ${profile.name} for collaborations or inquiries.`,
+}
 
+export default function ContactPage() {
   return (
-    <>
+    <div className="container max-w-7xl mx-auto px-4 py-12">
       <ContactHero />
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-12">
-          <ContactInfo />
-          {toggleSettings.contact_form ? <ContactForm /> : <ContactCircle />}
-        </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+        <ContactInfo />
+        <ContactCircle />
       </div>
-    </>
+    </div>
   )
 }

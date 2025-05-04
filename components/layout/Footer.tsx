@@ -5,10 +5,20 @@ import { useTranslations } from "@/hooks/useTranslations"
 import { profile } from "@/admin/profile"
 import SocialLinks from "@/components/shared/SocialLinks"
 import { Heart } from "lucide-react"
+import { toggleSettings } from "@/admin/toggle"
 
 export default function Footer() {
   const t = useTranslations()
   const currentYear = new Date().getFullYear()
+
+  // Create navigation items based on toggle settings
+  const navItems = [
+    { name: t.nav.home, href: "/", enabled: true },
+    { name: t.nav.projects, href: "/projects", enabled: toggleSettings.projects_page },
+    { name: t.nav.about, href: "/about", enabled: toggleSettings.about_page },
+    { name: t.nav.services, href: "/services", enabled: toggleSettings.services_page },
+    { name: t.nav.contact, href: "/contact", enabled: toggleSettings.contact_page },
+  ].filter((item) => item.enabled)
 
   return (
     <footer className="bg-background border-t border-border">
@@ -18,36 +28,13 @@ export default function Footer() {
         </div>
 
         <nav className="-mb-6 columns-2 sm:flex sm:justify-center sm:space-x-12" aria-label="Footer">
-          <div className="pb-6">
-            <Link href="/" className="text-sm leading-6 text-muted-foreground hover:text-foreground">
-              {t.nav.home}
-            </Link>
-          </div>
-          <div className="pb-6">
-            <Link href="/projects" className="text-sm leading-6 text-muted-foreground hover:text-foreground">
-              {t.nav.projects}
-            </Link>
-          </div>
-          <div className="pb-6">
-            <Link href="/about" className="text-sm leading-6 text-muted-foreground hover:text-foreground">
-              {t.nav.about}
-            </Link>
-          </div>
-          <div className="pb-6">
-            <Link href="/services" className="text-sm leading-6 text-muted-foreground hover:text-foreground">
-              {t.nav.services}
-            </Link>
-          </div>
-          <div className="pb-6">
-            <Link href="/contact" className="text-sm leading-6 text-muted-foreground hover:text-foreground">
-              {t.nav.contact}
-            </Link>
-          </div>
-          <div className="pb-6">
-            <Link href="/resume" className="text-sm leading-6 text-muted-foreground hover:text-foreground">
-              {t.nav.resume}
-            </Link>
-          </div>
+          {navItems.map((item) => (
+            <div key={item.name} className="pb-6">
+              <Link href={item.href} className="text-sm leading-6 text-muted-foreground hover:text-foreground">
+                {item.name}
+              </Link>
+            </div>
+          ))}
         </nav>
 
         <div className="mt-10 flex flex-col items-center">

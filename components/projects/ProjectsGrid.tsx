@@ -1,7 +1,5 @@
 "use client"
 
-import { Calendar } from "@/components/ui/calendar"
-
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { projects, projectCategories, projectCategoriesName } from "@/admin/projects"
@@ -168,14 +166,18 @@ export default function ProjectsGrid() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden mb-8"
             >
-              <div className="flex flex-wrap gap-2 py-4 bg-[#0a0d16] rounded-xl p-4">
+              <div className="flex flex-wrap gap-2 py-4 rounded-xl p-4 bg-card dark:bg-[#0a0d16]">
                 {categories.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`rounded-full ${selectedCategory === category.id ? "bg-primary" : "bg-[#1a1d26] hover:bg-[#2a2d36]"}`}
+                    className={`rounded-full ${
+                      selectedCategory === category.id
+                        ? "bg-primary"
+                        : "bg-background/80 dark:bg-[#1a1d26] hover:bg-background/50 dark:hover:bg-[#2a2d36]"
+                    }`}
                   >
                     {category.label} ({category.count})
                   </Button>
@@ -207,7 +209,7 @@ export default function ProjectsGrid() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+                className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer dark:bg-[#0a0d16] dark:border-[#21242f]"
                 onClick={() => handleProjectClick(project)}
               >
                 <div className="flex flex-col md:flex-row">
@@ -229,7 +231,6 @@ export default function ProjectsGrid() {
                       </span>
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground mb-3">
-                      <Calendar className="h-3 w-3 mr-1" />
                       <time dateTime={project.date}>{project.date}</time>
                     </div>
                     <p className="text-muted-foreground mb-4 line-clamp-2">{project.description}</p>

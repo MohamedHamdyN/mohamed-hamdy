@@ -23,7 +23,7 @@ export const toggleSettings = {
   payment_methods: true,
 
   // Contact page toggles
-  contact_form: true,
+  contact_form: false,
 
   // Calendly feature toggle
   calendly_feature: true,

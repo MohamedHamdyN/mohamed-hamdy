@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     siteName: `${profile.name || "Portfolio"} | Portfolio`,
     images: [
       {
-        url: profile.ogImage || "/logo.png",
+        url: profile.ogImage || "/logo.svg",
         width: 1200,
         height: 630,
         alt: profile.name || "Portfolio",
@@ -66,11 +66,11 @@ export const metadata: Metadata = {
     title: `${profile.name || "Portfolio"} | ${profile.title || "Data Analyst"}`,
     description: profile.shortBio || "Professional portfolio",
     creator: profile.name || "Creator",
-    images: [profile.ogImage || "/logo.png"],
+    images: [profile.ogImage || "/logo.svg"],
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [{ url: "/favicon.ico" }, { url: "/logo.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/favicon.ico" }],
   },
   verification: {
     google: "google-site-verification-code", // Replace with your verification code
@@ -99,9 +99,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#000000" />
+        <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
       </head>
       <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

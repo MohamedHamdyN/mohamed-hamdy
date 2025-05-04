@@ -146,32 +146,14 @@ export default function AboutHero() {
             className="relative"
           >
             <div className="relative w-full max-w-md mx-auto rounded-full overflow-hidden aspect-square border-4 border-white shadow-xl">
-              {profile.logo ? (
-                <Image
-                  src={profile.logo || "/placeholder.svg"}
-                  alt={profile.name}
-                  fill
-                  className="object-contain"
-                  priority
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                  <motion.span
-                    className="text-6xl font-bold text-primary"
-                    animate={{
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Number.POSITIVE_INFINITY,
-                    }}
-                  >
-                    MH
-                  </motion.span>
-                </div>
-              )}
+              <Image
+                src="/logo.svg"
+                alt={profile.name}
+                fill
+                className="object-contain"
+                priority
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
             </div>
 
             {/* Decorative elements */}

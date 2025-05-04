@@ -42,31 +42,15 @@ export default function ContactCircle() {
         >
           <div className="relative z-10 text-center p-6">
             {/* Logo circular */}
-            <div className="relative w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20">
-              {profile.logo ? (
-                <Image
-                  src={profile.logo || "/placeholder.svg"}
-                  alt={profile.name}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                  <motion.span
-                    className="text-3xl font-bold text-primary"
-                    animate={{
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Number.POSITIVE_INFINITY,
-                    }}
-                  >
-                    MH
-                  </motion.span>
-                </div>
-              )}
+            <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20">
+              <Image
+                src="/logo.svg"
+                alt={profile.name}
+                width={128}
+                height={128}
+                className="object-contain"
+                unoptimized
+              />
             </div>
 
             {/* Nombre con estilo mejorado */}

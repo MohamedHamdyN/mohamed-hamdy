@@ -2,47 +2,28 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export function middleware(request: NextRequest) {
-  // Simple middleware that doesn't rely on any external files
-  const url = request.nextUrl.clone()
+  // تعيين نوع المحتوى الصحيح للملفات
+  const { pathname } = request.nextUrl
 
-  // Get toggle settings from environment variables
-  const websiteEnabled = process.env.DISABLE_WEBSITE !== "true"
-  const servicesEnabled = process.env.DISABLE_SERVICES !== "true"
-  const aboutEnabled = process.env.DISABLE_ABOUT !== "true"
-  const contactEnabled = process.env.DISABLE_CONTACT !== "true"
-  const resumeEnabled = process.env.DISABLE_RESUME !== "true"
-  const projectsEnabled = process.env.DISABLE_PROJECTS !== "true"
-
-  // If website is disabled, redirect all routes to home page
-  if (!websiteEnabled && url.pathname !== "/") {
-    url.pathname = "/"
-    return NextResponse.redirect(url)
+  // إضافة نوع المحتوى الصحيح للملفات JavaScript
+  if (pathname.endsWith(".js")) {
+    const response = NextResponse.next()
+    response.headers.set("Content-Type", "application/javascript; charset=utf-8")
+    return response
   }
 
-  // Check environment variables directly
-  if (url.pathname.startsWith("/services") && !servicesEnabled) {
-    url.pathname = "/"
-    return NextResponse.redirect(url)
+  // إضافة نوع المحتوى الصحيح للملفات CSS
+  if (pathname.endsWith(".css")) {
+    const response = NextResponse.next()
+    response.headers.set("Content-Type", "text/css; charset=utf-8")
+    return response
   }
 
-  if (url.pathname.startsWith("/about") && !aboutEnabled) {
-    url.pathname = "/"
-    return NextResponse.redirect(url)
-  }
-
-  if (url.pathname.startsWith("/contact") && !contactEnabled) {
-    url.pathname = "/"
-    return NextResponse.redirect(url)
-  }
-
-  if (url.pathname.startsWith("/resume") && !resumeEnabled) {
-    url.pathname = "/"
-    return NextResponse.redirect(url)
-  }
-
-  if (url.pathname.startsWith("/projects") && !projectsEnabled) {
-    url.pathname = "/"
-    return NextResponse.redirect(url)
+  // إضافة نوع المحتوى الصحيح للملفات SVG
+  if (pathname.endsWith(".svg")) {
+    const response = NextResponse.next()
+    response.headers.set("Content-Type", "image/svg+xml")
+    return response
   }
 
   return NextResponse.next()

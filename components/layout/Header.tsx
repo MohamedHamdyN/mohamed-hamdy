@@ -54,21 +54,17 @@ export default function Header() {
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5" aria-label="Home">
               <span className="sr-only">{profile.name}</span>
-              {profile.logo ? (
-                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
-                  <Image
-                    src={profile.logo || "/placeholder.svg"}
-                    alt={profile.name}
-                    width={32}
-                    height={32}
-                    className="h-full w-full object-contain p-1"
-                    priority
-                    unoptimized
-                  />
-                </div>
-              ) : (
-                <div className="text-xl font-bold text-primary">MH</div>
-              )}
+              <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
+                <Image
+                  src="/logo.svg"
+                  alt={profile.name}
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-contain p-1"
+                  priority
+                  unoptimized
+                />
+              </div>
             </Link>
           </div>
 
