@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Home, FileQuestion } from "lucide-react"
 import { useTranslations } from "@/hooks/useTranslations"
 
-export const dynamic = "force-dynamic"
-
 export default function NotFound() {
   const t = useTranslations()
 
@@ -43,7 +41,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {t.notFound.title}
+          {t.notFound?.title || "Page Not Found"}
         </motion.h2>
 
         <motion.p
@@ -52,7 +50,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          {t.notFound.description}
+          {t.notFound?.description || "The page you are looking for does not exist or has been moved."}
         </motion.p>
 
         <motion.div
@@ -63,7 +61,7 @@ export default function NotFound() {
           <Link href="/">
             <Button className="gap-2">
               <Home className="h-4 w-4" />
-              {t.notFound.backHome}
+              {t.notFound?.backHome || "Back to Home"}
             </Button>
           </Link>
         </motion.div>

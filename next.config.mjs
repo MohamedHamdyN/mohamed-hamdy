@@ -11,9 +11,10 @@ const nextConfig = {
     domains: ['images.unsplash.com', 'via.placeholder.com', 'res.cloudinary.com'],
     unoptimized: true,
   },
-  experimental: {
-    optimizeCss: true,
-  },
+  // إزالة خاصية optimizeCss التي تسبب المشكلة
+  // experimental: {
+  //   optimizeCss: true,
+  // },
   async headers() {
     return [
       {
