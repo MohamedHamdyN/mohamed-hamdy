@@ -66,9 +66,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // استخدام toggleSettings بدلاً من متغيرات البيئة مباشرة
-  const isWebsiteDisabled = !toggleSettings.website
-
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${cairo.variable}`}>
       <head>
@@ -89,13 +86,13 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SkipToContent />
-          {!isWebsiteDisabled && (
+          {toggleSettings.website && (
             <HeaderErrorBoundary>
               <Header />
             </HeaderErrorBoundary>
           )}
           <div id="main-content">{children}</div>
-          {!isWebsiteDisabled && <Footer />}
+          {toggleSettings.website && <Footer />}
           <Toaster />
         </ThemeProvider>
       </body>
