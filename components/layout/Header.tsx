@@ -5,7 +5,8 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
-import { useLanguage, useTranslations } from "@/hooks/useTranslations"
+import { useLanguage } from "@/context/language-context"
+import { useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
 import { profile } from "@/admin/profile"
@@ -33,42 +34,12 @@ export default function Header() {
 
   // Create navigation items based on toggle settings
   const navItems = [
-    { name: t?.nav?.home || "Home", href: "/", enabled: true },
-    { name: t?.nav?.projects || "Projects", href: "/projects", enabled: toggleSettings.projects_page },
-    { name: t?.nav?.about || "About", href: "/about", enabled: toggleSettings.about_page },
-    { name: t?.nav?.services || "Services", href: "/services", enabled: toggleSettings.services_page },
-    { name: t?.nav?.contact || "Contact", href: "/contact", enabled: toggleSettings.contact_page },
+    { name: t.nav.home, href: "/", enabled: true },
+    { name: t.nav.projects, href: "/projects", enabled: toggleSettings.projects_page },
+    { name: t.nav.about, href: "/about", enabled: toggleSettings.about_page },
+    { name: t.nav.services, href: "/services", enabled: toggleSettings.services_page },
+    { name: t.nav.contact, href: "/contact", enabled: toggleSettings.contact_page },
   ].filter((item) => item.enabled)
-
-  if (!mounted) {
-    return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
-          <div className="flex lg:flex-1">
-            <Link href="/" className="-m-1.5 p-1.5" aria-label="Home">
-              <span className="sr-only">{profile.name}</span>
-              <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
-                {/* Placeholder for logo */}
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary">MH</span>
-                </div>
-              </div>
-            </Link>
-          </div>
-          <div className="flex items-center gap-4 lg:flex-1 lg:justify-end">
-            {/* Placeholder for theme toggle */}
-            <div className="p-2 rounded-full bg-black/10 dark:bg-white/5 backdrop-blur-sm"></div>
-
-            {/* Placeholder for language toggle */}
-            <div className="p-2 rounded-full bg-black/10 dark:bg-white/5 backdrop-blur-sm"></div>
-
-            {/* Placeholder for menu button */}
-            <div className="lg:hidden rounded-full p-2 bg-black/10 dark:bg-white/5 backdrop-blur-sm"></div>
-          </div>
-        </nav>
-      </header>
-    )
-  }
 
   return (
     <>
@@ -83,23 +54,21 @@ export default function Header() {
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5" aria-label="Home">
               <span className="sr-only">{profile.name}</span>
-              <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
-                {profile.logo ? (
+              {profile.logo ? (
+                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
                   <Image
                     src={profile.logo || "/placeholder.svg"}
                     alt={profile.name}
                     width={32}
                     height={32}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-contain p-1"
                     priority
                     unoptimized
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-xl font-bold text-primary">MH</span>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-xl font-bold text-primary">MH</div>
+              )}
             </Link>
           </div>
 

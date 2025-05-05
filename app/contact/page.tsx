@@ -1,28 +1,25 @@
-import type { Metadata } from "next"
 import { toggleSettings } from "@/admin/toggle"
-import ContactInfo from "@/components/contact/ContactInfo"
+import { notFound } from "next/navigation"
 import ContactForm from "@/components/contact/ContactForm"
+import ContactInfo from "@/components/contact/ContactInfo"
+import ContactHero from "@/components/contact/ContactHero"
 import ContactCircle from "@/components/contact/ContactCircle"
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Get in touch with me for collaborations or inquiries",
-}
-
 export default function ContactPage() {
-  return (
-    <main className="min-h-screen py-20 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* الجانب الأيسر - معلومات الاتصال */}
-          <div>
-            <ContactInfo />
-          </div>
+  // If contact page is disabled, return 404
+  if (!toggleSettings.contact_page) {
+    notFound()
+  }
 
-          {/* الجانب الأيمن - نموذج الاتصال أو الشعار */}
-          <div>{toggleSettings.contact_form ? <ContactForm /> : <ContactCircle />}</div>
+  return (
+    <>
+      <ContactHero />
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid md:grid-cols-2 gap-12">
+          <ContactInfo />
+          {toggleSettings.contact_form ? <ContactForm /> : <ContactCircle />}
         </div>
       </div>
-    </main>
+    </>
   )
 }

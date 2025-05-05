@@ -15,7 +15,7 @@ interface FullScreenMenuProps {
   items: MenuItem[]
 }
 
-export default function FullScreenMenu({ isOpen, onClose, items = [] }: FullScreenMenuProps) {
+export default function FullScreenMenu({ isOpen, onClose, items }: FullScreenMenuProps) {
   const pathname = usePathname()
 
   return (

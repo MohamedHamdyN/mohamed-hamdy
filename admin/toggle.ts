@@ -23,7 +23,7 @@ export const toggleSettings = {
   payment_methods: true,
 
   // Contact page toggles
-  contact_form: true, // تم تغييره من false إلى true
+  contact_form: true,
 
   // Calendly feature toggle
   calendly_feature: true,

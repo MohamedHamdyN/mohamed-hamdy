@@ -92,11 +92,6 @@ export const translations = {
         message: "Message",
         submit: "Send Message",
       },
-      cta: {
-        title: "Let's Work Together",
-        description: "Have a project in mind? I'd love to hear about it.",
-        button: "Get in Touch",
-      },
     },
     resume: {
       title: "Resume",
@@ -110,11 +105,6 @@ export const translations = {
     footer: {
       rights: "All rights reserved",
       madeWith: "Made with",
-      quickLinks: "Quick Links",
-      contactInfo: "Contact Info",
-      privacyPolicy: "Privacy Policy",
-      terms: "Terms",
-      rightsReserved: "All rights reserved",
     },
     notFound: {
       title: "Page Not Found",
@@ -222,11 +212,6 @@ export const translations = {
         message: "الرسالة",
         submit: "إرسال الرسالة",
       },
-      cta: {
-        title: "لنعمل معًا",
-        description: "هل لديك مشروع في ذهنك؟ أود أن أسمع عنه.",
-        button: "تواصل معي",
-      },
     },
     resume: {
       title: "السيرة الذاتية",
@@ -240,11 +225,6 @@ export const translations = {
     footer: {
       rights: "جميع الحقوق محفوظة",
       madeWith: "صنع بـ",
-      quickLinks: "روابط سريعة",
-      contactInfo: "معلومات الاتصال",
-      privacyPolicy: "سياسة الخصوصية",
-      terms: "الشروط والأحكام",
-      rightsReserved: "جميع الحقوق محفوظة",
     },
     notFound: {
       title: "الصفحة غير موجودة",

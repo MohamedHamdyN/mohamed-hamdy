@@ -1,62 +1,63 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { getCurrentLanguage, setLanguage as setLang, type Language } from "@/lib/language-utils"
+import type React from "react"
+import { createContext, useContext, useState, useEffect } from "react"
+import { languageSettings } from "@/admin/profile"
 
-interface LanguageContextProps {
+type Language = "en" | "ar"
+
+interface LanguageContextType {
   language: Language
-  setLanguage: (language: Language) => void
+  setLanguage: (lang: Language) => void
   isRTL: boolean
 }
 
-// إنشاء سياق اللغة مع قيم افتراضية لتجنب الأخطاء
-const LanguageContext = createContext<LanguageContextProps>({
-  language: "en",
-  setLanguage: () => {},
-  isRTL: false,
-})
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-interface LanguageProviderProps {
-  children: ReactNode
-}
-
-export function LanguageProvider({ children }: LanguageProviderProps) {
-  const defaultLang = getCurrentLanguage()
-  const [language, setLangState] = useState<Language>(defaultLang)
-  const [isRTL, setIsRTL] = useState(defaultLang === "ar")
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const defaultLang = (languageSettings.defaultLanguage as Language) || "en"
+  const [language, setLanguage] = useState<Language>(defaultLang)
+  const [isRTL, setIsRTL] = useState<boolean>(false)
 
   useEffect(() => {
-    // تحديث الحالة عند تحميل المكون
-    const currentLang = getCurrentLanguage()
-    setLangState(currentLang)
-    setIsRTL(currentLang === "ar")
-
-    // الاستماع لأحداث التخزين (في حالة تغيير اللغة في علامة تبويب أخرى)
-    const handleStorageChange = () => {
-      const newLang = getCurrentLanguage()
-      setLangState(newLang)
-      setIsRTL(newLang === "ar")
+    // Check if there's a saved language preference
+    if (typeof window !== "undefined") {
+      const savedLanguage = localStorage.getItem("language") as Language
+      if (savedLanguage) {
+        setLanguage(savedLanguage)
+      }
     }
-
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
-  // غلاف آمن لـ setLanguage
-  const setLanguage = (newLang: Language) => {
-    try {
-      setLang(newLang)
-      setLangState(newLang)
-      setIsRTL(newLang === "ar")
-    } catch (error) {
-      console.error("Error setting language:", error)
+  useEffect(() => {
+    // Update RTL state based on language
+    setIsRTL(language === "ar")
+
+    // Update HTML dir attribute
+    if (typeof document !== "undefined") {
+      document.documentElement.dir = language === "ar" ? "rtl" : "ltr"
+
+      // Update font family based on language
+      if (language === "ar") {
+        document.documentElement.classList.add("font-cairo")
+        document.documentElement.classList.remove("font-inter")
+      } else {
+        document.documentElement.classList.add("font-inter")
+        document.documentElement.classList.remove("font-cairo")
+      }
+
+      // Save language preference
+      localStorage.setItem("language", language)
     }
-  }
+  }, [language])
 
   return <LanguageContext.Provider value={{ language, setLanguage, isRTL }}>{children}</LanguageContext.Provider>
 }
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
+  if (context === undefined) {
+    throw new Error("useLanguage must be used within a LanguageProvider")
+  }
   return context
 }
