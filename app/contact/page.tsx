@@ -1,23 +1,27 @@
 import type { Metadata } from "next"
-import { profile } from "@/admin/profile"
 import ContactHero from "@/components/contact/ContactHero"
 import ContactInfo from "@/components/contact/ContactInfo"
+import ContactForm from "@/components/contact/ContactForm"
 import ContactCircle from "@/components/contact/ContactCircle"
+import { toggleSettings } from "@/admin/toggle"
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: `Get in touch with ${profile.name} for collaborations or inquiries.`,
+  description: "Get in touch with me for collaborations or inquiries",
 }
 
 export default function ContactPage() {
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-12">
+    <main className="min-h-screen">
       <ContactHero />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-        <ContactInfo />
-        <ContactCircle />
-      </div>
-    </div>
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12">
+            {toggleSettings.contact_form ? <ContactForm /> : <ContactInfo />}
+            <ContactCircle />
+          </div>
+        </div>
+      </section>
+    </main>
   )
 }

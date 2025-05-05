@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -8,68 +7,48 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['images.unsplash.com', 'via.placeholder.com', 'res.cloudinary.com'],
     unoptimized: true,
+    domains: ['i.imgur.com', 'i.postimg.cc'],
   },
-  // إزالة خاصية optimizeCss التي تسبب المشكلة
-  // experimental: {
-  //   optimizeCss: true,
-  // },
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
           },
         ],
       },
       {
-        source: '/(.*)\\.js',
+        source: '/:path*\\.js',
         headers: [
           {
             key: 'Content-Type',
             value: 'application/javascript; charset=utf-8',
           },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
         ],
       },
       {
-        source: '/(.*)\\.css',
+        source: '/:path*\\.css',
         headers: [
           {
             key: 'Content-Type',
             value: 'text/css; charset=utf-8',
           },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
         ],
       },
-      {
-        source: '/(.*)\\.svg',
-        headers: [
-          {
-            key: 'Content-Type',
-            value: 'image/svg+xml',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-    ];
+    ]
   },
-  // تحسين تحميل الملفات الثابتة
-  poweredByHeader: false,
-  generateEtags: true,
-};
+}
 
-export default nextConfig;
+export default nextConfig

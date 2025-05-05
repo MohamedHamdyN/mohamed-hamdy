@@ -32,13 +32,13 @@ export default function AboutHero() {
     {
       icon: <Clock className="h-6 w-6 text-primary" />,
       value: `${profile.experienceYears}+`,
-      label: t.about.yearsOfExperience,
+      label: t.about?.yearsOfExperience,
       color: "from-blue-500/20 to-blue-600/5",
     },
     {
       icon: <Briefcase className="h-6 w-6 text-purple-500" />,
       value: `${projectsNumber}+`,
-      label: t.about.completedProjects,
+      label: t.about?.completedProjects,
       color: "from-purple-500/20 to-purple-600/5",
     },
   ]
@@ -65,7 +65,7 @@ export default function AboutHero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6"
           >
-            <span className="text-sm font-medium">{t.about.title}</span>
+            <span className="text-sm font-medium">{t.about?.title || "About"}</span>
           </motion.div>
 
           <motion.h1
@@ -74,7 +74,7 @@ export default function AboutHero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {t.about.title}
+            {t.about?.title || "About"}
           </motion.h1>
 
           <motion.p
@@ -83,7 +83,7 @@ export default function AboutHero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            {t.about.description}
+            {t.about?.description || "Learn more about my background and expertise"}
           </motion.p>
         </motion.div>
 
@@ -146,14 +146,32 @@ export default function AboutHero() {
             className="relative"
           >
             <div className="relative w-full max-w-md mx-auto rounded-full overflow-hidden aspect-square border-4 border-white shadow-xl">
-              <Image
-                src="/logo.svg"
-                alt={profile.name}
-                fill
-                className="object-contain"
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
+              {profile.logo ? (
+                <Image
+                  src={profile.logo || "/placeholder.svg"}
+                  alt={profile.name}
+                  width={400}
+                  height={400}
+                  className="object-cover"
+                  priority
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                  <motion.span
+                    className="text-6xl font-bold text-primary"
+                    animate={{
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Number.POSITIVE_INFINITY,
+                    }}
+                  >
+                    MH
+                  </motion.span>
+                </div>
+              )}
             </div>
 
             {/* Decorative elements */}
@@ -197,7 +215,7 @@ export default function AboutHero() {
             >
               <span className="relative z-10 flex items-center gap-2">
                 <FileDown className="h-5 w-5" />
-                {t.about.downloadResume}
+                {t.about?.downloadResume || "Download CV"}
               </span>
               <span className="absolute inset-0 z-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
             </Button>

@@ -7,9 +7,10 @@ import { Linkedin, Github, Twitter, Facebook, Instagram, ExternalLink } from "lu
 interface SocialLinksProps {
   size?: "sm" | "md" | "lg"
   centered?: boolean
+  className?: string
 }
 
-export default function SocialLinks({ size = "md", centered = false }: SocialLinksProps) {
+export default function SocialLinks({ size = "md", centered = false, className = "" }: SocialLinksProps) {
   const getSizeClass = () => {
     switch (size) {
       case "sm":
@@ -39,14 +40,14 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
   const iconSize = getSizeClass()
   const containerSize = getContainerClass()
 
-  // Icono personalizado para Datacamp
+  // Custom icon for Datacamp
   const DatacampIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor">
       <path d="M12.946 18.151v-5.239L21.209 8.033v4.962l-8.263 5.156zm-1.825.468L2.791 13.25V8.033l8.33 5.418v5.168zM12 0L0 7.165v8.496l12 7.339 12-7.339V7.165L12 0z" />
     </svg>
   )
 
-  // Definir iconos conocidos
+  // Define known icons
   const knownIcons: Record<string, JSX.Element> = {
     linkedin: <Linkedin className={iconSize} />,
     github: <Github className={iconSize} />,
@@ -56,7 +57,7 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
     datacamp: <DatacampIcon className={iconSize} />,
   }
 
-  // Definir colores conocidos
+  // Define known colors
   const knownColors: Record<string, string> = {
     linkedin: "bg-[#0077B5]/10 text-[#0077B5] hover:bg-[#0077B5]",
     github:
@@ -68,8 +69,8 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
     datacamp: "bg-[#03EF62]/10 text-[#03EF62] hover:bg-[#03EF62]",
   }
 
-  // Crear un array de redes sociales a partir del objeto socialLinks
-  const socialNetworks = Object.entries(profile.socialLinks)
+  // Create an array of social networks from the socialLinks object
+  const socialNetworks = Object.entries(profile.socialLinks || {})
     .filter(([_, url]) => url && url.trim() !== "")
     .map(([key, url]) => ({
       key,
@@ -79,7 +80,7 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
     }))
 
   return (
-    <div className={`flex gap-3 flex-wrap ${centered ? "justify-center" : ""}`}>
+    <div className={`flex gap-3 flex-wrap ${centered ? "justify-center" : ""} ${className}`}>
       {socialNetworks.map((network) => (
         <motion.a
           key={network.key}

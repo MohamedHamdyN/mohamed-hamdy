@@ -5,8 +5,7 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
-import { useLanguage } from "@/context/language-context"
-import { useTranslations } from "@/hooks/useTranslations"
+import { useLanguage, useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
 import { profile } from "@/admin/profile"
@@ -34,11 +33,11 @@ export default function Header() {
 
   // Create navigation items based on toggle settings
   const navItems = [
-    { name: t.nav.home, href: "/", enabled: true },
-    { name: t.nav.projects, href: "/projects", enabled: toggleSettings.projects_page },
-    { name: t.nav.about, href: "/about", enabled: toggleSettings.about_page },
-    { name: t.nav.services, href: "/services", enabled: toggleSettings.services_page },
-    { name: t.nav.contact, href: "/contact", enabled: toggleSettings.contact_page },
+    { name: t?.nav?.home || "Home", href: "/", enabled: true },
+    { name: t?.nav?.projects || "Projects", href: "/projects", enabled: toggleSettings.projects_page },
+    { name: t?.nav?.about || "About", href: "/about", enabled: toggleSettings.about_page },
+    { name: t?.nav?.services || "Services", href: "/services", enabled: toggleSettings.services_page },
+    { name: t?.nav?.contact || "Contact", href: "/contact", enabled: toggleSettings.contact_page },
   ].filter((item) => item.enabled)
 
   return (
@@ -55,15 +54,21 @@ export default function Header() {
             <Link href="/" className="-m-1.5 p-1.5" aria-label="Home">
               <span className="sr-only">{profile.name}</span>
               <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
-                <Image
-                  src="/logo.svg"
-                  alt={profile.name}
-                  width={32}
-                  height={32}
-                  className="h-full w-full object-contain p-1"
-                  priority
-                  unoptimized
-                />
+                {profile.logo ? (
+                  <Image
+                    src={profile.logo || "/placeholder.svg"}
+                    alt={profile.name}
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-contain"
+                    priority
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-xl font-bold text-primary">MH</span>
+                  </div>
+                )}
               </div>
             </Link>
           </div>

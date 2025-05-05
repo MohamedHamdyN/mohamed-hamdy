@@ -7,6 +7,7 @@ import Clients from "@/components/home/Clients"
 import FeaturedProjects from "@/components/home/FeaturedProjects"
 import ContactCTA from "@/components/shared/ContactCTA"
 import { Suspense } from "react"
+import { toggleSettings } from "@/admin/toggle"
 
 // مكونات التحميل البسيطة
 const SkillsLoading = () => <div className="h-96 bg-background animate-pulse"></div>
@@ -16,70 +17,75 @@ const FeaturedProjectsLoading = () => <div className="h-96 bg-background animate
 const ContactCTALoading = () => <div className="h-96 bg-background animate-pulse"></div>
 
 export default function Home() {
-  // Check if website is enabled from environment variable
-  const websiteEnabled = process.env.DISABLE_WEBSITE !== "true"
+  // استخدام toggleSettings بدلاً من متغيرات البيئة مباشرة
+  const websiteEnabled = toggleSettings.website
 
   // If website is disabled, only show the Hero component
   if (!websiteEnabled) {
     return <Hero />
   }
 
-  // Create an array of sections to render based on environment variables
+  // Create an array of sections to render based on toggle settings
   const sections = []
 
-  // Add sections based on environment variables
-  if (process.env.DISABLE_SKILLS !== "true") {
+  // Add sections based on toggle settings
+  if (toggleSettings.skills) {
     sections.push({
+      id: "skills",
       component: (
-        <Suspense fallback={<SkillsLoading />}>
-          <Skills key="skills" />
+        <Suspense key="skills" fallback={<SkillsLoading />}>
+          <Skills />
         </Suspense>
       ),
-      order: 1,
+      order: toggleSettings.homeSectionsOrder?.skills || 1,
     })
   }
 
-  if (process.env.DISABLE_WHY_WORK_WITH_ME !== "true") {
+  if (toggleSettings.why_work_with_me) {
     sections.push({
+      id: "why-work-with-me",
       component: (
-        <Suspense fallback={<WhyWorkWithMeLoading />}>
-          <WhyWorkWithMe key="why-work-with-me" />
+        <Suspense key="why-work-with-me" fallback={<WhyWorkWithMeLoading />}>
+          <WhyWorkWithMe />
         </Suspense>
       ),
-      order: 2,
+      order: toggleSettings.homeSectionsOrder?.why_work_with_me || 2,
     })
   }
 
-  if (process.env.DISABLE_CLIENTS !== "true") {
+  if (toggleSettings.clients) {
     sections.push({
+      id: "clients",
       component: (
-        <Suspense fallback={<ClientsLoading />}>
-          <Clients key="clients" />
+        <Suspense key="clients" fallback={<ClientsLoading />}>
+          <Clients />
         </Suspense>
       ),
-      order: 4,
+      order: toggleSettings.homeSectionsOrder?.clients || 4,
     })
   }
 
-  if (process.env.DISABLE_PROJECTS_HOME !== "true") {
+  if (toggleSettings.projects_home) {
     sections.push({
+      id: "featured-projects",
       component: (
-        <Suspense fallback={<FeaturedProjectsLoading />}>
-          <FeaturedProjects key="featured-projects" />
+        <Suspense key="featured-projects" fallback={<FeaturedProjectsLoading />}>
+          <FeaturedProjects />
         </Suspense>
       ),
-      order: 3,
+      order: toggleSettings.homeSectionsOrder?.projects || 3,
     })
   }
 
-  if (process.env.DISABLE_CONTACT_HOME !== "true") {
+  if (toggleSettings.contact_home) {
     sections.push({
+      id: "contact-cta",
       component: (
-        <Suspense fallback={<ContactCTALoading />}>
-          <ContactCTA key="contact-cta" />
+        <Suspense key="contact-cta" fallback={<ContactCTALoading />}>
+          <ContactCTA />
         </Suspense>
       ),
-      order: 5,
+      order: toggleSettings.homeSectionsOrder?.contact || 5,
     })
   }
 
@@ -89,7 +95,6 @@ export default function Home() {
   return (
     <>
       <Hero />
-
       {/* Render sections in the specified order */}
       {sections.map((section) => section.component)}
     </>

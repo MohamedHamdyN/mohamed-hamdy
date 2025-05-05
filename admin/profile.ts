@@ -74,7 +74,7 @@ My approach combines technical expertise with clear communication, ensuring that
   ],
 }
 
-// إعدادات اللغة
+// تأكد من أن إعدادات اللغة موجودة وصحيحة
 export const languageSettings = {
   enableLanguageToggle: true,
   defaultLanguage: "en", // en, ar
