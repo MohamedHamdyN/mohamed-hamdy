@@ -22,17 +22,32 @@ const nextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: true,
-  // تحسين تحميل الأصول
   assetPrefix: process.env.NODE_ENV === 'production' ? '/' : '',
-  // تأكد من عدم وجود شرطات زائدة في النهاية
   trailingSlash: false,
-  // إضافة خيار لتجنب أخطاء JavaScript
   optimizeFonts: false,
   swcMinify: true,
   compiler: {
-    // تجنب أخطاء في تحويل JSX
     styledComponents: true,
-  }
+  },
+  // إضافة خيارات لتجنب أخطاء JavaScript
+  experimental: {
+    esmExternals: 'loose',
+    serverComponentsExternalPackages: [],
+  },
+  // تحسين تحميل الملفات
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.(js|jsx|ts|tsx)$/,
+      exclude: /node_modules/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['next/babel'],
+        },
+      },
+    });
+    return config;
+  },
 }
 
 export default nextConfig

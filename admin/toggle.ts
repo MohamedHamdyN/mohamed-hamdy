@@ -14,14 +14,10 @@ const defaultSettings = {
   why_work_with_me: true,
   clients: true,
   contact_home: true,
-  freelance_platforms: true,
-  payment_methods: true,
-  contact_form: true,
-  calendly_feature: true,
 }
 
-// Server-side only settings
-const serverSettings = {
+// Server-side settings
+export const toggleSettings = {
   // Main website toggle (when off, only shows hero section)
   website: process.env.DISABLE_WEBSITE !== "true",
 
@@ -39,16 +35,6 @@ const serverSettings = {
   why_work_with_me: process.env.DISABLE_WHY_WORK_WITH_ME !== "true",
   clients: process.env.DISABLE_CLIENTS !== "true",
   contact_home: process.env.DISABLE_CONTACT_HOME !== "true",
-
-  // Services page toggles
-  freelance_platforms: true,
-  payment_methods: true,
-
-  // Contact page toggles
-  contact_form: true,
-
-  // Calendly feature toggle
-  calendly_feature: true,
 }
 
 // Client-side safe settings
@@ -97,9 +83,6 @@ export const clientSettings = {
       ? process.env.NEXT_PUBLIC_DISABLE_CONTACT_HOME !== "true"
       : defaultSettings.contact_home,
 }
-
-// Export server settings for server components
-export const toggleSettings = typeof window === "undefined" ? serverSettings : clientSettings
 
 // Home page sections order (1-5)
 export const homeSectionsOrder = {

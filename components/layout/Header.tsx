@@ -18,6 +18,7 @@ import SkipToContent from "./SkipToContent"
 export default function Header() {
   const [mounted, setMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [logoError, setLogoError] = useState(false)
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, isRTL } = useLanguage()
   const t = useTranslations()
@@ -52,9 +53,9 @@ export default function Header() {
       >
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">
-            <Link href="/" className="-m-1.5 p-1.5" aria-label="Home">
+            <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2" aria-label="Home">
               <span className="sr-only">{profile.name}</span>
-              {profile.logo ? (
+              {!logoError && profile.logo ? (
                 <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
                   <Image
                     src={profile.logo || "/placeholder.svg"}
@@ -64,11 +65,15 @@ export default function Header() {
                     className="h-full w-full object-contain p-1"
                     priority
                     unoptimized
+                    onError={() => setLogoError(true)}
                   />
                 </div>
               ) : (
-                <div className="text-xl font-bold text-primary">MH</div>
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">MH</span>
+                </div>
               )}
+              <span className="text-lg font-semibold hidden sm:block">{profile.name}</span>
             </Link>
           </div>
 
