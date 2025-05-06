@@ -128,8 +128,8 @@ export interface FreelancePlatform {
 export const freelancePlatforms: FreelancePlatform[] = [
   {
     name: "Upwork",
-    profileUrl: "https://www.upwork.com/freelancers/yourusername",
-    logo: "https://i.imgur.com/zziw256.png",
+    profileUrl: "https://www.upwork.com/freelancers/~01b209a44bb4f07b39",
+    logo: "https://imgur.com/a/Q1FRERY",
     color: "border-green-500",
     enabled: true,
   },
