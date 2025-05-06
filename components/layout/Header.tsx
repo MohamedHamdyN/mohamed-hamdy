@@ -10,7 +10,7 @@ import { useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
 import { profile } from "@/admin/profile"
-import { toggleSettings } from "@/admin/toggle"
+import { clientSettings } from "@/admin/toggle"
 import { languageSettings } from "@/admin/profile"
 import Image from "next/image"
 import SkipToContent from "./SkipToContent"
@@ -32,13 +32,13 @@ export default function Header() {
     setLanguage(language === "en" ? "ar" : "en")
   }
 
-  // Create navigation items based on toggle settings
+  // Create navigation items based on client settings
   const navItems = [
     { name: t.nav.home, href: "/", enabled: true },
-    { name: t.nav.projects, href: "/projects", enabled: toggleSettings.projects_page },
-    { name: t.nav.about, href: "/about", enabled: toggleSettings.about_page },
-    { name: t.nav.services, href: "/services", enabled: toggleSettings.services_page },
-    { name: t.nav.contact, href: "/contact", enabled: toggleSettings.contact_page },
+    { name: t.nav.projects, href: "/projects", enabled: clientSettings.projects_page },
+    { name: t.nav.about, href: "/about", enabled: clientSettings.about_page },
+    { name: t.nav.services, href: "/services", enabled: clientSettings.services_page },
+    { name: t.nav.contact, href: "/contact", enabled: clientSettings.contact_page },
   ].filter((item) => item.enabled)
 
   return (

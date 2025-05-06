@@ -8,6 +8,7 @@ import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
+import { clientSettings } from "@/admin/toggle"
 
 export default function Hero() {
   const t = useTranslations()
@@ -25,9 +26,7 @@ export default function Hero() {
   useEffect(() => {
     // This is a client-side check using the clientSettings
     if (typeof window !== "undefined") {
-      import("@/admin/toggle").then(({ clientSettings }) => {
-        setWebsiteEnabled(clientSettings.website)
-      })
+      setWebsiteEnabled(clientSettings.website)
     }
   }, [])
 
