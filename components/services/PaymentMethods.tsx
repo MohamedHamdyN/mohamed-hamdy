@@ -52,7 +52,7 @@ export default function PaymentMethods() {
               {enabledPlatforms.map((platform, index) => (
                 <motion.div
                   key={platform.name}
-                  className={`flex flex-col items-center p-6 rounded-xl border-2 ${platform.color} bg-card hover:border-opacity-100 transition-all duration-300 w-40 relative overflow-hidden`}
+                  className={`flex flex-col items-center p-6 rounded-xl border-2 ${platform.color} bg-card hover:border-opacity-100 transition-all duration-300 w-40 relative overflow-hidden group`}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -62,7 +62,7 @@ export default function PaymentMethods() {
                     boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
                   }}
                 >
-                  {/* تأثير الحدود */}
+                  {/* Enhanced border effect */}
                   <motion.div
                     className={`absolute inset-0 ${platform.color} opacity-20`}
                     animate={{
@@ -80,7 +80,16 @@ export default function PaymentMethods() {
                       repeatType: "loop",
                     }}
                   />
-                  <div className="relative w-12 h-12 mb-3">
+
+                  {/* Add a glow effect on hover */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                    style={{
+                      background: `radial-gradient(circle at center, ${platform.color}, transparent 70%)`,
+                    }}
+                  />
+
+                  <div className="relative w-12 h-12 mb-3 group-hover:scale-110 transition-transform duration-300">
                     <Image
                       src={platform.logo || profile.defaultPlatformLogo}
                       alt={platform.name}
@@ -89,11 +98,13 @@ export default function PaymentMethods() {
                       unoptimized
                     />
                   </div>
-                  <span className="text-sm font-medium mb-2">{platform.name}</span>
+                  <span className="text-sm font-medium mb-2 group-hover:text-primary transition-colors duration-300">
+                    {platform.name}
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-2 relative z-10"
+                    className="mt-2 relative z-10 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
                     onClick={() => window.open(platform.profileUrl, "_blank")}
                   >
                     View Profile
@@ -126,7 +137,7 @@ export default function PaymentMethods() {
               {paymentMethods.map((method, index) => (
                 <motion.div
                   key={method.name}
-                  className="flex flex-col items-center p-6 bg-card rounded-xl border border-border hover:border-primary/30 transition-all duration-300 w-40 relative overflow-hidden"
+                  className="flex flex-col items-center p-6 bg-card rounded-xl border border-border hover:border-primary/30 transition-all duration-300 w-40 relative overflow-hidden group"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -138,19 +149,17 @@ export default function PaymentMethods() {
                 >
                   {/* Add animated background */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0"
+                    className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     initial={{ opacity: 0 }}
                     whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
                   />
 
                   {/* Add animated icon */}
                   <motion.div
-                    className="text-primary mb-3 bg-primary/10 p-3 rounded-full"
+                    className="text-primary mb-3 bg-primary/10 p-3 rounded-full group-hover:scale-110 transition-all duration-300"
                     whileHover={{
-                      scale: 1.1,
                       rotate: [0, 5, -5, 0],
-                      transition: { duration: 0.5 },
+                      transition: { duration: 0.5, repeat: 1 },
                     }}
                   >
                     {getIcon(method.icon)}
@@ -158,10 +167,9 @@ export default function PaymentMethods() {
 
                   {/* Add animated text */}
                   <motion.span
-                    className="text-sm font-medium"
+                    className="text-sm font-medium group-hover:text-primary transition-colors duration-300"
                     whileHover={{
                       scale: 1.05,
-                      color: "var(--primary)",
                       transition: { duration: 0.3 },
                     }}
                   >
@@ -195,6 +203,21 @@ export default function PaymentMethods() {
                         delay: 0.2,
                         repeat: Number.POSITIVE_INFINITY,
                         repeatType: "loop",
+                      },
+                    }}
+                  />
+
+                  {/* Add a pulse effect */}
+                  <motion.div
+                    className="absolute inset-0 rounded-xl border-2 border-transparent"
+                    initial={{ opacity: 0 }}
+                    whileHover={{
+                      opacity: [0, 0.5, 0],
+                      scale: [0.8, 1.05, 0.8],
+                      borderColor: "rgba(var(--primary), 0.3)",
+                      transition: {
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
                       },
                     }}
                   />

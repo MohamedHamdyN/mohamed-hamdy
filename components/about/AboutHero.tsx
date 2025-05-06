@@ -4,10 +4,8 @@ import { motion } from "framer-motion"
 import { profile } from "@/admin/profile"
 import { useTranslations } from "@/hooks/useTranslations"
 import Image from "next/image"
-import { Quote, Clock, Briefcase, FileDown } from "lucide-react"
+import { Quote, Clock, Briefcase } from "lucide-react"
 import { projects } from "@/admin/projects"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
 
 export default function AboutHero() {
   const t = useTranslations()
@@ -43,6 +41,9 @@ export default function AboutHero() {
     },
   ]
 
+  // تقسيم النص إلى فقرات
+  const bioParagraphs = profile.longBio.split("\n\n")
+
   return (
     <section className="py-20 bg-gradient-to-b from-background to-background/50 relative overflow-hidden">
       {/* Background elements */}
@@ -52,46 +53,11 @@ export default function AboutHero() {
       </div>
 
       <div className="container mx-auto px-4">
-        {/* Hero header */}
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6"
-          >
-            <span className="text-sm font-medium">{t.about.title}</span>
-          </motion.div>
-
-          <motion.h1
-            className="text-4xl md:text-5xl font-bold mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            {t.about.title}
-          </motion.h1>
-
-          <motion.p
-            className="text-xl text-muted-foreground max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            {t.about.description}
-          </motion.p>
-        </motion.div>
-
         <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
           {/* Bio content */}
           <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
             <div className="prose prose-lg dark:prose-invert max-w-none">
-              {profile.longBio.split("\n\n").map((paragraph, index) => (
+              {bioParagraphs.map((paragraph, index) => (
                 <motion.p
                   key={index}
                   className="mb-4 text-muted-foreground"
@@ -200,27 +166,6 @@ export default function AboutHero() {
             />
           </motion.div>
         </div>
-
-        {/* Download CV Button */}
-        <motion.div
-          className="flex justify-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
-          <Link href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
-            <Button
-              size="lg"
-              className="group relative overflow-hidden rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-primary/25 hover:shadow-xl"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <FileDown className="h-5 w-5" />
-                {t.about.downloadResume}
-              </span>
-              <span className="absolute inset-0 z-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
-            </Button>
-          </Link>
-        </motion.div>
       </div>
     </section>
   )

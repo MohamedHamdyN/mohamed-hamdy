@@ -23,9 +23,11 @@ export default function Hero() {
 
   // Check if website is enabled
   useEffect(() => {
-    // This is a client-side check, so it's safe to use process.env here
+    // This is a client-side check using the clientSettings
     if (typeof window !== "undefined") {
-      setWebsiteEnabled(process.env.DISABLE_WEBSITE !== "true")
+      import("@/admin/toggle").then(({ clientSettings }) => {
+        setWebsiteEnabled(clientSettings.website)
+      })
     }
   }, [])
 

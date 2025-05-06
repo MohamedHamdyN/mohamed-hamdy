@@ -15,12 +15,24 @@ const nextConfig = {
       'i.ibb.co',
       'i.postimg.cc',
       'imgur.com',
-      'postimg.cc'
+      'postimg.cc',
+      'hebbkx1anhila5yf.public.blob.vercel-storage.com'
     ],
     unoptimized: true,
   },
   poweredByHeader: false,
   reactStrictMode: true,
+  // تحسين تحميل الأصول
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/' : '',
+  // تأكد من عدم وجود شرطات زائدة في النهاية
+  trailingSlash: false,
+  // إضافة خيار لتجنب أخطاء JavaScript
+  optimizeFonts: false,
+  swcMinify: true,
+  compiler: {
+    // تجنب أخطاء في تحويل JSX
+    styledComponents: true,
+  }
 }
 
 export default nextConfig

@@ -64,8 +64,8 @@
     "vue": "latest",
     "vue-router": "latest",
     "framer-motion": "latest",
-    "nodemailer": "latest",
     "react-intersection-observer": "latest",
+    "resend": "latest",
     "@vercel/speed-insights": "latest"
   },
   "devDependencies": {

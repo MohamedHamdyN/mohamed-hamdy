@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server"
-import nodemailer from "nodemailer"
+import { Resend } from "resend"
 
 export async function POST(request: Request) {
   try {
     const { name, email, subject, message } = await request.json()
 
-    // Get environment variables
-    const emailUser = process.env.EMAIL_USER
-    const emailPass = process.env.EMAIL_PASSWORD
-    const workEmail = process.env.WORK_EMAIL
+    // Get Resend API key
+    const resendApiKey = process.env.RESEND_API_KEY
+    const resendFromEmail = process.env.RESEND_FROM_EMAIL
+    const resendToEmail = process.env.RESEND_TO_EMAIL
 
     // Check if required environment variables are available
-    if (!emailUser || !emailPass || !workEmail) {
-      console.log("Email configuration is missing, using fallback")
+    if (!resendApiKey || !resendFromEmail || !resendToEmail) {
+      console.log("Resend configuration is missing, using fallback")
 
       // Return success in preview mode or when environment variables are missing
       return NextResponse.json({
@@ -28,9 +28,9 @@ export async function POST(request: Request) {
     if (isPreview) {
       console.log("Preview mode: simulating email send")
       console.log({
-        to: workEmail,
+        to: resendToEmail,
         subject: `Contact Form: ${subject}`,
-        from: emailUser,
+        from: resendFromEmail,
         name,
         email,
         message,
@@ -41,19 +41,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, preview: true })
     }
 
-    // Configure nodemailer transport for production
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-    })
+    // Configure Resend for production
+    const resend = new Resend(resendApiKey)
 
-    // Configure email
-    const mailOptions = {
-      from: emailUser,
-      to: workEmail,
+    // Send email
+    const data = await resend.emails.send({
+      from: `Contact Form <${resendFromEmail}>`,
+      to: resendToEmail,
       subject: `Contact Form: ${subject}`,
       html: `
         <h1>New Contact Form Submission</h1>
@@ -63,12 +57,9 @@ export async function POST(request: Request) {
         <p><strong>Message:</strong></p>
         <p>${message.replace(/\n/g, "<br>")}</p>
       `,
-    }
+    })
 
-    // Send email
-    const info = await transporter.sendMail(mailOptions)
-    console.log("Email sent: ", info.response)
-
+    console.log("Email sent: ", data)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error sending email:", error)

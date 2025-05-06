@@ -168,14 +168,14 @@ export default function ProjectsGrid() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden mb-8"
             >
-              <div className="flex flex-wrap gap-2 py-4 bg-[#0a0d16] rounded-xl p-4">
+              <div className="flex flex-wrap gap-2 py-4 bg-card rounded-xl p-4">
                 {categories.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`rounded-full ${selectedCategory === category.id ? "bg-primary" : "bg-[#1a1d26] hover:bg-[#2a2d36]"}`}
+                    className={`rounded-full ${selectedCategory === category.id ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80 text-foreground"}`}
                   >
                     {category.label} ({category.count})
                   </Button>
@@ -230,7 +230,9 @@ export default function ProjectsGrid() {
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground mb-3">
                       <Calendar className="h-3 w-3 mr-1" />
-                      <time dateTime={project.date}>{project.date}</time>
+                      <time dateTime={project.date} className="tabular-nums">
+                        {project.date}
+                      </time>
                     </div>
                     <p className="text-muted-foreground mb-4 line-clamp-2">{project.description}</p>
                     <div className="flex flex-wrap gap-2 mb-4">

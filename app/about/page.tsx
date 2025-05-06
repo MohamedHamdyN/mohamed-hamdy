@@ -5,6 +5,8 @@ import AboutFeatures from "@/components/about/AboutFeatures"
 import SocialLinks from "@/components/shared/SocialLinks"
 import ContactCTA from "@/components/shared/ContactCTA"
 import AboutResume from "@/components/about/AboutResume"
+import PageHero from "@/components/shared/PageHero"
+import { User } from "lucide-react"
 
 export default function AboutPage() {
   // If about page is disabled, return 404
@@ -14,6 +16,11 @@ export default function AboutPage() {
 
   return (
     <>
+      <PageHero
+        title="About"
+        description="Learn more about my background, skills, and experience"
+        icon={<User className="h-4 w-4" />}
+      />
       <AboutHero />
       <AboutResume />
       <AboutFeatures />
