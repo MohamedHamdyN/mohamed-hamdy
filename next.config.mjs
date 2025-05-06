@@ -28,26 +28,7 @@ const nextConfig = {
   swcMinify: true,
   compiler: {
     styledComponents: true,
-  },
-  // إضافة خيارات لتجنب أخطاء JavaScript
-  experimental: {
-    esmExternals: 'loose',
-    serverComponentsExternalPackages: [],
-  },
-  // تحسين تحميل الملفات
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.(js|jsx|ts|tsx)$/,
-      exclude: /node_modules/,
-      use: {
-        loader: 'babel-loader',
-        options: {
-          presets: ['next/babel'],
-        },
-      },
-    });
-    return config;
-  },
+  }
 }
 
 export default nextConfig

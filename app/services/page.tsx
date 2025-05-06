@@ -10,7 +10,6 @@ export default function ServicesPage() {
   // If services page is disabled, return 404
   if (!toggleSettings.services_page) {
     notFound()
-    return null
   }
 
   return (

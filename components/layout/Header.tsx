@@ -55,7 +55,7 @@ export default function Header() {
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2" aria-label="Home">
               <span className="sr-only">{profile.name}</span>
-              {!logoError && profile.logo ? (
+              {!logoError ? (
                 <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
                   <Image
                     src={profile.logo || "/placeholder.svg"}

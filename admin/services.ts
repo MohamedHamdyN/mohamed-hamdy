@@ -101,7 +101,6 @@ export const services: Service[] = [
   },
 ]
 
-// طرق الدفع - تم تبسيطها
 export const paymentMethods = [
   {
     name: "Instapay",
@@ -114,5 +113,38 @@ export const paymentMethods = [
   {
     name: "Cryptocurrency",
     icon: "Bitcoin",
+  },
+]
+
+// منصات العمل الحر
+export interface FreelancePlatform {
+  name: string
+  profileUrl: string
+  logo: string
+  color: string
+  enabled: boolean
+}
+
+export const freelancePlatforms: FreelancePlatform[] = [
+  {
+    name: "Upwork",
+    profileUrl: "https://www.upwork.com/freelancers/~01b209a44bb4f07b39",
+    logo: "https://imgur.com/a/Q1FRERY",
+    color: "border-green-500",
+    enabled: true,
+  },
+  {
+    name: "Freelancer",
+    profileUrl: "https://www.freelancer.com/u/yourusername",
+    logo: "https://i.imgur.com/zziw256.png",
+    color: "border-blue-500",
+    enabled: true,
+  },
+  {
+    name: "Mostql",
+    profileUrl: "https://mostaql.com/u/yourusername",
+    logo: "https://i.imgur.com/zziw256.png",
+    color: "border-yellow-500",
+    enabled: true,
   },
 ]
