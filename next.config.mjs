@@ -1,11 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // إعدادات أساسية
+  reactStrictMode: true,
+  swcMinify: true,
+  
+  // تجاهل أخطاء ESLint و TypeScript أثناء البناء
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
+  
+  // إعدادات الصور
   images: {
     domains: [
       'i.imgur.com',
@@ -20,16 +27,12 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  
+  // تعطيل رأس "Powered-By"
   poweredByHeader: false,
-  reactStrictMode: true,
-  swcMinify: true,
+  
+  // تعطيل تحسين الخطوط
   optimizeFonts: false,
-  // إضافة تكوين لمعالجة مشكلة تحميل الأصول
-  assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
-  // تعطيل تحسين الصور لتجنب مشاكل التحميل
-  experimental: {
-    largePageDataBytes: 128 * 100000, // زيادة حجم البيانات المسموح به
-  },
 }
 
 export default nextConfig

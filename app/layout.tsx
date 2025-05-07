@@ -11,6 +11,7 @@ import type React from "react"
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
 import type { Metadata } from "next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { toggleSettings } from "@/admin/toggle"
 
 // Optimize font loading
 const inter = Inter({
@@ -97,8 +98,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Check if website is enabled from environment variable
-  const websiteEnabled = process.env.DISABLE_WEBSITE !== "true"
+  // استخدام toggleSettings بدلاً من الوصول المباشر إلى متغيرات البيئة
+  const websiteEnabled = toggleSettings.website
 
   return (
     <html lang="en" suppressHydrationWarning className="dark scroll-smooth">

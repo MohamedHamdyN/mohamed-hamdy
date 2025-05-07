@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
+import { useTheme } from "next-themes"
 
 export default function ProjectsGrid() {
   const t = useTranslations()
@@ -24,6 +25,7 @@ export default function ProjectsGrid() {
   const [sortOption, setSortOption] = useState("newest")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(true)
+  const { theme } = useTheme()
 
   // Contar proyectos por categoría
   const projectCounts = {
@@ -168,14 +170,22 @@ export default function ProjectsGrid() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden mb-8"
             >
-              <div className="flex flex-wrap gap-2 py-4 bg-card rounded-xl p-4">
+              <div
+                className={`flex flex-wrap gap-2 py-4 rounded-xl p-4 ${theme === "dark" ? "bg-card" : "bg-gray-50"}`}
+              >
                 {categories.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`rounded-full ${selectedCategory === category.id ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80 text-foreground"}`}
+                    className={`rounded-full ${
+                      selectedCategory === category.id
+                        ? "bg-primary text-primary-foreground"
+                        : theme === "dark"
+                          ? "bg-muted hover:bg-muted/80 text-foreground"
+                          : "bg-white hover:bg-gray-100 text-foreground shadow-sm"
+                    }`}
                   >
                     {category.label} ({category.count})
                   </Button>

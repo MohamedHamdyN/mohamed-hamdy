@@ -19,12 +19,25 @@ export default function Header() {
   const [mounted, setMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [logoError, setLogoError] = useState(false)
+  const [logoLoaded, setLogoLoaded] = useState(false)
+  const [navItems, setNavItems] = useState([{ name: "Home", href: "/", enabled: true }])
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, isRTL } = useLanguage()
   const t = useTranslations()
   const pathname = usePathname()
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+
+    // تحديث عناصر التنقل بناءً على clientSettings
+    setNavItems([
+      { name: t.nav.home, href: "/", enabled: true },
+      { name: t.nav.projects, href: "/projects", enabled: clientSettings.projects_page },
+      { name: t.nav.about, href: "/about", enabled: clientSettings.about_page },
+      { name: t.nav.services, href: "/services", enabled: clientSettings.services_page },
+      { name: t.nav.contact, href: "/contact", enabled: clientSettings.contact_page },
+    ])
+  }, [t, language])
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
@@ -33,14 +46,18 @@ export default function Header() {
     setLanguage(language === "en" ? "ar" : "en")
   }
 
-  // Create navigation items based on client settings
-  const navItems = [
-    { name: t.nav.home, href: "/", enabled: true },
-    { name: t.nav.projects, href: "/projects", enabled: clientSettings.projects_page },
-    { name: t.nav.about, href: "/about", enabled: clientSettings.about_page },
-    { name: t.nav.services, href: "/services", enabled: clientSettings.services_page },
-    { name: t.nav.contact, href: "/contact", enabled: clientSettings.contact_page },
-  ].filter((item) => item.enabled)
+  // تصفية عناصر التنقل المفعلة فقط
+  const enabledNavItems = navItems.filter((item) => item.enabled)
+
+  // معالجة تحميل الشعار
+  const handleLogoLoad = () => {
+    setLogoLoaded(true)
+  }
+
+  // معالجة خطأ تحميل الشعار
+  const handleLogoError = () => {
+    setLogoError(true)
+  }
 
   return (
     <>
@@ -55,32 +72,41 @@ export default function Header() {
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2" aria-label="Home">
               <span className="sr-only">{profile.name}</span>
-              {!logoError ? (
-                <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
-                  <Image
-                    src={profile.logo || "/placeholder.svg"}
-                    alt={profile.name}
-                    width={32}
-                    height={32}
-                    className="h-full w-full object-contain p-1"
-                    priority
-                    unoptimized
-                    onError={() => setLogoError(true)}
-                  />
-                </div>
-              ) : (
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary">MH</span>
-                </div>
-              )}
-              {/* إزالة اسم الموقع من الشريط العلوي */}
+              <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
+                {!logoError ? (
+                  <>
+                    {!logoLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    <Image
+                      src={profile.logo || "/placeholder.svg"}
+                      alt={profile.name}
+                      width={32}
+                      height={32}
+                      className={`h-full w-full object-contain p-1 transition-opacity duration-300 ${
+                        logoLoaded ? "opacity-100" : "opacity-0"
+                      }`}
+                      priority
+                      unoptimized
+                      onLoad={handleLogoLoad}
+                      onError={handleLogoError}
+                    />
+                  </>
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <span className="text-xl font-bold text-primary">MH</span>
+                  </div>
+                )}
+              </div>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex">
             <div className="relative bg-black/10 dark:bg-white/5 backdrop-blur-sm rounded-full p-1.5 flex space-x-1">
-              {navItems.map((item) => (
+              {enabledNavItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -142,7 +168,7 @@ export default function Header() {
         </nav>
       </motion.header>
 
-      <FullScreenMenu isOpen={isMenuOpen} onClose={toggleMenu} items={navItems} />
+      <FullScreenMenu isOpen={isMenuOpen} onClose={toggleMenu} items={enabledNavItems} />
     </>
   )
 }

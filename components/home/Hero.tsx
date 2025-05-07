@@ -22,12 +22,10 @@ export default function Hero() {
   const period = 2000 // Wait time after typing
   const nameRef = useRef<HTMLSpanElement>(null)
 
-  // Check if website is enabled
+  // استخدام clientSettings بشكل آمن
   useEffect(() => {
-    // This is a client-side check using the clientSettings
-    if (typeof window !== "undefined") {
-      setWebsiteEnabled(clientSettings.website)
-    }
+    // تعيين القيمة الافتراضية إلى true ثم تحديثها بناءً على clientSettings
+    setWebsiteEnabled(clientSettings.website)
   }, [])
 
   // Ensure we have default values for all properties

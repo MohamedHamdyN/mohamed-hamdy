@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import ProjectCard from "@/components/projects/ProjectCard"
 import ProjectModal from "@/components/projects/ProjectModal"
 import { ArrowRight } from "lucide-react"
+import { useTheme } from "next-themes"
 
 export default function FeaturedProjects() {
   const t = useTranslations()
@@ -18,6 +19,7 @@ export default function FeaturedProjects() {
   const [hoveredFilter, setHoveredFilter] = useState<string | null>(null)
   const [selectedProject, setSelectedProject] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { theme } = useTheme()
 
   // Contar proyectos por categoría
   const projectCounts = {
@@ -91,7 +93,9 @@ export default function FeaturedProjects() {
           </motion.p>
 
           <div className="flex justify-center mb-12">
-            <div className="bg-[#0a0d16] p-2 rounded-full flex flex-wrap justify-center">
+            <div
+              className={`p-2 rounded-full flex flex-wrap justify-center ${theme === "dark" ? "bg-[#0a0d16]" : "bg-gray-100"}`}
+            >
               {categories
                 .filter((cat) => cat.count > 0)
                 .map((category) => {
@@ -102,7 +106,11 @@ export default function FeaturedProjects() {
                       key={category.id}
                       onClick={() => setFilter(category.id === "all" ? "all" : Number.parseInt(category.id))}
                       className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                        isActive ? "bg-primary text-white" : "bg-[#1a1d26] text-foreground hover:text-primary"
+                        isActive
+                          ? "bg-primary text-white"
+                          : theme === "dark"
+                            ? "bg-[#1a1d26] text-foreground hover:text-primary"
+                            : "bg-white text-foreground hover:text-primary shadow-sm"
                       } mx-1 my-1`}
                       onHoverStart={() => setHoveredFilter(category.id)}
                       onHoverEnd={() => setHoveredFilter(null)}
