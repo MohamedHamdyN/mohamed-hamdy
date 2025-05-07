@@ -90,13 +90,29 @@ export default function PaymentMethods() {
                   />
 
                   <div className="relative w-12 h-12 mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <Image
-                      src={platform.logo || profile.defaultPlatformLogo || "/placeholder.svg"}
-                      alt={platform.name}
-                      fill
-                      className="object-contain"
-                      unoptimized
-                    />
+                    {/* تحسين عرض الشعار مع معالجة الأخطاء */}
+                    <div className="w-12 h-12 bg-background/50 rounded-full flex items-center justify-center overflow-hidden">
+                      <Image
+                        src={platform.logo || profile.defaultPlatformLogo || "/placeholder.svg"}
+                        alt={platform.name}
+                        width={48}
+                        height={48}
+                        className="object-contain"
+                        unoptimized
+                        onError={(e) => {
+                          // في حالة فشل تحميل الصورة، استخدم الأيقونة الافتراضية
+                          const target = e.target as HTMLImageElement
+                          target.style.display = "none"
+                          const parent = target.parentElement
+                          if (parent) {
+                            const icon = document.createElement("div")
+                            icon.className = "text-primary text-2xl font-bold"
+                            icon.textContent = platform.name.charAt(0)
+                            parent.appendChild(icon)
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                   <span className="text-sm font-medium mb-2 group-hover:text-primary transition-colors duration-300">
                     {platform.name}

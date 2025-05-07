@@ -22,13 +22,14 @@ const nextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: true,
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/' : '',
-  trailingSlash: false,
-  optimizeFonts: false,
   swcMinify: true,
-  compiler: {
-    styledComponents: true,
-  }
+  optimizeFonts: false,
+  // إضافة تكوين لمعالجة مشكلة تحميل الأصول
+  assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
+  // تعطيل تحسين الصور لتجنب مشاكل التحميل
+  experimental: {
+    largePageDataBytes: 128 * 100000, // زيادة حجم البيانات المسموح به
+  },
 }
 
 export default nextConfig

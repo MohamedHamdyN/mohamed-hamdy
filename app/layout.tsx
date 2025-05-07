@@ -69,8 +69,12 @@ export const metadata: Metadata = {
     images: [profile.ogImage || "/logo.png"],
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png" }],
+    shortcut: ["/shortcut-icon.png"],
   },
   verification: {
     google: "google-site-verification-code", // Replace with your verification code

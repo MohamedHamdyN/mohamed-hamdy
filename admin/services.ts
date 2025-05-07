@@ -116,7 +116,7 @@ export const paymentMethods = [
   },
 ]
 
-// منصات العمل الحر
+// منصات العمل الحر - تحديث روابط الشعارات
 export interface FreelancePlatform {
   name: string
   profileUrl: string
@@ -129,7 +129,7 @@ export const freelancePlatforms: FreelancePlatform[] = [
   {
     name: "Upwork",
     profileUrl: "https://www.upwork.com/freelancers/~01b209a44bb4f07b39",
-    logo: "https://imgur.com/a/Q1FRERY",
+    logo: "https://i.imgur.com/zziw256.png", // تحديث رابط الشعار
     color: "border-green-500",
     enabled: true,
   },

@@ -73,7 +73,7 @@ export default function Header() {
                   <span className="text-xl font-bold text-primary">MH</span>
                 </div>
               )}
-              <span className="text-lg font-semibold hidden sm:block">{profile.name}</span>
+              {/* إزالة اسم الموقع من الشريط العلوي */}
             </Link>
           </div>
 
