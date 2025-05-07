@@ -27,21 +27,21 @@ My approach combines technical expertise with clear communication, ensuring that
   ogImage: "https://i.imgur.com/zziw256.png",
 
   // روابط
-  resumeUrl: "https://drive.google.com/file/d/170bD9hOyw6qSMxOcWJw40pt2_fOL3TaE/view?usp=drive_link",
+  resumeUrl: "https://drive.google.com/file/d/18GP_gCewc2svPC0-F62o_Nm0VwtlcK0k/view?usp=drive_link",
   calendlyUrl: "https://calendly.com/mohamedhamdynour/30min",
 
   // إحصائيات
-  experienceYears: "2",
+  experienceYears: "1",
   projectsCount: "00", // سيتم حساب العدد تلقائيًا من مصفوفة المشاريع
 
   // وسائل التواصل الاجتماعي
   socialLinks: {
     linkedin: "https://linkedin.com/in/mohamedhamdynour",
     github: "https://github.com/mohamedhamdynour",
-    twitter: "https://twitter.com/mohamedhamdy15_",
-    instagram: "https://instagram.com/muhamedhamdy15",
+    twitter: "https://twitter.com/MoBinHamdy",
+    instagram: "https://instagram.com/mohamedhamdyn",
     datacamp: "https://www.datacamp.com/portfolio/mohamedhamdynour",
-    facebook: "",
+    facebook: "https://facebook.com/mohamedhamdyn",
     // يمكن إضافة المزيد من المواقع هنا
   },
 
@@ -76,6 +76,6 @@ My approach combines technical expertise with clear communication, ensuring that
 
 // إعدادات اللغة
 export const languageSettings = {
-  enableLanguageToggle: true,
+  enableLanguageToggle: false,
   defaultLanguage: "en", // en, ar
 }
