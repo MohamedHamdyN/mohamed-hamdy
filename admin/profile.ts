@@ -30,9 +30,81 @@ My approach combines technical expertise with clear communication, ensuring that
   resumeUrl: "https://drive.google.com/file/d/18GP_gCewc2svPC0-F62o_Nm0VwtlcK0k/view?usp=drive_link",
   calendlyUrl: "https://calendly.com/mohamedhamdynour/30min",
 
-  // إحصائيات
-  experienceYears: "1",
-  projectsCount: "00", // سيتم حساب العدد تلقائيًا من مصفوفة المشاريع
+  // إحصائيات قابلة للتخصيص
+  stats: [
+    {
+      id: 1,
+      name: "Years of Experience",
+      value: "1+",
+      icon: "Clock",
+      color: "from-blue-500/20 to-blue-600/5",
+      enabled: true,
+    },
+    {
+      id: 2,
+      name: "Completed Projects",
+      value: "10+",
+      icon: "Briefcase",
+      color: "from-purple-500/20 to-purple-600/5",
+      enabled: true,
+    },
+    {
+      id: 3,
+      name: "LinkedIn Followers",
+      value: "500+",
+      icon: "Linkedin",
+      color: "from-cyan-500/20 to-cyan-600/5",
+      enabled: true,
+    },
+    {
+      id: 4,
+      name: "Completed Courses",
+      value: "15+",
+      icon: "GraduationCap",
+      color: "from-green-500/20 to-green-600/5",
+      enabled: true,
+    },
+  ],
+
+  // الشهادات
+  certifications: [
+    {
+      id: 1,
+      title: "Data Analysis Professional Certificate",
+      issuer: "Google",
+      date: "2023",
+      credentialUrl: "https://www.credential.net/sample",
+      description: "Comprehensive data analysis training covering SQL, R, and data visualization techniques.",
+      enabled: true,
+    },
+    {
+      id: 2,
+      title: "Financial Accounting Specialization",
+      issuer: "University of Illinois",
+      date: "2022",
+      credentialUrl: "https://www.credential.net/sample",
+      description: "Advanced financial accounting principles and practices for business analysis.",
+      enabled: true,
+    },
+    {
+      id: 3,
+      title: "Power BI Data Analyst Associate",
+      issuer: "Microsoft",
+      date: "2023",
+      credentialUrl: "https://www.credential.net/sample",
+      description: "Professional certification in creating and managing business intelligence solutions with Power BI.",
+      enabled: true,
+    },
+    {
+      id: 4,
+      title: "SQL for Data Science",
+      issuer: "University of California, Davis",
+      date: "2022",
+      credentialUrl: "https://www.credential.net/sample",
+      description: "Database querying and manipulation for data analysis and business intelligence.",
+      enabled: true,
+    },
+  ],
 
   // وسائل التواصل الاجتماعي
   socialLinks: {

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { type Project, projectCategories, projectCategoriesName } from "@/admin/projects"
 import { useTranslations } from "@/hooks/useTranslations"
 import { Button } from "@/components/ui/button"
-import { X, ExternalLink, Linkedin, Calendar, Tag } from "lucide-react"
+import { X, Linkedin, Calendar, Tag, BarChart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { profile } from "@/admin/profile"
@@ -86,6 +86,16 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
     setImageError(true)
   }
 
+  // Define technology colors
+  const techColors = [
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+    "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+  ]
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -156,7 +166,10 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
                 <h3 className="text-lg font-semibold mb-2">Technologies</h3>
                 <div className="flex flex-wrap gap-2">
                   {project.technologies.map((tech, index) => (
-                    <span key={index} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                    <span
+                      key={index}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${techColors[index % techColors.length]}`}
+                    >
                       {tech}
                     </span>
                   ))}
@@ -180,8 +193,8 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
                     className="flex items-center gap-2"
                     onClick={() => window.open(project.projectUrl, "_blank", "noopener noreferrer")}
                   >
-                    <ExternalLink className="h-5 w-5" aria-hidden="true" />
-                    <span>{t.projects.viewProject}</span>
+                    <BarChart className="h-5 w-5" aria-hidden="true" />
+                    <span>Preview Dashboard</span>
                   </Button>
                 )}
               </div>

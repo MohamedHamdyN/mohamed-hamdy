@@ -4,45 +4,23 @@ import { motion } from "framer-motion"
 import { profile } from "@/admin/profile"
 import { useTranslations } from "@/hooks/useTranslations"
 import Image from "next/image"
-import { Quote, Clock, Briefcase } from "lucide-react"
-import { projects } from "@/admin/projects"
+import { Quote } from "lucide-react"
+import * as LucideIcons from "lucide-react"
 
 export default function AboutHero() {
   const t = useTranslations()
 
-  // Calculate the actual number of projects if projectsCount is "00"
-  const projectsNumber = profile.projectsCount === "00" ? projects.length : Number.parseInt(profile.projectsCount)
-
-  const boxVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: (i: number) => ({
-      y: 0,
-      opacity: 1,
-      transition: {
-        delay: i * 0.1,
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    }),
-  }
-
-  const experienceBoxes = [
-    {
-      icon: <Clock className="h-6 w-6 text-primary" />,
-      value: `${profile.experienceYears}+`,
-      label: t.about.yearsOfExperience,
-      color: "from-blue-500/20 to-blue-600/5",
-    },
-    {
-      icon: <Briefcase className="h-6 w-6 text-purple-500" />,
-      value: `${projectsNumber}+`,
-      label: t.about.completedProjects,
-      color: "from-purple-500/20 to-purple-600/5",
-    },
-  ]
-
   // تقسيم النص إلى فقرات
   const bioParagraphs = profile.longBio.split("\n\n")
+
+  // الحصول على الأيقونة بشكل ديناميكي
+  const getIcon = (iconName: string) => {
+    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] || LucideIcons.Info
+    return <Icon className="h-6 w-6" />
+  }
+
+  // تصفية الإحصائيات المفعلة
+  const enabledStats = profile.stats.filter((stat) => stat.enabled)
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-background/50 relative overflow-hidden">
@@ -81,26 +59,6 @@ export default function AboutHero() {
               <p className="text-lg italic text-muted-foreground">
                 "Transforming complex data into actionable insights that drive business decisions."
               </p>
-            </motion.div>
-
-            {/* Experience Boxes */}
-            <motion.div initial="hidden" animate="visible" className="grid grid-cols-2 gap-4 mt-8">
-              {experienceBoxes.map((box, i) => (
-                <motion.div
-                  key={i}
-                  custom={i}
-                  variants={boxVariants}
-                  className={`relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br ${box.color} p-4 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-background/50 p-2 backdrop-blur-sm">{box.icon}</div>
-                    <div>
-                      <h3 className="text-2xl font-bold">{box.value}</h3>
-                      <p className="text-muted-foreground text-xs">{box.label}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
             </motion.div>
           </motion.div>
 
@@ -166,6 +124,32 @@ export default function AboutHero() {
             />
           </motion.div>
         </div>
+
+        {/* Stats Section */}
+        <motion.div
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+        >
+          {enabledStats.map((stat, index) => (
+            <motion.div
+              key={stat.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+              className={`relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br ${stat.color} p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-background/50 p-3 backdrop-blur-sm">{getIcon(stat.icon)}</div>
+                <div>
+                  <h3 className="text-2xl font-bold">{stat.value}</h3>
+                  <p className="text-muted-foreground text-sm">{stat.name}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   )

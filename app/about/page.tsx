@@ -5,6 +5,7 @@ import AboutFeatures from "@/components/about/AboutFeatures"
 import SocialLinks from "@/components/shared/SocialLinks"
 import ContactCTA from "@/components/shared/ContactCTA"
 import AboutResume from "@/components/about/AboutResume"
+import Certifications from "@/components/about/Certifications"
 import PageHero from "@/components/shared/PageHero"
 import { User } from "lucide-react"
 
@@ -23,6 +24,7 @@ export default function AboutPage() {
       />
       <AboutHero />
       <AboutResume />
+      <Certifications />
       <AboutFeatures />
       <div className="container mx-auto px-4 py-12 text-center">
         <h2 className="text-2xl font-bold mb-6">Connect With Me</h2>
