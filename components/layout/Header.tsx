@@ -29,7 +29,7 @@ export default function Header() {
   useEffect(() => {
     setMounted(true)
 
-    // تحديث عناصر التنقل بناءً على clientSettings
+    // Actualizar elementos de navegación basados en clientSettings
     setNavItems([
       { name: t.nav.home, href: "/", enabled: true },
       { name: t.nav.projects, href: "/projects", enabled: clientSettings.projects_page },
@@ -41,20 +41,20 @@ export default function Header() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-  // Toggle language directly
+  // Cambiar idioma directamente
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "ar" : "en")
   }
 
-  // تصفية عناصر التنقل المفعلة فقط
+  // Filtrar elementos de navegación habilitados
   const enabledNavItems = navItems.filter((item) => item.enabled)
 
-  // معالجة تحميل الشعار
+  // Manejar carga del logo
   const handleLogoLoad = () => {
     setLogoLoaded(true)
   }
 
-  // معالجة خطأ تحميل الشعار
+  // Manejar error de carga del logo
   const handleLogoError = () => {
     setLogoError(true)
   }

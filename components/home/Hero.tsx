@@ -22,13 +22,13 @@ export default function Hero() {
   const period = 2000 // Wait time after typing
   const nameRef = useRef<HTMLSpanElement>(null)
 
-  // استخدام clientSettings بشكل آمن
+  // Usar clientSettings de forma segura
   useEffect(() => {
-    // تعيين القيمة الافتراضية إلى true ثم تحديثها بناءً على clientSettings
+    // Establecer el valor predeterminado en true y luego actualizarlo según clientSettings
     setWebsiteEnabled(clientSettings.website)
   }, [])
 
-  // Ensure we have default values for all properties
+  // Asegurar que tenemos valores predeterminados para todas las propiedades
   const textArray = [
     t?.hero?.title || "Data Analyst",
     t?.hero?.title2 || "Financial Accountant",
@@ -94,7 +94,7 @@ export default function Hero() {
     },
   }
 
-  // Simplified version when website is disabled
+  // Versión simplificada cuando el sitio web está deshabilitado
   if (!websiteEnabled) {
     return (
       <div className="relative isolate overflow-hidden bg-[#020617] min-h-screen flex items-center">
@@ -262,7 +262,7 @@ export default function Hero() {
     )
   }
 
-  // Regular version when website is enabled
+  // Versión regular cuando el sitio web está habilitado
   return (
     <div className="relative isolate overflow-hidden bg-background">
       {/* Background gradient effect */}

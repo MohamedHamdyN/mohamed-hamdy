@@ -1,14 +1,14 @@
-// الإعدادات الافتراضية - تُستخدم عندما لا تتوفر متغيرات البيئة
+// Configuraciones predeterminadas - Se utilizan cuando no hay variables de entorno disponibles
 const defaultSettings = {
-  // Main website toggle
+  // Interruptor principal del sitio web
   website: true,
-  // Page toggles
+  // Interruptores de páginas
   projects_page: true,
   services_page: true,
   about_page: true,
   contact_page: true,
   resume_page: true,
-  // Home page section toggles
+  // Interruptores de secciones de la página de inicio
   projects_home: true,
   services_home: true,
   about_home: true,
@@ -16,16 +16,16 @@ const defaultSettings = {
   why_work_with_me: true,
   clients: true,
   contact_home: true,
-  // Services page toggles
+  // Interruptores de la página de servicios
   freelance_platforms: true,
   payment_methods: true,
-  // Contact page toggles
+  // Interruptores de la página de contacto
   contact_form: true,
-  // Calendly feature toggle
+  // Interruptor de la función Calendly
   calendly_feature: true,
 }
 
-// إعدادات الخادم - تُستخدم فقط على جانب الخادم
+// Configuraciones del servidor - Solo se utilizan en el lado del servidor
 export const toggleSettings = {
   website: process.env.DISABLE_WEBSITE !== "true",
   projects_page: process.env.DISABLE_PROJECTS !== "true",
@@ -46,8 +46,8 @@ export const toggleSettings = {
   calendly_feature: true,
 }
 
-// إعدادات العميل - تُستخدم فقط على جانب العميل
-// تستخدم فقط متغيرات البيئة التي تبدأ بـ NEXT_PUBLIC_
+// Configuraciones del cliente - Solo se utilizan en el lado del cliente
+// Solo utilizan variables de entorno que comienzan con NEXT_PUBLIC_
 export const clientSettings = {
   website: typeof window !== "undefined" ? process.env.NEXT_PUBLIC_DISABLE_WEBSITE !== "true" : defaultSettings.website,
 
@@ -98,7 +98,7 @@ export const clientSettings = {
   calendly_feature: defaultSettings.calendly_feature,
 }
 
-// ترتيب أقسام الصفحة الرئيسية
+// Orden de las secciones de la página de inicio
 export const homeSectionsOrder = {
   skills: 1,
   why_work_with_me: 2,

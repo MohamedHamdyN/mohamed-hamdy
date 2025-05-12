@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // إعدادات أساسية
+  // Configuraciones básicas
   reactStrictMode: true,
   swcMinify: true,
   
-  // تجاهل أخطاء ESLint و TypeScript أثناء البناء
+  // Ignorar errores durante la compilación
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -12,7 +12,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // إعدادات الصور
+  // Configuración de imágenes
   images: {
     domains: [
       'i.imgur.com',
@@ -28,35 +28,11 @@ const nextConfig = {
     unoptimized: true,
   },
   
-  // تعطيل رأس "Powered-By"
+  // Desactivar cabecera "Powered-By"
   poweredByHeader: false,
   
-  // تعطيل تحسين الخطوط
+  // Desactivar optimización de fuentes
   optimizeFonts: false,
-  
-  // إضافة إعدادات webpack لإصلاح خطأ "Unexpected token '<'"
-  webpack: (config) => {
-    // إضافة معالجة ملفات SVG
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ['@svgr/webpack'],
-    });
-    
-    // إضافة معالجة ملفات الوسائط
-    config.module.rules.push({
-      test: /\.(mp3|wav|ogg|mp4|webm|glb|gltf)$/,
-      use: {
-        loader: 'file-loader',
-        options: {
-          publicPath: '/_next/static/media/',
-          outputPath: 'static/media/',
-          name: '[name].[hash].[ext]',
-        },
-      },
-    });
-    
-    return config;
-  },
 }
 
 export default nextConfig
