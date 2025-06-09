@@ -7,8 +7,9 @@ import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { clientSettings } from "@/admin/toggle"
+import Head from "next/head"
 
 export default function Hero() {
   const t = useTranslations()
@@ -16,35 +17,33 @@ export default function Hero() {
   const [text, setText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const [loopNum, setLoopNum] = useState(0)
-  const [delta, setDelta] = useState(150) // Faster initial typing speed
+  const [delta, setDelta] = useState(150)
   const [websiteEnabled, setWebsiteEnabled] = useState(true)
+  const [isVisible, setIsVisible] = useState(false)
 
-  const period = 2000 // Wait time after typing
+  const period = 2000
   const nameRef = useRef<HTMLSpanElement>(null)
 
-  // Usar clientSettings de forma segura
+  // Preload critical resources
   useEffect(() => {
-    // Establecer el valor predeterminado en true y luego actualizarlo según clientSettings
+    // Preload critical images
+    if (profile.logo) {
+      const img = new Image()
+      img.src = profile.logo
+    }
+
+    // Set visibility after mount to prevent hydration issues
+    setIsVisible(true)
     setWebsiteEnabled(clientSettings.website)
   }, [])
 
-  // Asegurar que tenemos valores predeterminados para todas las propiedades
   const textArray = [
     t?.hero?.title || "Data Analyst",
     t?.hero?.title2 || "Financial Accountant",
     `${t?.hero?.title || "Data Analyst"} & ${t?.hero?.title2 || "Financial Accountant"}`,
   ]
 
-  useEffect(() => {
-    const ticker = setInterval(() => {
-      tick()
-    }, delta)
-
-    return () => clearInterval(ticker)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, isDeleting, loopNum])
-
-  const tick = () => {
+  const tick = useCallback(() => {
     const i = loopNum % textArray.length
     const fullText = textArray[i]
     const updatedText = isDeleting ? fullText.substring(0, text.length - 1) : fullText.substring(0, text.length + 1)
@@ -52,56 +51,67 @@ export default function Hero() {
     setText(updatedText)
 
     if (isDeleting) {
-      setDelta(75) // Faster deleting speed
+      setDelta(75)
     } else {
-      setDelta(150) // Faster typing speed
+      setDelta(150)
     }
 
     if (!isDeleting && updatedText === fullText) {
       setIsDeleting(true)
-      setDelta(period) // Wait before deleting
+      setDelta(period)
     } else if (isDeleting && updatedText === "") {
       setIsDeleting(false)
       setLoopNum(loopNum + 1)
-      setDelta(150) // Reset to typing speed
+      setDelta(150)
     }
-  }
+  }, [text, isDeleting, loopNum, period])
 
-  // Button animations
+  useEffect(() => {
+    if (!isVisible) return
+
+    const ticker = setInterval(tick, delta)
+    return () => clearInterval(ticker)
+  }, [tick, delta, isVisible])
+
+  // Optimized button variants with reduced complexity
   const buttonVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
+    hidden: { opacity: 0, scale: 0.9 },
     visible: (custom: number) => ({
       opacity: 1,
       scale: 1,
       transition: {
-        delay: custom * 0.3,
-        duration: 0.8,
-        type: "spring",
-        stiffness: 100,
+        delay: custom * 0.2,
+        duration: 0.6,
+        ease: "easeOut",
       },
     }),
     hover: {
-      scale: 1.05,
-      boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
+      scale: 1.02,
       transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 10,
+        duration: 0.2,
+        ease: "easeInOut",
       },
-    },
-    tap: {
-      scale: 0.95,
     },
   }
 
-  // Versión simplificada cuando el sitio web está deshabilitado
+  if (!isVisible) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   if (!websiteEnabled) {
     return (
       <div className="relative isolate overflow-hidden bg-[#020617] min-h-screen flex items-center">
-        {/* Background gradient effect */}
+        <Head>
+          <link rel="preload" href={profile.logo} as="image" />
+        </Head>
+
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-[10%] w-[500px] h-[500px] bg-primary/10 rounded-full filter blur-3xl opacity-30 animate-blob"></div>
-          <div className="absolute bottom-0 right-[10%] w-[600px] h-[600px] bg-secondary/10 rounded-full filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-0 left-[10%] w-[500px] h-[500px] bg-primary/10 rounded-full filter blur-3xl opacity-30"></div>
+          <div className="absolute bottom-0 right-[10%] w-[600px] h-[600px] bg-secondary/10 rounded-full filter blur-3xl opacity-20"></div>
         </div>
 
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:flex lg:items-center lg:gap-x-10 lg:px-8 lg:py-40">
@@ -115,7 +125,6 @@ export default function Hero() {
               {t?.hero?.greeting || "Hello, I'm"}
             </motion.p>
 
-            {/* Name with gradient and mask effect */}
             <div className="overflow-hidden">
               <motion.h1
                 className="mt-2 text-4xl font-bold tracking-tight text-foreground sm:text-6xl"
@@ -132,7 +141,6 @@ export default function Hero() {
               </motion.h1>
             </div>
 
-            {/* Animated typing effect */}
             <motion.h2
               className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl min-h-[40px] text-primary"
               initial={{ opacity: 0, y: 20 }}
@@ -156,50 +164,20 @@ export default function Hero() {
             </motion.p>
 
             <div className="mt-10 flex items-center gap-x-6">
-              <motion.div
-                variants={buttonVariants}
-                initial="hidden"
-                animate="visible"
-                whileHover="hover"
-                whileTap="tap"
-                custom={0}
-              >
+              <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={0}>
                 <a href="mailto:muhamedhamdynour@gmail.com">
-                  <Button size="lg" className="relative px-6 py-3 overflow-hidden group bg-primary hover:bg-primary/90">
-                    <span className="absolute top-0 left-0 w-0 h-0 transition-all duration-500 border-t-2 border-l-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="absolute bottom-0 right-0 w-0 h-0 transition-all duration-500 border-b-2 border-r-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="absolute top-0 right-0 w-0 h-0 transition-all duration-500 border-t-2 border-r-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="absolute bottom-0 left-0 w-0 h-0 transition-all duration-500 border-b-2 border-l-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4" />
-                      {t?.hero?.cta || "View My Work"}
-                    </span>
+                  <Button size="lg" className="bg-primary hover:bg-primary/90">
+                    <FolderOpen className="h-4 w-4 mr-2" />
+                    {t?.hero?.cta || "View My Work"}
                   </Button>
                 </a>
               </motion.div>
 
-              <motion.div
-                variants={buttonVariants}
-                initial="hidden"
-                animate="visible"
-                whileHover="hover"
-                whileTap="tap"
-                custom={1}
-              >
+              <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={1}>
                 <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="relative px-6 py-2 overflow-hidden group bg-gradient-to-r from-secondary/10 to-primary/10 border-secondary/30 hover:bg-secondary/20"
-                  >
-                    <span className="absolute top-0 left-0 w-0 h-0 transition-all duration-500 border-t-2 border-l-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="absolute bottom-0 right-0 w-0 h-0 transition-all duration-500 border-b-2 border-r-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="absolute top-0 right-0 w-0 h-0 transition-all duration-500 border-t-2 border-r-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="absolute bottom-0 left-0 w-0 h-0 transition-all duration-500 border-b-2 border-l-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                    <span className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      {t?.about?.title || "About Me"}
-                    </span>
+                  <Button variant="outline" size="lg">
+                    <User className="h-4 w-4 mr-2" />
+                    {t?.about?.title || "About Me"}
                   </Button>
                 </a>
               </motion.div>
@@ -214,9 +192,9 @@ export default function Hero() {
           >
             <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
               <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
-                <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+                <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+                <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+                <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
 
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative w-64 h-64">
@@ -224,7 +202,7 @@ export default function Hero() {
                       className="absolute top-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                       initial={{ x: -50, y: -50, opacity: 0 }}
                       animate={{ x: 0, y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.7, type: "spring" }}
+                      transition={{ duration: 0.5, delay: 0.7 }}
                     >
                       <ChartBar className="h-8 w-8 text-primary mb-2" />
                       <div className="w-32 h-2 bg-primary/30 rounded-full"></div>
@@ -235,7 +213,7 @@ export default function Hero() {
                       className="absolute bottom-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                       initial={{ x: -50, y: 50, opacity: 0 }}
                       animate={{ x: 0, y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.9, type: "spring" }}
+                      transition={{ duration: 0.5, delay: 0.9 }}
                     >
                       <Database className="h-8 w-8 text-secondary mb-2" />
                       <div className="w-32 h-2 bg-secondary/30 rounded-full"></div>
@@ -246,7 +224,7 @@ export default function Hero() {
                       className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                       initial={{ x: 50, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.8, type: "spring" }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
                     >
                       <LineChart className="h-8 w-8 text-accent mb-2" />
                       <div className="w-32 h-2 bg-accent/30 rounded-full"></div>
@@ -262,13 +240,16 @@ export default function Hero() {
     )
   }
 
-  // Versión regular cuando el sitio web está habilitado
   return (
     <div className="relative isolate overflow-hidden bg-background">
-      {/* Background gradient effect */}
+      <Head>
+        <link rel="preload" href={profile.logo} as="image" />
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+      </Head>
+
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 left-[10%] w-[500px] h-[500px] bg-primary/10 rounded-full filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute bottom-0 right-[10%] w-[600px] h-[600px] bg-secondary/10 rounded-full filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-0 left-[10%] w-[500px] h-[500px] bg-primary/10 rounded-full filter blur-3xl opacity-30"></div>
+        <div className="absolute bottom-0 right-[10%] w-[600px] h-[600px] bg-secondary/10 rounded-full filter blur-3xl opacity-20"></div>
       </div>
 
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:flex lg:items-center lg:gap-x-10 lg:px-8 lg:py-40">
@@ -282,7 +263,6 @@ export default function Hero() {
             {t?.hero?.greeting || "Hello, I'm"}
           </motion.p>
 
-          {/* Name with gradient and mask effect */}
           <div className="overflow-hidden">
             <motion.h1
               className="mt-2 text-4xl font-bold tracking-tight text-foreground sm:text-6xl"
@@ -299,7 +279,6 @@ export default function Hero() {
             </motion.h1>
           </div>
 
-          {/* Animated typing effect */}
           <motion.h2
             className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl min-h-[40px] text-primary"
             initial={{ opacity: 0, y: 20 }}
@@ -323,50 +302,20 @@ export default function Hero() {
           </motion.p>
 
           <div className="mt-10 flex items-center gap-x-6">
-            <motion.div
-              variants={buttonVariants}
-              initial="hidden"
-              animate="visible"
-              whileHover="hover"
-              whileTap="tap"
-              custom={0}
-            >
+            <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={0}>
               <Link href="/projects">
-                <Button size="lg" className="relative px-6 py-3 overflow-hidden group bg-primary hover:bg-primary/90">
-                  <span className="absolute top-0 left-0 w-0 h-0 transition-all duration-500 border-t-2 border-l-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="absolute bottom-0 right-0 w-0 h-0 transition-all duration-500 border-b-2 border-r-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="absolute top-0 right-0 w-0 h-0 transition-all duration-500 border-t-2 border-r-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="absolute bottom-0 left-0 w-0 h-0 transition-all duration-500 border-b-2 border-l-2 border-white group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4" />
-                    {t?.hero?.cta || "View My Work"}
-                  </span>
+                <Button size="lg" className="bg-primary hover:bg-primary/90">
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  {t?.hero?.cta || "View My Work"}
                 </Button>
               </Link>
             </motion.div>
 
-            <motion.div
-              variants={buttonVariants}
-              initial="hidden"
-              animate="visible"
-              whileHover="hover"
-              whileTap="tap"
-              custom={1}
-            >
+            <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={1}>
               <Link href="/about">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="relative px-6 py-2 overflow-hidden group bg-gradient-to-r from-secondary/10 to-primary/10 border-secondary/30 hover:bg-secondary/20"
-                >
-                  <span className="absolute top-0 left-0 w-0 h-0 transition-all duration-500 border-t-2 border-l-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="absolute bottom-0 right-0 w-0 h-0 transition-all duration-500 border-b-2 border-r-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="absolute top-0 right-0 w-0 h-0 transition-all duration-500 border-t-2 border-r-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="absolute bottom-0 left-0 w-0 h-0 transition-all duration-500 border-b-2 border-l-2 border-secondary group-hover:w-[12px] group-hover:h-[12px]"></span>
-                  <span className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {t?.about?.title || "About Me"}
-                  </span>
+                <Button variant="outline" size="lg">
+                  <User className="h-4 w-4 mr-2" />
+                  {t?.about?.title || "About Me"}
                 </Button>
               </Link>
             </motion.div>
@@ -381,9 +330,9 @@ export default function Hero() {
         >
           <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
             <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
-              <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-              <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-              <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+              <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+              <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+              <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
 
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative w-64 h-64">
@@ -391,7 +340,7 @@ export default function Hero() {
                     className="absolute top-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                     initial={{ x: -50, y: -50, opacity: 0 }}
                     animate={{ x: 0, y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.7, type: "spring" }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
                   >
                     <ChartBar className="h-8 w-8 text-primary mb-2" />
                     <div className="w-32 h-2 bg-primary/30 rounded-full"></div>
@@ -402,7 +351,7 @@ export default function Hero() {
                     className="absolute bottom-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                     initial={{ x: -50, y: 50, opacity: 0 }}
                     animate={{ x: 0, y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.9, type: "spring" }}
+                    transition={{ duration: 0.5, delay: 0.9 }}
                   >
                     <Database className="h-8 w-8 text-secondary mb-2" />
                     <div className="w-32 h-2 bg-secondary/30 rounded-full"></div>
@@ -413,7 +362,7 @@ export default function Hero() {
                     className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                     initial={{ x: 50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.8, type: "spring" }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
                   >
                     <LineChart className="h-8 w-8 text-accent mb-2" />
                     <div className="w-32 h-2 bg-accent/30 rounded-full"></div>

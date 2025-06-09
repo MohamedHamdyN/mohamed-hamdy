@@ -1,54 +1,100 @@
+import React from "react"
 export const dynamic = "force-dynamic"
 
+import { Suspense } from "react"
 import Hero from "@/components/home/Hero"
-import Skills from "@/components/home/Skills"
-import WhyWorkWithMe from "@/components/home/WhyWorkWithMe"
-import Clients from "@/components/home/Clients"
-import FeaturedProjects from "@/components/home/FeaturedProjects"
-import ContactCTA from "@/components/shared/ContactCTA"
+import LazySection from "@/components/shared/LazySection"
 import { toggleSettings } from "@/admin/toggle"
 
+// Lazy load components
+const Skills = lazy(() => import("@/components/home/Skills"))
+const WhyWorkWithMe = lazy(() => import("@/components/home/WhyWorkWithMe"))
+const Clients = lazy(() => import("@/components/home/Clients"))
+const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects"))
+const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
+
+function lazy<T extends React.ComponentType<any>>(
+  importFunc: () => Promise<{ default: T }>,
+): React.ComponentType<React.ComponentProps<T>> {
+  const LazyComponent = React.lazy(importFunc)
+  return function LazyWrapper(props: React.ComponentProps<T>) {
+    return (
+      <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    )
+  }
+}
+
 export default function Home() {
-  // استخدام toggleSettings بدلاً من clientSettings لأن هذا مكون خادم
   const websiteEnabled = toggleSettings.website
 
-  // If website is disabled, only show the Hero component
   if (!websiteEnabled) {
     return <Hero />
   }
 
-  // Create an array of sections to render based on toggle settings
   const sections = []
 
-  // Add sections based on toggle settings
   if (toggleSettings.skills) {
-    sections.push({ component: <Skills key="skills" />, order: 1 })
+    sections.push({
+      component: (
+        <LazySection key="skills" className="py-20">
+          <Skills />
+        </LazySection>
+      ),
+      order: 1,
+    })
   }
 
   if (toggleSettings.why_work_with_me) {
-    sections.push({ component: <WhyWorkWithMe key="why-work-with-me" />, order: 2 })
+    sections.push({
+      component: (
+        <LazySection key="why-work-with-me" className="py-20">
+          <WhyWorkWithMe />
+        </LazySection>
+      ),
+      order: 2,
+    })
   }
 
   if (toggleSettings.clients) {
-    sections.push({ component: <Clients key="clients" />, order: 4 })
+    sections.push({
+      component: (
+        <LazySection key="clients" className="py-20">
+          <Clients />
+        </LazySection>
+      ),
+      order: 4,
+    })
   }
 
   if (toggleSettings.projects_home) {
-    sections.push({ component: <FeaturedProjects key="featured-projects" />, order: 3 })
+    sections.push({
+      component: (
+        <LazySection key="featured-projects" className="py-20">
+          <FeaturedProjects />
+        </LazySection>
+      ),
+      order: 3,
+    })
   }
 
   if (toggleSettings.contact_home) {
-    sections.push({ component: <ContactCTA key="contact-cta" />, order: 5 })
+    sections.push({
+      component: (
+        <LazySection key="contact-cta" className="py-20">
+          <ContactCTA />
+        </LazySection>
+      ),
+      order: 5,
+    })
   }
 
-  // Sort sections by order
   sections.sort((a, b) => a.order - b.order)
 
   return (
     <>
       <Hero />
-
-      {/* Render sections in the specified order */}
       {sections.map((section) => section.component)}
     </>
   )
