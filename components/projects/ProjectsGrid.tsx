@@ -1,7 +1,5 @@
 "use client"
 
-import { Calendar } from "@/components/ui/calendar"
-
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { projects, projectCategories, projectCategoriesName } from "@/admin/projects"
@@ -9,7 +7,7 @@ import { profile } from "@/admin/profile"
 import ProjectCard from "./ProjectCard"
 import ProjectModal from "./ProjectModal"
 import { useTranslations } from "@/hooks/useTranslations"
-import { Search, SlidersHorizontal, Grid, List, Filter } from "lucide-react"
+import { Search, SlidersHorizontal, Grid, List, Filter, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"

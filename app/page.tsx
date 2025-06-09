@@ -1,7 +1,6 @@
-import React from "react"
 export const dynamic = "force-dynamic"
 
-import { Suspense } from "react"
+import { lazy } from "react"
 import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
 import { toggleSettings } from "@/admin/toggle"
@@ -12,19 +11,6 @@ const WhyWorkWithMe = lazy(() => import("@/components/home/WhyWorkWithMe"))
 const Clients = lazy(() => import("@/components/home/Clients"))
 const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects"))
 const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
-
-function lazy<T extends React.ComponentType<any>>(
-  importFunc: () => Promise<{ default: T }>,
-): React.ComponentType<React.ComponentProps<T>> {
-  const LazyComponent = React.lazy(importFunc)
-  return function LazyWrapper(props: React.ComponentProps<T>) {
-    return (
-      <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded-lg" />}>
-        <LazyComponent {...props} />
-      </Suspense>
-    )
-  }
-}
 
 export default function Home() {
   const websiteEnabled = toggleSettings.website

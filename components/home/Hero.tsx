@@ -9,7 +9,6 @@ import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from 
 import Link from "next/link"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { clientSettings } from "@/admin/toggle"
-import Head from "next/head"
 
 export default function Hero() {
   const t = useTranslations()
@@ -105,10 +104,6 @@ export default function Hero() {
   if (!websiteEnabled) {
     return (
       <div className="relative isolate overflow-hidden bg-[#020617] min-h-screen flex items-center">
-        <Head>
-          <link rel="preload" href={profile.logo} as="image" />
-        </Head>
-
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 left-[10%] w-[500px] h-[500px] bg-primary/10 rounded-full filter blur-3xl opacity-30"></div>
           <div className="absolute bottom-0 right-[10%] w-[600px] h-[600px] bg-secondary/10 rounded-full filter blur-3xl opacity-20"></div>
@@ -242,11 +237,6 @@ export default function Hero() {
 
   return (
     <div className="relative isolate overflow-hidden bg-background">
-      <Head>
-        <link rel="preload" href={profile.logo} as="image" />
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-      </Head>
-
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-[10%] w-[500px] h-[500px] bg-primary/10 rounded-full filter blur-3xl opacity-30"></div>
         <div className="absolute bottom-0 right-[10%] w-[600px] h-[600px] bg-secondary/10 rounded-full filter blur-3xl opacity-20"></div>
