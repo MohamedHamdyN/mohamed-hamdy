@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
 
 export async function POST(request: Request) {
   try {
     const { name, email, subject, message } = await request.json()
 
-    // Get Resend API key
+    // Get environment variables
     const resendApiKey = process.env.RESEND_API_KEY
     const resendFromEmail = process.env.RESEND_FROM_EMAIL
     const resendToEmail = process.env.RESEND_TO_EMAIL
@@ -41,11 +40,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, preview: true })
     }
 
-    // Configure Resend for production
-    const resend = new Resend(resendApiKey)
-
-    // Send email
-    const data = await resend.emails.send({
+    // For production, we'll use a simple fetch approach instead of Resend SDK
+    // to avoid potential SSR issues
+    const emailData = {
       from: `Contact Form <${resendFromEmail}>`,
       to: resendToEmail,
       subject: `Contact Form: ${subject}`,
@@ -57,8 +54,23 @@ export async function POST(request: Request) {
         <p><strong>Message:</strong></p>
         <p>${message.replace(/\n/g, "<br>")}</p>
       `,
+    }
+
+    // Use fetch instead of Resend SDK to avoid SSR issues
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(emailData),
     })
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
     console.log("Email sent: ", data)
     return NextResponse.json({ success: true })
   } catch (error) {

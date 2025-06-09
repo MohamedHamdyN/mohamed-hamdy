@@ -2,69 +2,101 @@
 
 import { useEffect, useState } from "react"
 
-interface PerformanceMetrics {
-  fcp: number | null // First Contentful Paint
-  lcp: number | null // Largest Contentful Paint
-  fid: number | null // First Input Delay
-  cls: number | null // Cumulative Layout Shift
-  ttfb: number | null // Time to First Byte
+interface PerformanceData {
+  fcp?: number
+  lcp?: number
+  cls?: number
+  fid?: number
+  ttfb?: number
 }
 
 export default function PerformanceMetrics() {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({
-    fcp: null,
-    lcp: null,
-    fid: null,
-    cls: null,
-    ttfb: null,
-  })
+  const [performanceData, setPerformanceData] = useState<PerformanceData>({})
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    // Only run in development or when explicitly enabled
+    setIsClient(true)
+
+    // Only run performance monitoring in development
     if (process.env.NODE_ENV !== "development") return
 
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        switch (entry.entryType) {
-          case "paint":
-            if (entry.name === "first-contentful-paint") {
-              setMetrics((prev) => ({ ...prev, fcp: entry.startTime }))
-            }
-            break
-          case "largest-contentful-paint":
-            setMetrics((prev) => ({ ...prev, lcp: entry.startTime }))
-            break
-          case "first-input":
-            setMetrics((prev) => ({ ...prev, fid: entry.processingStart - entry.startTime }))
-            break
-          case "layout-shift":
-            if (!(entry as any).hadRecentInput) {
-              setMetrics((prev) => ({ ...prev, cls: (prev.cls || 0) + (entry as any).value }))
-            }
-            break
-          case "navigation":
-            const navEntry = entry as PerformanceNavigationTiming
-            setMetrics((prev) => ({ ...prev, ttfb: navEntry.responseStart - navEntry.requestStart }))
-            break
+    const measurePerformance = () => {
+      try {
+        // Check if performance API is available
+        if (typeof window === "undefined" || !window.performance) return
+
+        const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
+        const paint = performance.getEntriesByType("paint")
+
+        const data: PerformanceData = {}
+
+        // First Contentful Paint
+        const fcp = paint.find((entry) => entry.name === "first-contentful-paint")
+        if (fcp) data.fcp = Math.round(fcp.startTime)
+
+        // Time to First Byte
+        if (navigation) {
+          data.ttfb = Math.round(navigation.responseStart - navigation.requestStart)
         }
+
+        // Largest Contentful Paint (requires observer)
+        if ("PerformanceObserver" in window) {
+          try {
+            const lcpObserver = new PerformanceObserver((list) => {
+              const entries = list.getEntries()
+              const lastEntry = entries[entries.length - 1] as any
+              if (lastEntry) {
+                setPerformanceData((prev) => ({
+                  ...prev,
+                  lcp: Math.round(lastEntry.startTime),
+                }))
+              }
+            })
+            lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] })
+
+            // Cumulative Layout Shift
+            const clsObserver = new PerformanceObserver((list) => {
+              let clsValue = 0
+              for (const entry of list.getEntries()) {
+                if (!(entry as any).hadRecentInput) {
+                  clsValue += (entry as any).value
+                }
+              }
+              setPerformanceData((prev) => ({
+                ...prev,
+                cls: Math.round(clsValue * 1000) / 1000,
+              }))
+            })
+            clsObserver.observe({ entryTypes: ["layout-shift"] })
+          } catch (error) {
+            console.warn("Performance Observer not supported:", error)
+          }
+        }
+
+        setPerformanceData(data)
+      } catch (error) {
+        console.warn("Performance measurement failed:", error)
       }
-    })
+    }
 
-    observer.observe({ entryTypes: ["paint", "largest-contentful-paint", "first-input", "layout-shift", "navigation"] })
-
-    return () => observer.disconnect()
+    // Delay measurement to ensure page is loaded
+    const timer = setTimeout(measurePerformance, 1000)
+    return () => clearTimeout(timer)
   }, [])
 
-  if (process.env.NODE_ENV !== "development") return null
+  // Don't render on server or in production
+  if (!isClient || process.env.NODE_ENV !== "development") {
+    return null
+  }
 
   return (
-    <div className="fixed bottom-4 left-4 bg-black/80 text-white p-4 rounded-lg text-xs font-mono z-50">
-      <div className="grid grid-cols-2 gap-2">
-        <div>FCP: {metrics.fcp ? `${Math.round(metrics.fcp)}ms` : "..."}</div>
-        <div>LCP: {metrics.lcp ? `${Math.round(metrics.lcp)}ms` : "..."}</div>
-        <div>FID: {metrics.fid ? `${Math.round(metrics.fid)}ms` : "..."}</div>
-        <div>CLS: {metrics.cls ? metrics.cls.toFixed(3) : "..."}</div>
-        <div>TTFB: {metrics.ttfb ? `${Math.round(metrics.ttfb)}ms` : "..."}</div>
+    <div className="fixed bottom-4 left-4 bg-black/80 text-white p-3 rounded-lg text-xs font-mono z-50 max-w-xs">
+      <div className="font-bold mb-2">Performance Metrics</div>
+      <div className="space-y-1">
+        {performanceData.fcp && <div>FCP: {performanceData.fcp}ms</div>}
+        {performanceData.lcp && <div>LCP: {performanceData.lcp}ms</div>}
+        {performanceData.cls !== undefined && <div>CLS: {performanceData.cls}</div>}
+        {performanceData.ttfb && <div>TTFB: {performanceData.ttfb}ms</div>}
       </div>
     </div>
   )

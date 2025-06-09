@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     shortcut: ["/shortcut-icon.png"],
   },
   verification: {
-    google: "google-site-verification-code", // Replace with your verification code
+    google: "google-site-verification-code",
   },
   robots: {
     index: true,
@@ -98,7 +98,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // استخدام toggleSettings بدلاً من الوصول المباشر إلى متغيرات البيئة
   const websiteEnabled = toggleSettings.website
 
   return (
