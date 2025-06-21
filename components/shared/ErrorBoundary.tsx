@@ -1,51 +1,55 @@
 "use client"
 
-import { Component, type ErrorInfo, type ReactNode } from "react"
-import { Button } from "@/components/ui/button"
-import { FileSearch } from "lucide-react"
+import React from "react"
 
-interface Props {
-  children?: ReactNode
-}
-
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean
   error?: Error
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
+export class ErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
   }
 
-  public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Update state so the next render will show the fallback UI
     return { hasError: true, error }
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo)
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error details
+    console.error("ErrorBoundary caught an error:", error, errorInfo)
+
+    // Don't log Speed Insights errors as they're not critical
+    if (error.message?.includes("speed-insights") || error.stack?.includes("vercel")) {
+      console.warn("Non-critical Vercel service error:", error.message)
+      return
+    }
   }
 
-  public render() {
+  render() {
     if (this.state.hasError) {
+      // Don't show error UI for Speed Insights failures
+      if (this.state.error?.message?.includes("speed-insights") || this.state.error?.stack?.includes("vercel")) {
+        return this.props.children
+      }
+
+      // Fallback UI for other errors
       return (
-        <div className="min-h-screen flex items-center justify-center px-4 bg-background text-foreground">
-          <div className="text-center">
-            <div className="flex justify-center mb-8">
-              <FileSearch className="text-blue-500 w-24 h-24" />
-            </div>
-            <h1 className="text-4xl font-bold mb-4 text-blue-500">Something went wrong</h1>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              We're sorry, but there was an error loading this page.
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center p-8">
+            <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+            <p className="text-muted-foreground mb-4">
+              We apologize for the inconvenience. Please try refreshing the page.
             </p>
-            <Button
-              onClick={() => (window.location.href = "/")}
-              size="lg"
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
-              Back to Home
-            </Button>
+              Refresh Page
+            </button>
           </div>
         </div>
       )

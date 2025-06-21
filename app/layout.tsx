@@ -10,7 +10,7 @@ import SkipToContent from "@/components/layout/SkipToContent"
 import type React from "react"
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
 import type { Metadata } from "next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import SpeedInsightsWrapper from "@/components/shared/SpeedInsightsWrapper"
 import { toggleSettings } from "@/admin/toggle"
 
 // Optimize font loading
@@ -118,7 +118,7 @@ export default function RootLayout({
               </main>
               {websiteEnabled && <Footer />}
               <FloatingActionButton />
-              <SpeedInsights />
+              <SpeedInsightsWrapper />
             </ErrorBoundary>
           </LanguageProvider>
         </ThemeProvider>

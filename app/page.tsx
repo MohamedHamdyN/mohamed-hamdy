@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 import { lazy } from "react"
 import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
-import { toggleSettings } from "@/admin/toggle"
+import { universalSettings } from "@/admin/toggle"
 
 // Lazy load components
 const Skills = lazy(() => import("@/components/home/Skills"))
@@ -13,7 +13,7 @@ const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects")
 const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
 
 export default function Home() {
-  const websiteEnabled = toggleSettings.website
+  const websiteEnabled = universalSettings.website
 
   if (!websiteEnabled) {
     return <Hero />
@@ -21,7 +21,7 @@ export default function Home() {
 
   const sections = []
 
-  if (toggleSettings.skills) {
+  if (universalSettings.skills) {
     sections.push({
       component: (
         <LazySection key="skills" className="py-20">
@@ -32,7 +32,7 @@ export default function Home() {
     })
   }
 
-  if (toggleSettings.why_work_with_me) {
+  if (universalSettings.why_work_with_me) {
     sections.push({
       component: (
         <LazySection key="why-work-with-me" className="py-20">
@@ -43,7 +43,7 @@ export default function Home() {
     })
   }
 
-  if (toggleSettings.clients) {
+  if (universalSettings.clients) {
     sections.push({
       component: (
         <LazySection key="clients" className="py-20">
@@ -54,7 +54,7 @@ export default function Home() {
     })
   }
 
-  if (toggleSettings.projects_home) {
+  if (universalSettings.projects_home) {
     sections.push({
       component: (
         <LazySection key="featured-projects" className="py-20">
@@ -65,7 +65,7 @@ export default function Home() {
     })
   }
 
-  if (toggleSettings.contact_home) {
+  if (universalSettings.contact_home) {
     sections.push({
       component: (
         <LazySection key="contact-cta" className="py-20">

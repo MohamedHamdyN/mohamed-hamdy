@@ -41,7 +41,7 @@ const nextConfig = {
   // Configuración de compresión
   compress: true,
   
-  // Headers básicos
+  // Headers optimizados para permitir Speed Insights
   async headers() {
     return [
       {
@@ -54,6 +54,19 @@ const nextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.vercel-scripts.com *.vercel-insights.com; connect-src 'self' *.vercel-insights.com vitals.vercel-insights.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline';"
+          }
+        ]
+      },
+      {
+        source: '/_vercel/speed-insights/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
           }
         ]
       }

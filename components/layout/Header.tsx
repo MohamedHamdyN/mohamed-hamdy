@@ -10,7 +10,7 @@ import { useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
 import { profile } from "@/admin/profile"
-import { clientSettings } from "@/admin/toggle"
+import { universalSettings } from "@/admin/toggle"
 import { languageSettings } from "@/admin/profile"
 import Image from "next/image"
 import SkipToContent from "./SkipToContent"
@@ -29,13 +29,13 @@ export default function Header() {
   useEffect(() => {
     setMounted(true)
 
-    // Actualizar elementos de navegación basados en clientSettings
+    // Actualizar elementos de navegación basados en universalSettings
     setNavItems([
       { name: t.nav.home, href: "/", enabled: true },
-      { name: t.nav.projects, href: "/projects", enabled: clientSettings.projects_page },
-      { name: t.nav.about, href: "/about", enabled: clientSettings.about_page },
-      { name: t.nav.services, href: "/services", enabled: clientSettings.services_page },
-      { name: t.nav.contact, href: "/contact", enabled: clientSettings.contact_page },
+      { name: t.nav.projects, href: "/projects", enabled: universalSettings.projects_page },
+      { name: t.nav.about, href: "/about", enabled: universalSettings.about_page },
+      { name: t.nav.services, href: "/services", enabled: universalSettings.services_page },
+      { name: t.nav.contact, href: "/contact", enabled: universalSettings.contact_page },
     ])
   }, [t, language])
 
