@@ -36,14 +36,11 @@ export default function Hero() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [profileData, settingsData] = await Promise.all([
-          cachedServices.getProfile(),
-          getSettings()
-        ])
+        const [profileData, settingsData] = await Promise.all([cachedServices.getProfile(), getSettings()])
         setProfile(profileData)
         setSettings(settingsData)
       } catch (error) {
-        console.error('Error fetching hero data:', error)
+        console.error("Error fetching hero data:", error)
       } finally {
         setLoading(false)
         setIsVisible(true)
@@ -165,13 +162,14 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              {profile?.short_bio || t?.hero?.description ||
+              {profile?.short_bio ||
+                t?.hero?.description ||
                 "Transforming complex data into actionable insights that drive business decisions."}
             </motion.p>
 
             <div className="mt-10 flex items-center gap-x-6">
               <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={0}>
-                <a href={`mailto:${profile?.email || 'muhamedhamdynour@gmail.com'}`}>
+                <a href={`mailto:${profile?.email || "muhamedhamdynour@gmail.com"}`}>
                   <Button size="lg" className="bg-primary hover:bg-primary/90">
                     <FolderOpen className="h-4 w-4 mr-2" />
                     {t?.hero?.cta || "View My Work"}
@@ -298,7 +296,8 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            {profile?.short_bio || t?.hero?.description ||
+            {profile?.short_bio ||
+              t?.hero?.description ||
               "I help businesses make data-driven decisions through expert financial analysis and reporting."}
           </motion.p>
 
@@ -372,9 +371,9 @@ export default function Hero() {
                 </div>
               </div>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
-    )
+    </div>
   )
-}\
+}
