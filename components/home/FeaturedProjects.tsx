@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { projects, projectCategoriesName } from "@/admin/projects"
+import { projectsService, projectCategoriesService } from "@/lib/database"
 import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
@@ -11,44 +11,100 @@ import ProjectCard from "@/components/projects/ProjectCard"
 import ProjectModal from "@/components/projects/ProjectModal"
 import { ArrowRight } from "lucide-react"
 import { useTheme } from "next-themes"
+import type { Project, ProjectCategory } from "@/lib/supabase"
 
 export default function FeaturedProjects() {
-  const t = useTranslations()
-  const { isRTL } = useLanguage()
+  const [projects, setProjects] = useState<Project[]>([])
+  const [categories, setCategories] = useState<ProjectCategory[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<number | "all">("all")
-  const [hoveredFilter, setHoveredFilter] = useState<string | null>(null)
   const [selectedProject, setSelectedProject] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const t = useTranslations()
+  const { isRTL } = useLanguage()
   const { theme } = useTheme()
 
-  // Contar proyectos por categoría
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [projectsData, categoriesData] = await Promise.all([
+          projectsService.getFeaturedProjects(),
+          projectCategoriesService.getProjectCategories(),
+        ])
+        setProjects(projectsData)
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error("Error fetching featured projects:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="h-8 bg-muted animate-pulse rounded mb-4 max-w-md mx-auto"></div>
+            <div className="h-4 bg-muted animate-pulse rounded max-w-lg mx-auto mb-8"></div>
+            <div className="flex justify-center mb-12">
+              <div className="flex gap-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-8 w-20 bg-muted animate-pulse rounded-full"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="h-48 bg-muted animate-pulse"></div>
+                <div className="p-5">
+                  <div className="h-6 bg-muted animate-pulse rounded mb-2"></div>
+                  <div className="h-4 bg-muted animate-pulse rounded mb-4 w-3/4"></div>
+                  <div className="flex gap-2 mb-4">
+                    {[...Array(3)].map((_, j) => (
+                      <div key={j} className="h-6 w-16 bg-muted animate-pulse rounded-full"></div>
+                    ))}
+                  </div>
+                  <div className="h-10 bg-muted animate-pulse rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (projects.length === 0) {
+    return null
+  }
+
+  // Count projects by category
   const projectCounts = {
-    all: projects.filter((p) => p.featured).length,
+    all: projects.length,
   } as Record<string | number, number>
 
-  projects
-    .filter((p) => p.featured)
-    .forEach((project) => {
-      projectCounts[project.categoryId] = (projectCounts[project.categoryId] || 0) + 1
-    })
+  projects.forEach((project) => {
+    projectCounts[project.category_id] = (projectCounts[project.category_id] || 0) + 1
+  })
 
   // Create categories for the filter with counts
-  const categories = [
+  const filterCategories = [
     { id: "all", label: t?.projects?.filters?.all || "All", count: projectCounts.all },
-    ...Object.entries(projectCategoriesName).map(([id, name]) => {
-      return {
-        id,
-        label: name,
-        count: projectCounts[Number(id)] || 0,
-      }
-    }),
+    ...categories.map((category) => ({
+      id: category.id,
+      label: category.name,
+      count: projectCounts[category.id] || 0,
+    })),
   ]
 
-  // Filter featured projects based on the category selected
-  const filteredProjects =
-    filter === "all"
-      ? projects.filter((project) => project.featured)
-      : projects.filter((project) => project.categoryId === filter && project.featured)
+  // Filter projects based on the category selected
+  const filteredProjects = filter === "all" ? projects : projects.filter((project) => project.category_id === filter)
 
   // Limit to 6 projects maximum
   const displayedProjects = filteredProjects.slice(0, 6)
@@ -96,15 +152,15 @@ export default function FeaturedProjects() {
             <div
               className={`p-2 rounded-full flex flex-wrap justify-center ${theme === "dark" ? "bg-[#0a0d16]" : "bg-gray-100"}`}
             >
-              {categories
+              {filterCategories
                 .filter((cat) => cat.count > 0)
                 .map((category) => {
-                  const isActive = filter === (category.id === "all" ? "all" : Number.parseInt(category.id))
+                  const isActive = filter === category.id
 
                   return (
                     <motion.button
                       key={category.id}
-                      onClick={() => setFilter(category.id === "all" ? "all" : Number.parseInt(category.id))}
+                      onClick={() => setFilter(category.id)}
                       className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                         isActive
                           ? "bg-primary text-white"
@@ -112,8 +168,6 @@ export default function FeaturedProjects() {
                             ? "bg-[#1a1d26] text-foreground hover:text-primary"
                             : "bg-white text-foreground hover:text-primary shadow-sm"
                       } mx-1 my-1`}
-                      onHoverStart={() => setHoveredFilter(category.id)}
-                      onHoverEnd={() => setHoveredFilter(null)}
                     >
                       {category.label} ({category.count})
                     </motion.button>
@@ -140,13 +194,13 @@ export default function FeaturedProjects() {
           </AnimatePresence>
         </motion.div>
 
-        {projects.filter((p) => p.featured).length > 0 && (
+        {projects.length > 0 && (
           <div className="text-center mt-12">
             <Link href="/projects">
               <Button
                 variant="outline"
                 size="lg"
-                className="group relative overflow-hidden border-primary/30 hover:border-primary"
+                className="group relative overflow-hidden border-primary/30 hover:border-primary bg-transparent"
               >
                 <span className="relative z-10 flex items-center gap-2 transition-transform duration-300 group-hover:translate-x-[-5px]">
                   {t?.projects?.viewAll || "View All Projects"}

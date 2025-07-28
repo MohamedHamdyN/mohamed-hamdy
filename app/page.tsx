@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 import { lazy } from "react"
 import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
-import { universalSettings } from "@/admin/toggle"
+import { getSettings } from "@/lib/settings"
 
 // Lazy load components
 const Skills = lazy(() => import("@/components/home/Skills"))
@@ -12,16 +12,16 @@ const Clients = lazy(() => import("@/components/home/Clients"))
 const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects"))
 const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
 
-export default function Home() {
-  const websiteEnabled = universalSettings.website
+export default async function Home() {
+  const settings = await getSettings()
 
-  if (!websiteEnabled) {
+  if (!settings.website) {
     return <Hero />
   }
 
   const sections = []
 
-  if (universalSettings.skills) {
+  if (settings.skills) {
     sections.push({
       component: (
         <LazySection key="skills" className="py-20">
@@ -32,7 +32,7 @@ export default function Home() {
     })
   }
 
-  if (universalSettings.why_work_with_me) {
+  if (settings.why_work_with_me) {
     sections.push({
       component: (
         <LazySection key="why-work-with-me" className="py-20">
@@ -43,7 +43,7 @@ export default function Home() {
     })
   }
 
-  if (universalSettings.clients) {
+  if (settings.clients) {
     sections.push({
       component: (
         <LazySection key="clients" className="py-20">
@@ -54,7 +54,7 @@ export default function Home() {
     })
   }
 
-  if (universalSettings.projects_home) {
+  if (settings.projects_home) {
     sections.push({
       component: (
         <LazySection key="featured-projects" className="py-20">
@@ -65,7 +65,7 @@ export default function Home() {
     })
   }
 
-  if (universalSettings.contact_home) {
+  if (settings.contact_home) {
     sections.push({
       component: (
         <LazySection key="contact-cta" className="py-20">

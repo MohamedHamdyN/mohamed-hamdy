@@ -1,16 +1,32 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { aboutFeatures } from "@/admin/about-features"
+import { aboutFeaturesService } from "@/lib/database"
 import * as LucideIcons from "lucide-react"
 import { PuzzlePiece } from "@/components/shared/CustomIcons"
 import { useTranslations } from "@/hooks/useTranslations"
+import type { AboutFeature } from "@/lib/supabase"
 
 export default function AboutFeatures() {
+  const [features, setFeatures] = useState<AboutFeature[]>([])
+  const [loading, setLoading] = useState(true)
   const t = useTranslations()
 
-  // Only show up to 6 features
-  const features = aboutFeatures.slice(0, 6)
+  useEffect(() => {
+    async function fetchFeatures() {
+      try {
+        const data = await aboutFeaturesService.getAboutFeatures()
+        setFeatures(data)
+      } catch (error) {
+        console.error("Error fetching about features:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeatures()
+  }, [])
 
   const getIcon = (iconName: string) => {
     if (iconName === "PuzzlePiece") {
@@ -22,6 +38,36 @@ export default function AboutFeatures() {
       return <Icon className="h-6 w-6" />
     }
     return <LucideIcons.Star className="h-6 w-6" />
+  }
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="h-8 bg-muted animate-pulse rounded mb-4 max-w-md mx-auto"></div>
+            <div className="h-4 bg-muted animate-pulse rounded max-w-lg mx-auto"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-card border border-border/40 rounded-xl p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-muted animate-pulse rounded-lg"></div>
+                  <div className="flex-1">
+                    <div className="h-6 bg-muted animate-pulse rounded mb-2"></div>
+                    <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (features.length === 0) {
+    return null
   }
 
   return (

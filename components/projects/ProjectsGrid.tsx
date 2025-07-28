@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { projects, projectCategories, projectCategoriesName } from "@/admin/projects"
-import { profile } from "@/admin/profile"
+import { projectsService, projectCategoriesService } from "@/lib/database"
 import ProjectCard from "./ProjectCard"
 import ProjectModal from "./ProjectModal"
 import { useTranslations } from "@/hooks/useTranslations"
@@ -13,9 +12,12 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import { useTheme } from "next-themes"
+import type { Project, ProjectCategory } from "@/lib/supabase"
 
 export default function ProjectsGrid() {
-  const t = useTranslations()
+  const [projects, setProjects] = useState<Project[]>([])
+  const [categories, setCategories] = useState<ProjectCategory[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState<any>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | number>("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -23,36 +25,54 @@ export default function ProjectsGrid() {
   const [sortOption, setSortOption] = useState("newest")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(true)
+  const t = useTranslations()
   const { theme } = useTheme()
 
-  // Contar proyectos por categoría
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [projectsData, categoriesData] = await Promise.all([
+          projectsService.getProjects(),
+          projectCategoriesService.getProjectCategories(),
+        ])
+        setProjects(projectsData)
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error("Error fetching projects:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Count projects by category
   const projectCounts = {
     all: projects.length,
   } as Record<string | number, number>
 
   projects.forEach((project) => {
-    projectCounts[project.categoryId] = (projectCounts[project.categoryId] || 0) + 1
+    projectCounts[project.category_id] = (projectCounts[project.category_id] || 0) + 1
   })
 
   // Get unique categories with counts
-  const categories = [
+  const filterCategories = [
     { id: "all", label: t.projects.filters.all, count: projectCounts.all },
-    ...Object.entries(projectCategoriesName).map(([id, name]) => {
-      return {
-        id: Number(id),
-        label: name,
-        count: projectCounts[Number(id)] || 0,
-      }
-    }),
+    ...categories.map((category) => ({
+      id: category.id,
+      label: category.name,
+      count: projectCounts[category.id] || 0,
+    })),
   ]
 
   // Filter projects based on category and search query
   const filteredProjects = projects.filter((project) => {
-    const matchesCategory = selectedCategory === "all" || project.categoryId === selectedCategory
+    const matchesCategory = selectedCategory === "all" || project.category_id === selectedCategory
     const matchesSearch =
       project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.shortDescription.toLowerCase().includes(searchQuery.toLowerCase())
+      project.short_description.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
 
@@ -89,6 +109,42 @@ export default function ProjectsGrid() {
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
+
+  if (loading) {
+    return (
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div className="h-8 bg-muted animate-pulse rounded mb-2 w-48"></div>
+              <div className="h-4 bg-muted animate-pulse rounded w-32"></div>
+            </div>
+            <div className="flex gap-3">
+              <div className="h-10 w-64 bg-muted animate-pulse rounded"></div>
+              <div className="h-10 w-40 bg-muted animate-pulse rounded"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="h-48 bg-muted animate-pulse"></div>
+                <div className="p-5">
+                  <div className="h-6 bg-muted animate-pulse rounded mb-2"></div>
+                  <div className="h-4 bg-muted animate-pulse rounded mb-4 w-3/4"></div>
+                  <div className="flex gap-2 mb-4">
+                    {[...Array(3)].map((_, j) => (
+                      <div key={j} className="h-6 w-16 bg-muted animate-pulse rounded-full"></div>
+                    ))}
+                  </div>
+                  <div className="h-10 bg-muted animate-pulse rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="py-12 bg-background">
@@ -171,7 +227,7 @@ export default function ProjectsGrid() {
               <div
                 className={`flex flex-wrap gap-2 py-4 rounded-xl p-4 ${theme === "dark" ? "bg-card" : "bg-gray-50"}`}
               >
-                {categories.map((category) => (
+                {filterCategories.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "ghost"}
@@ -221,7 +277,7 @@ export default function ProjectsGrid() {
                 <div className="flex flex-col md:flex-row">
                   <div className="md:w-1/4 h-48 md:h-auto relative">
                     <Image
-                      src={project.image || profile.defaultProjectImage}
+                      src={project.image || "/placeholder.svg"}
                       alt={project.title}
                       className="object-cover"
                       fill
@@ -232,8 +288,7 @@ export default function ProjectsGrid() {
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-xl font-bold">{project.title}</h3>
                       <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full capitalize">
-                        {projectCategoriesName[project.categoryId as keyof typeof projectCategoriesName] ||
-                          projectCategories[project.categoryId as keyof typeof projectCategories]}
+                        {categories.find((cat) => cat.id === project.category_id)?.name || "Category"}
                       </span>
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground mb-3">

@@ -1,4 +1,4 @@
-import { toggleSettings } from "@/admin/toggle"
+import { getSetting } from "@/lib/settings"
 import { notFound } from "next/navigation"
 import AboutHero from "@/components/about/AboutHero"
 import AboutFeatures from "@/components/about/AboutFeatures"
@@ -9,9 +9,11 @@ import Certifications from "@/components/about/Certifications"
 import PageHero from "@/components/shared/PageHero"
 import { User } from "lucide-react"
 
-export default function AboutPage() {
-  // If about page is disabled, return 404
-  if (!toggleSettings.about_page) {
+export default async function AboutPage() {
+  // Check if about page is enabled
+  const aboutEnabled = await getSetting("about_page")
+
+  if (!aboutEnabled) {
     notFound()
   }
 

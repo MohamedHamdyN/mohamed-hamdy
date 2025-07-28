@@ -1,12 +1,14 @@
-import { toggleSettings } from "@/admin/toggle"
+import { getSetting } from "@/lib/settings"
 import { notFound } from "next/navigation"
 import ProjectsGrid from "@/components/projects/ProjectsGrid"
 import PageHero from "@/components/shared/PageHero"
 import { BarChart3 } from "lucide-react"
 
-export default function ProjectsPage() {
-  // If projects page is disabled, return 404
-  if (!toggleSettings.projects_page) {
+export default async function ProjectsPage() {
+  // Check if projects page is enabled
+  const projectsEnabled = await getSetting("projects_page")
+
+  if (!projectsEnabled) {
     notFound()
   }
 

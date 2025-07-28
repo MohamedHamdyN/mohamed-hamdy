@@ -1,13 +1,15 @@
-import { toggleSettings } from "@/admin/toggle"
+import { getSetting } from "@/lib/settings"
 import { notFound } from "next/navigation"
 import ContactForm from "@/components/contact/ContactForm"
 import ContactInfo from "@/components/contact/ContactInfo"
 import PageHero from "@/components/shared/PageHero"
 import { Mail } from "lucide-react"
 
-export default function ContactPage() {
-  // If contact page is disabled, return 404
-  if (!toggleSettings.contact_page) {
+export default async function ContactPage() {
+  // Check if contact page is enabled
+  const contactEnabled = await getSetting("contact_page")
+
+  if (!contactEnabled) {
     notFound()
   }
 
