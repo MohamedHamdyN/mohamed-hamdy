@@ -198,7 +198,7 @@ export default function Hero() {
               <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
                 <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
                 <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-                <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+                <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full filter blur-xl opacity-70"></div>
 
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative w-64 h-64">
@@ -332,7 +332,7 @@ export default function Hero() {
             <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
               <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
               <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-              <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+              <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full filter blur-xl opacity-70"></div>
 
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative w-64 h-64">
