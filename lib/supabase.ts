@@ -3,12 +3,31 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Client-side Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing Supabase environment variables")
+}
 
-// Server-side Supabase client (for server actions)
-export const createServerClient = () => {
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false,
+  },
+})
+
+// Server-side client for admin operations
+export function createServerClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("Missing Supabase server environment variables")
+    return supabase // Fallback to regular client
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+    },
+  })
 }
 
 // Database types
@@ -17,12 +36,12 @@ export interface Profile {
   name: string
   title: string
   title2: string
-  email: string
-  phone: string
-  location: string
   bio: string
   short_bio: string
   long_bio: string
+  email: string
+  phone: string
+  location: string
   logo: string
   favicon: string
   avatar: string
@@ -63,27 +82,10 @@ export interface Client {
   id: number
   name: string
   logo: string
+  website: string
   testimonial: string
   rating: number
-  website: string
   last_project: string
-  enabled: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface Project {
-  id: number
-  title: string
-  description: string
-  short_description: string
-  category_id: number
-  image: string
-  project_url: string
-  linkedin_url: string
-  technologies: string[]
-  date: string
-  featured: boolean
   enabled: boolean
   created_at: string
   updated_at: string
@@ -93,9 +95,29 @@ export interface ProjectCategory {
   id: number
   name: string
   slug: string
-  enabled: boolean
+  description: string
   created_at: string
   updated_at: string
+}
+
+export interface Project {
+  id: number
+  title: string
+  short_description: string
+  long_description: string
+  image: string
+  images: string[]
+  technologies: string[]
+  project_url: string
+  github_url: string
+  linkedin_url: string
+  category_id: number
+  featured: boolean
+  enabled: boolean
+  date: string
+  created_at: string
+  updated_at: string
+  project_categories?: ProjectCategory
 }
 
 export interface Service {
@@ -103,7 +125,7 @@ export interface Service {
   title: string
   description: string
   icon: string
-  color: string
+  price: string
   features: string[]
   enabled: boolean
   created_at: string
@@ -112,10 +134,10 @@ export interface Service {
 
 export interface Education {
   id: number
-  year: string
-  institution: string
   degree: string
-  details: string
+  institution: string
+  year: string
+  description: string
   created_at: string
   updated_at: string
 }
@@ -125,18 +147,16 @@ export interface Journey {
   year: string
   title: string
   description: string
-  details: string
   created_at: string
   updated_at: string
 }
 
 export interface Certification {
   id: number
-  title: string
+  name: string
   issuer: string
   date: string
-  credential_url: string
-  description: string
+  url: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -144,10 +164,9 @@ export interface Certification {
 
 export interface Stat {
   id: number
-  name: string
+  label: string
   value: string
   icon: string
-  color: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -158,7 +177,6 @@ export interface AboutFeature {
   title: string
   description: string
   icon: string
-  color: string
   created_at: string
   updated_at: string
 }
@@ -166,9 +184,10 @@ export interface AboutFeature {
 export interface FreelancePlatform {
   id: number
   name: string
-  profile_url: string
   logo: string
-  color: string
+  profile_url: string
+  rating: number
+  reviews_count: number
   enabled: boolean
   created_at: string
   updated_at: string
@@ -177,16 +196,9 @@ export interface FreelancePlatform {
 export interface PaymentMethod {
   id: number
   name: string
-  icon: string
-  created_at: string
-  updated_at: string
-}
-
-export interface Settings {
-  id: number
-  key: string
-  value: boolean
-  description: string
+  logo: string
+  details: string
+  enabled: boolean
   created_at: string
   updated_at: string
 }

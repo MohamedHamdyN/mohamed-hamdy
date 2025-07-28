@@ -1,31 +1,34 @@
 import { settingsService, languageSettingsService, cachedServices } from "./database"
 
-// Get settings with caching
-export async function getSettings() {
+// Default settings
+const DEFAULT_SETTINGS = {
+  website: true,
+  projects_page: true,
+  services_page: true,
+  about_page: true,
+  contact_page: true,
+  resume_page: true,
+  projects_home: true,
+  services_home: true,
+  about_home: true,
+  skills: true,
+  why_work_with_me: true,
+  clients: true,
+  contact_home: true,
+  freelance_platforms: true,
+  payment_methods: true,
+  contact_form: true,
+  calendly_feature: true,
+}
+
+// Get settings with caching and fallback
+export async function getSettings(): Promise<Record<string, boolean>> {
   try {
-    return await cachedServices.getSettings()
+    const settings = await cachedServices.getSettings()
+    return { ...DEFAULT_SETTINGS, ...settings }
   } catch (error) {
     console.error("Error fetching settings:", error)
-    // Return default settings if database fails
-    return {
-      website: true,
-      projects_page: true,
-      services_page: true,
-      about_page: true,
-      contact_page: true,
-      resume_page: true,
-      projects_home: true,
-      services_home: true,
-      about_home: true,
-      skills: true,
-      why_work_with_me: true,
-      clients: true,
-      contact_home: true,
-      freelance_platforms: true,
-      payment_methods: true,
-      contact_form: true,
-      calendly_feature: true,
-    }
+    return DEFAULT_SETTINGS
   }
 }
 
@@ -35,7 +38,7 @@ export async function getSetting(key: string): Promise<boolean> {
     return await settingsService.getSetting(key)
   } catch (error) {
     console.error(`Error fetching setting ${key}:`, error)
-    return true // Default to enabled
+    return DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS] ?? true
   }
 }
 
@@ -59,9 +62,7 @@ export async function getLanguageSettings() {
 }
 
 // Server-side settings for middleware and server components
-export async function getServerSettings() {
-  // For server-side, we'll use environment variables as fallback
-  // and database as primary source
+export async function getServerSettings(): Promise<Record<string, boolean>> {
   try {
     const dbSettings = await getSettings()
 
