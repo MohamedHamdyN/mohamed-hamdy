@@ -4,23 +4,19 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables")
+  throw new Error("❌ Missing Supabase environment variables")
 }
 
+// ✅ يستخدم في أي كود Client أو Server للتعامل مع Supabase
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: false,
   },
 })
-console.log("🔍 PROD ENV URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
-console.log("🔍 PROD ENV ANON KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-// Server-side client for admin operations
+// ✅ يُستخدم في الخادم فقط إذا احتجت ذلك، ولكن نفس الـ anon key
 export function createServerClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  return createClient(supabaseUrl, supabaseServiceKey, {
+  return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: false,
     },

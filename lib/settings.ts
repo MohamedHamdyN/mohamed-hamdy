@@ -1,10 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from './supabase'
 
-// ✅ Supabase Client مباشر
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// ✅ Supabase Client مخصص للسيرفر باستخدام service role
+const supabase = createServerClient()
 
 // ✅ إعدادات افتراضية (fallback)
 const DEFAULT_SETTINGS = {
@@ -30,12 +27,11 @@ const DEFAULT_SETTINGS = {
 // ✅ دالة رئيسية للحصول على الإعدادات كلها
 export async function getSettings(): Promise<Record<string, boolean>> {
   try {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('key, value')
+    const supabase = createServerClient()
+    const { data, error } = await supabase.from("settings").select("key, value")
 
     if (error || !data) {
-      console.error('⚠️ Supabase error in getSettings():', error?.message || 'No data returned')
+      console.error("⚠️ Error fetching settings:", error?.message || "No data")
       return DEFAULT_SETTINGS
     }
 
@@ -44,11 +40,12 @@ export async function getSettings(): Promise<Record<string, boolean>> {
       settingsFromDB[row.key] = row.value === true
     }
 
-    console.log('✅ Settings fetched and transformed:', settingsFromDB)
-
-    return { ...DEFAULT_SETTINGS, ...settingsFromDB }
-  } catch (error) {
-    console.error('❌ Unexpected error in getSettings():', error)
+    return {
+      ...DEFAULT_SETTINGS,
+      ...settingsFromDB,
+    }
+  } catch (err) {
+    console.error("❌ Unexpected error in getSettings():", err)
     return DEFAULT_SETTINGS
   }
 }
