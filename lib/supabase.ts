@@ -20,11 +20,6 @@ export function createServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Missing Supabase server environment variables")
-    return supabase // Fallback to regular client
-  }
-
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       persistSession: false,
