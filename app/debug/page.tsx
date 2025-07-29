@@ -1,10 +1,16 @@
-// pages/debug.tsx
+"use client"
+import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
-export default async function DebugPage() {
-  const { data: profile, error } = await supabase.from("profile").select("*").limit(1).single()
+export default function DebugProd() {
+  const [res, setRes] = useState<any>()
 
-  return (
-    <pre>{JSON.stringify({ profile, error }, null, 2)}</pre>
-  )
+  useEffect(() => {
+    supabase.from("profile").select("*").then((r) => {
+      console.log("DebugProd:", r)
+      setRes(r.data)
+    })
+  }, [])
+
+  return <pre>{JSON.stringify(res, null, 2)}</pre>
 }
