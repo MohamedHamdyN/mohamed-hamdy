@@ -12,6 +12,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: false,
   },
 })
+console.log("🔍 PROD ENV URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+console.log("🔍 PROD ENV ANON KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
 // Server-side client for admin operations
 export function createServerClient() {
