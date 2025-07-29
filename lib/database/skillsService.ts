@@ -1,19 +1,17 @@
-import { supabase } from "../supabase"
-import type { Skill } from "../supabase"
+import { supabase } from "./supabase"
 
 export const skillsService = {
-  async getEnabledSkills(): Promise<Skill[]> {
+  async getEnabledSkills() {
     const { data, error } = await supabase
-      .from("skills") // تأكد أن اسم الجدول هو skills
+      .from("skills")
       .select("*")
-      .eq("enabled", true)
+      .eq("enabled", true)  // جرب حذف هذا السطر مؤقتًا لو ما ظهرتش البيانات
 
     if (error) {
-      console.error("❌ Error fetching skills:", error.message)
-      return []
+      console.error("❌ Error in getEnabledSkills:", error)
+      throw error
     }
 
-    console.log(`✅ Enabled skills fetched successfully: ${data.length} items`)
-    return data ?? []
-  },
+    return data
+  }
 }

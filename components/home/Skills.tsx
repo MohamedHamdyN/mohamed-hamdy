@@ -2,22 +2,20 @@
 
 import { useEffect, useState } from "react"
 import { skillsService } from "@/lib/database"
-import { useTranslations } from "@/hooks/useTranslations"
-import InfiniteSlider from "@/components/shared/InfiniteSlider"
 import type { Skill } from "@/lib/supabase"
 
 export default function Skills() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
-  const t = useTranslations()
 
   useEffect(() => {
     async function fetchSkills() {
       try {
         const data = await skillsService.getEnabledSkills()
+        console.log("🧠 Skills fetched:", data)
         setSkills(data)
       } catch (error) {
-        console.error("Error fetching skills:", error)
+        console.error("❌ Error fetching skills:", error)
       } finally {
         setLoading(false)
       }
@@ -27,38 +25,23 @@ export default function Skills() {
   }, [])
 
   if (loading) {
-    return (
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="h-8 bg-muted animate-pulse rounded mb-4 max-w-md mx-auto"></div>
-            <div className="h-4 bg-muted animate-pulse rounded max-w-lg mx-auto"></div>
-          </div>
-          <div className="flex gap-6 overflow-hidden">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex-shrink-0 w-64 p-4 rounded-xl border border-border bg-card">
-                <div className="h-6 bg-muted animate-pulse rounded mb-3"></div>
-                <div className="h-4 bg-muted animate-pulse rounded"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    )
+    return <p>Loading skills...</p>
   }
 
   if (skills.length === 0) {
-    return null
+    return <p>No skills found.</p>
   }
 
   return (
-    <InfiniteSlider
-      items={skills}
-      title={t?.skills?.title || "My Skills"}
-      description={t?.skills?.description || "Specialized expertise in data analysis"}
-      autoplaySpeed={3000}
-      pauseOnHover={true}
-      reverseDirection={false}
-    />
+    <section className="bg-background p-4">
+      <h2 className="text-xl font-bold mb-4">Skills:</h2>
+      <ul className="list-disc pl-6 space-y-2">
+        {skills.map((skill) => (
+          <li key={skill.id}>
+            <strong>{skill.name}</strong>: {skill.description}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
