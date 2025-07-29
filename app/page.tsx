@@ -4,8 +4,8 @@ import { lazy, Suspense } from "react"
 import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
 import { getSettings } from "@/lib/settings"
-
 import Skills from "@/components/home/Skills"
+
 const WhyWorkWithMe = lazy(() => import("@/components/home/WhyWorkWithMe"))
 const Clients = lazy(() => import("@/components/home/Clients"))
 const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects"))
@@ -14,12 +14,16 @@ const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
 export default async function Home() {
   const settings = await getSettings()
 
+  // 🔍 دي للتأكد فقط، تقدر تشيلها بعد التجربة
+  console.log("💡 Settings loaded:", settings)
+
   if (!settings.website) {
     return <Hero />
   }
 
   const sections = []
 
+  // ✅ Skills Section
   if (settings.skills) {
     sections.push({
       component: (
@@ -33,6 +37,7 @@ export default async function Home() {
     })
   }
 
+  // ✅ Why Work With Me Section
   if (settings.why_work_with_me) {
     sections.push({
       component: (
@@ -46,6 +51,7 @@ export default async function Home() {
     })
   }
 
+  // ✅ Clients Section
   if (settings.clients) {
     sections.push({
       component: (
@@ -59,6 +65,7 @@ export default async function Home() {
     })
   }
 
+  // ✅ Featured Projects Section
   if (settings.projects_home) {
     sections.push({
       component: (
@@ -72,6 +79,7 @@ export default async function Home() {
     })
   }
 
+  // ✅ Contact CTA Section
   if (settings.contact_home) {
     sections.push({
       component: (
