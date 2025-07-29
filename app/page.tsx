@@ -5,7 +5,7 @@ import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
 import { getSettings } from "@/lib/settings"
 
-const Skills = lazy(() => import("@/components/home/Skills"))
+import Skills from "@/components/home/Skills"
 const WhyWorkWithMe = lazy(() => import("@/components/home/WhyWorkWithMe"))
 const Clients = lazy(() => import("@/components/home/Clients"))
 const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects"))
