@@ -3,6 +3,17 @@ import { createServerClient } from './supabase'
 // ✅ Supabase Client مخصص للسيرفر باستخدام service role
 const supabase = createServerClient()
 
+console.log("🔑 Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+console.log("🔑 Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
+const { data, error } = await supabase
+  .from("skills")
+  .select("*")
+  .eq("enabled", true)
+
+console.log("📦 Data:", data)
+console.log("⚠️ Error:", error)
+
 // ✅ إعدادات افتراضية (fallback)
 const DEFAULT_SETTINGS = {
   website: true,
