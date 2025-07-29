@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { settingsService, languageSettingsService } from './database'
 
 // ✅ Supabase Client مباشر
 const supabase = createClient(
@@ -28,35 +27,50 @@ const DEFAULT_SETTINGS = {
   calendly_feature: true,
 }
 
-// ✅ دالة رئيسية للحصول على الإعدادات
+// ✅ دالة رئيسية للحصول على الإعدادات كلها
 export async function getSettings(): Promise<Record<string, boolean>> {
   try {
     const { data, error } = await supabase
       .from('settings')
-      .select('*')
-      .limit(1)
-      .maybeSingle()
+      .select('key, value')
 
     if (error || !data) {
-      console.error('⚠️ Supabase error in getSettings():', error?.message || 'No data found')
+      console.error('⚠️ Supabase error in getSettings():', error?.message || 'No data returned')
       return DEFAULT_SETTINGS
     }
 
-    console.log('✅ Settings from Supabase:', data)
-    return { ...DEFAULT_SETTINGS, ...data }
+    const settingsFromDB: Record<string, boolean> = {}
+    for (const row of data) {
+      settingsFromDB[row.key] = row.value === true
+    }
+
+    console.log('✅ Settings fetched and transformed:', settingsFromDB)
+
+    return { ...DEFAULT_SETTINGS, ...settingsFromDB }
   } catch (error) {
     console.error('❌ Unexpected error in getSettings():', error)
     return DEFAULT_SETTINGS
   }
 }
 
-
-// ✅ دالة فردية لإعداد معين
+// ✅ دالة فردية للحصول على إعداد معيّن
 export async function getSetting(key: string): Promise<boolean> {
   try {
-    return await settingsService.getSetting(key)
+    const { data, error } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', key)
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !data) {
+      console.error(`❌ Error fetching setting "${key}":`, error?.message || 'No data found')
+      return DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS] ?? true
+    }
+
+    return data.value === true
   } catch (error) {
-    console.error(`Error fetching setting ${key}:`, error)
+    console.error(`❌ Unexpected error in getSetting "${key}":`, error)
     return DEFAULT_SETTINGS[key as keyof typeof DEFAULT_SETTINGS] ?? true
   }
 }
@@ -64,15 +78,23 @@ export async function getSetting(key: string): Promise<boolean> {
 // ✅ إعدادات اللغة
 export async function getLanguageSettings() {
   try {
-    const settings = await languageSettingsService.getLanguageSettings()
-    return (
-      settings || {
+    const { data, error } = await supabase
+      .from('language_settings')
+      .select('*')
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !data) {
+      console.error('⚠️ Error fetching language settings:', error?.message || 'No data')
+      return {
         enable_language_toggle: false,
         default_language: 'en',
       }
-    )
+    }
+
+    return data
   } catch (error) {
-    console.error('Error fetching language settings:', error)
+    console.error('❌ Unexpected error in getLanguageSettings():', error)
     return {
       enable_language_toggle: false,
       default_language: 'en',
@@ -80,7 +102,7 @@ export async function getLanguageSettings() {
   }
 }
 
-// ✅ إعدادات للسيرفر / middleware
+// ✅ إعدادات السيرفر (middleware)
 export async function getServerSettings(): Promise<Record<string, boolean>> {
   try {
     const dbSettings = await getSettings()
@@ -105,7 +127,7 @@ export async function getServerSettings(): Promise<Record<string, boolean>> {
       calendly_feature: dbSettings.calendly_feature,
     }
   } catch (error) {
-    console.error('Error fetching server settings:', error)
+    console.error('❌ Error fetching server settings:', error)
 
     return {
       website: process.env.DISABLE_WEBSITE !== 'true',
