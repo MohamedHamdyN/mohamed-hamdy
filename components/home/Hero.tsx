@@ -103,7 +103,7 @@ export default function Hero() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="relative w-64 h-64 text-slate-50">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -335,7 +335,7 @@ export default function Hero() {
               <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full filter blur-xl opacity-70"></div>
 
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-64 h-64">
+                <div className="relative w-64 h-64 text-slate-600">
                   <motion.div
                     className="absolute top-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                     initial={{ x: -50, y: -50, opacity: 0 }}
