@@ -5,7 +5,6 @@ import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
 import { getSettings } from "@/lib/settings"
 
-// Lazy load components
 const Skills = lazy(() => import("@/components/home/Skills"))
 const WhyWorkWithMe = lazy(() => import("@/components/home/WhyWorkWithMe"))
 const Clients = lazy(() => import("@/components/home/Clients"))
@@ -14,9 +13,6 @@ const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
 
 export default async function Home() {
   const settings = await getSettings()
-
-  // ✅ يظهر في لوج Vercel للتأكد أن البيانات فعلاً واصلة
-  console.log("📦 Settings:", settings)
 
   if (!settings.website) {
     return <Hero />
@@ -94,16 +90,6 @@ export default async function Home() {
   return (
     <>
       <Hero />
-
-      {/* ✅ عرض الإعدادات للتأكد */}
-      <div className="px-4 py-4">
-        <h2 className="text-lg font-bold mb-2">🔧 Settings Preview:</h2>
-        <pre className="bg-gray-100 text-sm p-4 rounded overflow-x-auto">
-          {JSON.stringify(settings, null, 2)}
-        </pre>
-      </div>
-
-      {/* ✅ عرض الأقسام */}
       {sections.map((section) => section.component)}
     </>
   )
