@@ -1,34 +1,42 @@
 "use client"
 
 import type React from "react"
-import { Suspense, type ComponentType } from "react"
+
+import { Suspense, lazy, type ComponentType } from "react"
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer"
 
 interface LazySectionProps {
   children: React.ReactNode
   fallback?: React.ReactNode
+  rootMargin?: string
   className?: string
 }
 
 export default function LazySection({
   children,
   fallback = <div className="h-64 bg-muted animate-pulse rounded-lg" />,
+  rootMargin = "100px",
   className = "",
 }: LazySectionProps) {
+  const [ref, isIntersecting] = useIntersectionObserver({
+    rootMargin,
+    triggerOnce: true,
+    threshold: 0.1,
+  })
+
   return (
-    <div className={className}>
-      <Suspense fallback={fallback}>
-        {children}
-      </Suspense>
+    <div ref={ref} className={className}>
+      {isIntersecting ? <Suspense fallback={fallback}>{children}</Suspense> : fallback}
     </div>
   )
 }
 
-// اختياري: High Order Component لو بتحتاج تكسل كمبوننت ديناميكياً
+// HOC para crear componentes lazy
 export function createLazyComponent<T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
   fallback?: React.ReactNode,
 ) {
-  const LazyComponent = React.lazy(importFunc)
+  const LazyComponent = lazy(importFunc)
 
   return function LazyWrapper(props: React.ComponentProps<T>) {
     return (

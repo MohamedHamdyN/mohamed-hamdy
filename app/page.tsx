@@ -1,11 +1,12 @@
 export const dynamic = "force-dynamic"
 
-import { lazy, Suspense } from "react"
+import { lazy } from "react"
 import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
 import { getSettings } from "@/lib/settings"
 
-import Skills from "@/components/home/Skills"
+// Lazy load components
+const Skills = lazy(() => import("@/components/home/Skills"))
 const WhyWorkWithMe = lazy(() => import("@/components/home/WhyWorkWithMe"))
 const Clients = lazy(() => import("@/components/home/Clients"))
 const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects"))
@@ -23,11 +24,9 @@ export default async function Home() {
   if (settings.skills) {
     sections.push({
       component: (
-        <Suspense fallback={<div>Loading Skills...</div>} key="skills">
-          <LazySection className="py-20">
-            <Skills />
-          </LazySection>
-        </Suspense>
+        <LazySection key="skills" className="py-20">
+          <Skills />
+        </LazySection>
       ),
       order: 1,
     })
@@ -36,11 +35,9 @@ export default async function Home() {
   if (settings.why_work_with_me) {
     sections.push({
       component: (
-        <Suspense fallback={<div>Loading Why Work With Me...</div>} key="why-work-with-me">
-          <LazySection className="py-20">
-            <WhyWorkWithMe />
-          </LazySection>
-        </Suspense>
+        <LazySection key="why-work-with-me" className="py-20">
+          <WhyWorkWithMe />
+        </LazySection>
       ),
       order: 2,
     })
@@ -49,11 +46,9 @@ export default async function Home() {
   if (settings.clients) {
     sections.push({
       component: (
-        <Suspense fallback={<div>Loading Clients...</div>} key="clients">
-          <LazySection className="py-20">
-            <Clients />
-          </LazySection>
-        </Suspense>
+        <LazySection key="clients" className="py-20">
+          <Clients />
+        </LazySection>
       ),
       order: 4,
     })
@@ -62,11 +57,9 @@ export default async function Home() {
   if (settings.projects_home) {
     sections.push({
       component: (
-        <Suspense fallback={<div>Loading Featured Projects...</div>} key="featured-projects">
-          <LazySection className="py-20">
-            <FeaturedProjects />
-          </LazySection>
-        </Suspense>
+        <LazySection key="featured-projects" className="py-20">
+          <FeaturedProjects />
+        </LazySection>
       ),
       order: 3,
     })
@@ -75,11 +68,9 @@ export default async function Home() {
   if (settings.contact_home) {
     sections.push({
       component: (
-        <Suspense fallback={<div>Loading Contact Section...</div>} key="contact-cta">
-          <LazySection className="py-20">
-            <ContactCTA />
-          </LazySection>
-        </Suspense>
+        <LazySection key="contact-cta" className="py-20">
+          <ContactCTA />
+        </LazySection>
       ),
       order: 5,
     })

@@ -21,19 +21,64 @@ import type {
 export const profileService = {
   async getProfile(): Promise<Profile | null> {
     try {
-      console.log("Fetching profile from database...")
       const { data, error } = await supabase.from("profile").select("*").single()
 
       if (error) {
-        console.error("Database error fetching profile:", error)
-        throw error
+        console.error("Error fetching profile:", error)
+        // Return default profile if database fails
+        return {
+          id: 1,
+          name: "Mohamed Hamdy",
+          title: "Data Analyst",
+          title2: "Financial Accountant",
+          bio: "Transforming complex data into actionable insights that drive business decisions.",
+          short_bio: "Data Analyst & Financial Accountant",
+          long_bio: "",
+          email: "muhamedhamdynour@gmail.com",
+          phone: "",
+          location: "",
+          logo: "",
+          favicon: "",
+          avatar: "",
+          default_project_image: "",
+          default_client_logo: "",
+          default_platform_logo: "",
+          og_image: "",
+          resume_url: "",
+          calendly_url: "",
+          social_links: {},
+          created_at: "",
+          updated_at: "",
+        }
       }
 
-      console.log("Profile fetched successfully:", data)
       return data
     } catch (error) {
       console.error("Error in getProfile:", error)
-      throw error
+      return {
+        id: 1,
+        name: "Mohamed Hamdy",
+        title: "Data Analyst",
+        title2: "Financial Accountant",
+        bio: "Transforming complex data into actionable insights that drive business decisions.",
+        short_bio: "Data Analyst & Financial Accountant",
+        long_bio: "",
+        email: "muhamedhamdynour@gmail.com",
+        phone: "",
+        location: "",
+        logo: "",
+        favicon: "",
+        avatar: "",
+        default_project_image: "",
+        default_client_logo: "",
+        default_platform_logo: "",
+        og_image: "",
+        resume_url: "",
+        calendly_url: "",
+        social_links: {},
+        created_at: "",
+        updated_at: "",
+      }
     }
   },
 
@@ -49,13 +94,13 @@ export const profileService = {
 
       if (error) {
         console.error("Error updating profile:", error)
-        throw error
+        return null
       }
 
       return data
     } catch (error) {
       console.error("Error in updateProfile:", error)
-      throw error
+      return null
     }
   },
 }
@@ -64,38 +109,69 @@ export const profileService = {
 export const skillsService = {
   async getSkills(): Promise<Skill[]> {
     try {
-      console.log("Fetching skills from database...")
       const { data, error } = await supabase.from("skills").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching skills:", error)
-        throw error
+        console.error("Error fetching skills:", error)
+        return this.getDefaultSkills()
       }
 
-      console.log("Skills fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultSkills()
     } catch (error) {
       console.error("Error in getSkills:", error)
-      throw error
+      return this.getDefaultSkills()
     }
   },
 
   async getEnabledSkills(): Promise<Skill[]> {
     try {
-      console.log("Fetching enabled skills from database...")
       const { data, error } = await supabase.from("skills").select("*").eq("enabled", true).order("id")
 
       if (error) {
-        console.error("Database error fetching enabled skills:", error)
-        throw error
+        console.error("Error fetching enabled skills:", error)
+        return this.getDefaultSkills()
       }
 
-      console.log("Enabled skills fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultSkills()
     } catch (error) {
       console.error("Error in getEnabledSkills:", error)
-      throw error
+      return this.getDefaultSkills()
     }
+  },
+
+  getDefaultSkills(): Skill[] {
+    return [
+      {
+        id: 1,
+        name: "Data Analysis",
+        description: "Advanced data analysis using Python, R, and SQL",
+        icon: "bar-chart",
+        color: "text-blue-500",
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+      {
+        id: 2,
+        name: "Financial Modeling",
+        description: "Creating comprehensive financial models and forecasts",
+        icon: "calculator",
+        color: "text-green-500",
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+      {
+        id: 3,
+        name: "Database Management",
+        description: "Expert in SQL, PostgreSQL, and database optimization",
+        icon: "database",
+        color: "text-purple-500",
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+    ]
   },
 }
 
@@ -103,38 +179,59 @@ export const skillsService = {
 export const workReasonsService = {
   async getWorkReasons(): Promise<WorkReason[]> {
     try {
-      console.log("Fetching work reasons from database...")
       const { data, error } = await supabase.from("work_reasons").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching work reasons:", error)
-        throw error
+        console.error("Error fetching work reasons:", error)
+        return this.getDefaultWorkReasons()
       }
 
-      console.log("Work reasons fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultWorkReasons()
     } catch (error) {
       console.error("Error in getWorkReasons:", error)
-      throw error
+      return this.getDefaultWorkReasons()
     }
   },
 
   async getEnabledWorkReasons(): Promise<WorkReason[]> {
     try {
-      console.log("Fetching enabled work reasons from database...")
       const { data, error } = await supabase.from("work_reasons").select("*").eq("enabled", true).order("id")
 
       if (error) {
-        console.error("Database error fetching enabled work reasons:", error)
-        throw error
+        console.error("Error fetching enabled work reasons:", error)
+        return this.getDefaultWorkReasons()
       }
 
-      console.log("Enabled work reasons fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultWorkReasons()
     } catch (error) {
       console.error("Error in getEnabledWorkReasons:", error)
-      throw error
+      return this.getDefaultWorkReasons()
     }
+  },
+
+  getDefaultWorkReasons(): WorkReason[] {
+    return [
+      {
+        id: 1,
+        title: "Expert Analysis",
+        description: "Deep expertise in data analysis and financial modeling",
+        icon: "bar-chart-3",
+        color: "text-blue-500",
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+      {
+        id: 2,
+        title: "Reliable Results",
+        description: "Consistent delivery of accurate and actionable insights",
+        icon: "calculator",
+        color: "text-green-500",
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+    ]
   },
 }
 
@@ -142,38 +239,51 @@ export const workReasonsService = {
 export const clientsService = {
   async getClients(): Promise<Client[]> {
     try {
-      console.log("Fetching clients from database...")
       const { data, error } = await supabase.from("clients").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching clients:", error)
-        throw error
+        console.error("Error fetching clients:", error)
+        return this.getDefaultClients()
       }
 
-      console.log("Clients fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultClients()
     } catch (error) {
       console.error("Error in getClients:", error)
-      throw error
+      return this.getDefaultClients()
     }
   },
 
   async getEnabledClients(): Promise<Client[]> {
     try {
-      console.log("Fetching enabled clients from database...")
       const { data, error } = await supabase.from("clients").select("*").eq("enabled", true).order("id")
 
       if (error) {
-        console.error("Database error fetching enabled clients:", error)
-        throw error
+        console.error("Error fetching enabled clients:", error)
+        return this.getDefaultClients()
       }
 
-      console.log("Enabled clients fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultClients()
     } catch (error) {
       console.error("Error in getEnabledClients:", error)
-      throw error
+      return this.getDefaultClients()
     }
+  },
+
+  getDefaultClients(): Client[] {
+    return [
+      {
+        id: 1,
+        name: "Tech Solutions Inc",
+        logo: "/placeholder.svg?height=64&width=64",
+        website: "https://example.com",
+        testimonial: "Excellent data analysis and insights provided",
+        rating: 5,
+        last_project: "https://example.com/project",
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+    ]
   },
 }
 
@@ -181,20 +291,39 @@ export const clientsService = {
 export const projectCategoriesService = {
   async getProjectCategories(): Promise<ProjectCategory[]> {
     try {
-      console.log("Fetching project categories from database...")
       const { data, error } = await supabase.from("project_categories").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching project categories:", error)
-        throw error
+        console.error("Error fetching project categories:", error)
+        return this.getDefaultCategories()
       }
 
-      console.log("Project categories fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultCategories()
     } catch (error) {
       console.error("Error in getProjectCategories:", error)
-      throw error
+      return this.getDefaultCategories()
     }
+  },
+
+  getDefaultCategories(): ProjectCategory[] {
+    return [
+      {
+        id: 1,
+        name: "Data Analysis",
+        slug: "data-analysis",
+        description: "Data analysis projects",
+        created_at: "",
+        updated_at: "",
+      },
+      {
+        id: 2,
+        name: "Financial Modeling",
+        slug: "financial-modeling",
+        description: "Financial modeling projects",
+        created_at: "",
+        updated_at: "",
+      },
+    ]
   },
 }
 
@@ -202,7 +331,6 @@ export const projectCategoriesService = {
 export const projectsService = {
   async getProjects(): Promise<Project[]> {
     try {
-      console.log("Fetching projects from database...")
       const { data, error } = await supabase
         .from("projects")
         .select(`
@@ -217,21 +345,19 @@ export const projectsService = {
         .order("date", { ascending: false })
 
       if (error) {
-        console.error("Database error fetching projects:", error)
-        throw error
+        console.error("Error fetching projects:", error)
+        return this.getDefaultProjects()
       }
 
-      console.log("Projects fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultProjects()
     } catch (error) {
       console.error("Error in getProjects:", error)
-      throw error
+      return this.getDefaultProjects()
     }
   },
 
   async getFeaturedProjects(): Promise<Project[]> {
     try {
-      console.log("Fetching featured projects from database...")
       const { data, error } = await supabase
         .from("projects")
         .select(`
@@ -247,21 +373,19 @@ export const projectsService = {
         .order("date", { ascending: false })
 
       if (error) {
-        console.error("Database error fetching featured projects:", error)
-        throw error
+        console.error("Error fetching featured projects:", error)
+        return this.getDefaultProjects()
       }
 
-      console.log("Featured projects fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultProjects()
     } catch (error) {
       console.error("Error in getFeaturedProjects:", error)
-      throw error
+      return this.getDefaultProjects()
     }
   },
 
   async getProjectById(id: number): Promise<Project | null> {
     try {
-      console.log("Fetching project by ID:", id)
       const { data, error } = await supabase
         .from("projects")
         .select(`
@@ -277,16 +401,56 @@ export const projectsService = {
         .single()
 
       if (error) {
-        console.error("Database error fetching project:", error)
-        throw error
+        console.error("Error fetching project:", error)
+        return null
       }
 
-      console.log("Project fetched successfully:", data)
       return data
     } catch (error) {
       console.error("Error in getProjectById:", error)
-      throw error
+      return null
     }
+  },
+
+  getDefaultProjects(): Project[] {
+    return [
+      {
+        id: 1,
+        title: "Sales Data Analysis Dashboard",
+        short_description: "Interactive dashboard for sales performance analysis",
+        long_description: "Comprehensive sales analysis dashboard built with Python and Tableau",
+        image: "/placeholder.svg?height=200&width=400",
+        images: [],
+        technologies: ["Python", "Tableau", "SQL"],
+        project_url: "https://example.com",
+        github_url: "",
+        linkedin_url: "",
+        category_id: 1,
+        featured: true,
+        enabled: true,
+        date: "2024-01-01",
+        created_at: "",
+        updated_at: "",
+      },
+      {
+        id: 2,
+        title: "Financial Forecast Model",
+        short_description: "Advanced financial forecasting model for budget planning",
+        long_description: "Sophisticated financial model for 5-year budget forecasting",
+        image: "/placeholder.svg?height=200&width=400",
+        images: [],
+        technologies: ["Excel", "Python", "R"],
+        project_url: "https://example.com",
+        github_url: "",
+        linkedin_url: "",
+        category_id: 2,
+        featured: true,
+        enabled: true,
+        date: "2024-02-01",
+        created_at: "",
+        updated_at: "",
+      },
+    ]
   },
 }
 
@@ -294,38 +458,61 @@ export const projectsService = {
 export const servicesService = {
   async getServices(): Promise<Service[]> {
     try {
-      console.log("Fetching services from database...")
       const { data, error } = await supabase.from("services").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching services:", error)
-        throw error
+        console.error("Error fetching services:", error)
+        return this.getDefaultServices()
       }
 
-      console.log("Services fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultServices()
     } catch (error) {
       console.error("Error in getServices:", error)
-      throw error
+      return this.getDefaultServices()
     }
   },
 
   async getEnabledServices(): Promise<Service[]> {
     try {
-      console.log("Fetching enabled services from database...")
       const { data, error } = await supabase.from("services").select("*").eq("enabled", true).order("id")
 
       if (error) {
-        console.error("Database error fetching enabled services:", error)
-        throw error
+        console.error("Error fetching enabled services:", error)
+        return this.getDefaultServices()
       }
 
-      console.log("Enabled services fetched successfully:", data?.length, "items")
-      return data || []
+      return data || this.getDefaultServices()
     } catch (error) {
       console.error("Error in getEnabledServices:", error)
-      throw error
+      return this.getDefaultServices()
     }
+  },
+
+  getDefaultServices(): Service[] {
+    return [
+      {
+        id: 1,
+        title: "Data Analysis",
+        description: "Comprehensive data analysis and visualization services",
+        icon: "bar-chart",
+        price: "$500",
+        features: ["Data cleaning", "Statistical analysis", "Visualization"],
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+      {
+        id: 2,
+        title: "Financial Modeling",
+        description: "Advanced financial modeling and forecasting",
+        icon: "calculator",
+        price: "$800",
+        features: ["Budget planning", "Forecasting", "Risk analysis"],
+        enabled: true,
+        created_at: "",
+        updated_at: "",
+      },
+    ]
   },
 }
 
@@ -333,19 +520,17 @@ export const servicesService = {
 export const educationService = {
   async getEducation(): Promise<Education[]> {
     try {
-      console.log("Fetching education from database...")
       const { data, error } = await supabase.from("education").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching education:", error)
-        throw error
+        console.error("Error fetching education:", error)
+        return []
       }
 
-      console.log("Education fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getEducation:", error)
-      throw error
+      return []
     }
   },
 }
@@ -354,19 +539,17 @@ export const educationService = {
 export const journeyService = {
   async getJourney(): Promise<Journey[]> {
     try {
-      console.log("Fetching journey from database...")
       const { data, error } = await supabase.from("journey").select("*").order("year", { ascending: false })
 
       if (error) {
-        console.error("Database error fetching journey:", error)
-        throw error
+        console.error("Error fetching journey:", error)
+        return []
       }
 
-      console.log("Journey fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getJourney:", error)
-      throw error
+      return []
     }
   },
 }
@@ -375,25 +558,22 @@ export const journeyService = {
 export const certificationsService = {
   async getCertifications(): Promise<Certification[]> {
     try {
-      console.log("Fetching certifications from database...")
       const { data, error } = await supabase.from("certifications").select("*").order("date", { ascending: false })
 
       if (error) {
-        console.error("Database error fetching certifications:", error)
-        throw error
+        console.error("Error fetching certifications:", error)
+        return []
       }
 
-      console.log("Certifications fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getCertifications:", error)
-      throw error
+      return []
     }
   },
 
   async getEnabledCertifications(): Promise<Certification[]> {
     try {
-      console.log("Fetching enabled certifications from database...")
       const { data, error } = await supabase
         .from("certifications")
         .select("*")
@@ -401,15 +581,14 @@ export const certificationsService = {
         .order("date", { ascending: false })
 
       if (error) {
-        console.error("Database error fetching enabled certifications:", error)
-        throw error
+        console.error("Error fetching enabled certifications:", error)
+        return []
       }
 
-      console.log("Enabled certifications fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getEnabledCertifications:", error)
-      throw error
+      return []
     }
   },
 }
@@ -418,37 +597,33 @@ export const certificationsService = {
 export const statsService = {
   async getStats(): Promise<Stat[]> {
     try {
-      console.log("Fetching stats from database...")
       const { data, error } = await supabase.from("stats").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching stats:", error)
-        throw error
+        console.error("Error fetching stats:", error)
+        return []
       }
 
-      console.log("Stats fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getStats:", error)
-      throw error
+      return []
     }
   },
 
   async getEnabledStats(): Promise<Stat[]> {
     try {
-      console.log("Fetching enabled stats from database...")
       const { data, error } = await supabase.from("stats").select("*").eq("enabled", true).order("id")
 
       if (error) {
-        console.error("Database error fetching enabled stats:", error)
-        throw error
+        console.error("Error fetching enabled stats:", error)
+        return []
       }
 
-      console.log("Enabled stats fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getEnabledStats:", error)
-      throw error
+      return []
     }
   },
 }
@@ -457,19 +632,17 @@ export const statsService = {
 export const aboutFeaturesService = {
   async getAboutFeatures(): Promise<AboutFeature[]> {
     try {
-      console.log("Fetching about features from database...")
       const { data, error } = await supabase.from("about_features").select("*").order("id").limit(6)
 
       if (error) {
-        console.error("Database error fetching about features:", error)
-        throw error
+        console.error("Error fetching about features:", error)
+        return []
       }
 
-      console.log("About features fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getAboutFeatures:", error)
-      throw error
+      return []
     }
   },
 }
@@ -478,37 +651,33 @@ export const aboutFeaturesService = {
 export const freelancePlatformsService = {
   async getFreelancePlatforms(): Promise<FreelancePlatform[]> {
     try {
-      console.log("Fetching freelance platforms from database...")
       const { data, error } = await supabase.from("freelance_platforms").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching freelance platforms:", error)
-        throw error
+        console.error("Error fetching freelance platforms:", error)
+        return []
       }
 
-      console.log("Freelance platforms fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getFreelancePlatforms:", error)
-      throw error
+      return []
     }
   },
 
   async getEnabledFreelancePlatforms(): Promise<FreelancePlatform[]> {
     try {
-      console.log("Fetching enabled freelance platforms from database...")
       const { data, error } = await supabase.from("freelance_platforms").select("*").eq("enabled", true).order("id")
 
       if (error) {
-        console.error("Database error fetching enabled freelance platforms:", error)
-        throw error
+        console.error("Error fetching enabled freelance platforms:", error)
+        return []
       }
 
-      console.log("Enabled freelance platforms fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getEnabledFreelancePlatforms:", error)
-      throw error
+      return []
     }
   },
 }
@@ -517,19 +686,17 @@ export const freelancePlatformsService = {
 export const paymentMethodsService = {
   async getPaymentMethods(): Promise<PaymentMethod[]> {
     try {
-      console.log("Fetching payment methods from database...")
       const { data, error } = await supabase.from("payment_methods").select("*").order("id")
 
       if (error) {
-        console.error("Database error fetching payment methods:", error)
-        throw error
+        console.error("Error fetching payment methods:", error)
+        return []
       }
 
-      console.log("Payment methods fetched successfully:", data?.length, "items")
       return data || []
     } catch (error) {
       console.error("Error in getPaymentMethods:", error)
-      throw error
+      return []
     }
   },
 }
@@ -538,12 +705,11 @@ export const paymentMethodsService = {
 export const settingsService = {
   async getSettings(): Promise<Record<string, boolean>> {
     try {
-      console.log("Fetching settings from database...")
       const { data, error } = await supabase.from("settings").select("key, value")
 
       if (error) {
-        console.error("Database error fetching settings:", error)
-        throw error
+        console.error("Error fetching settings:", error)
+        return this.getDefaultSettings()
       }
 
       const settings: Record<string, boolean> = {}
@@ -551,29 +717,26 @@ export const settingsService = {
         settings[setting.key] = setting.value
       })
 
-      console.log("Settings fetched successfully:", Object.keys(settings).length, "settings")
-      return settings
+      return { ...this.getDefaultSettings(), ...settings }
     } catch (error) {
       console.error("Error in getSettings:", error)
-      throw error
+      return this.getDefaultSettings()
     }
   },
 
   async getSetting(key: string): Promise<boolean> {
     try {
-      console.log("Fetching setting:", key)
       const { data, error } = await supabase.from("settings").select("value").eq("key", key).single()
 
       if (error) {
-        console.error(`Database error fetching setting ${key}:`, error)
-        throw error
+        console.error(`Error fetching setting ${key}:`, error)
+        return true // Default to true
       }
 
-      console.log(`Setting ${key} fetched successfully:`, data?.value)
       return data?.value ?? true
     } catch (error) {
       console.error(`Error in getSetting ${key}:`, error)
-      throw error
+      return true
     }
   },
 
@@ -587,13 +750,35 @@ export const settingsService = {
 
       if (error) {
         console.error(`Error updating setting ${key}:`, error)
-        throw error
+        return false
       }
 
       return true
     } catch (error) {
       console.error(`Error in updateSetting ${key}:`, error)
-      throw error
+      return false
+    }
+  },
+
+  getDefaultSettings(): Record<string, boolean> {
+    return {
+      website: true,
+      projects_page: true,
+      services_page: true,
+      about_page: true,
+      contact_page: true,
+      resume_page: true,
+      projects_home: true,
+      services_home: true,
+      about_home: true,
+      skills: true,
+      why_work_with_me: true,
+      clients: true,
+      contact_home: true,
+      freelance_platforms: true,
+      payment_methods: true,
+      contact_form: true,
+      calendly_feature: true,
     }
   },
 }
@@ -602,19 +787,17 @@ export const settingsService = {
 export const languageSettingsService = {
   async getLanguageSettings(): Promise<LanguageSettings | null> {
     try {
-      console.log("Fetching language settings from database...")
       const { data, error } = await supabase.from("language_settings").select("*").single()
 
       if (error) {
-        console.error("Database error fetching language settings:", error)
-        throw error
+        console.error("Error fetching language settings:", error)
+        return null
       }
 
-      console.log("Language settings fetched successfully:", data)
       return data
     } catch (error) {
       console.error("Error in getLanguageSettings:", error)
-      throw error
+      return null
     }
   },
 }
@@ -647,21 +830,16 @@ class CacheManager {
 
 export const cache = new CacheManager()
 
-// Cached service functions with fallback to direct database calls
+// Cached service functions
 export const cachedServices = {
   async getProfile(): Promise<Profile | null> {
     const cacheKey = "profile"
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await profileService.getProfile()
-      if (data) cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch profile from database:", error)
-      return null
-    }
+    const data = await profileService.getProfile()
+    if (data) cache.set(cacheKey, data)
+    return data
   },
 
   async getEnabledSkills(): Promise<Skill[]> {
@@ -669,14 +847,9 @@ export const cachedServices = {
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await skillsService.getEnabledSkills()
-      cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch skills from database:", error)
-      return []
-    }
+    const data = await skillsService.getEnabledSkills()
+    cache.set(cacheKey, data)
+    return data
   },
 
   async getEnabledWorkReasons(): Promise<WorkReason[]> {
@@ -684,14 +857,9 @@ export const cachedServices = {
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await workReasonsService.getEnabledWorkReasons()
-      cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch work reasons from database:", error)
-      return []
-    }
+    const data = await workReasonsService.getEnabledWorkReasons()
+    cache.set(cacheKey, data)
+    return data
   },
 
   async getEnabledClients(): Promise<Client[]> {
@@ -699,14 +867,9 @@ export const cachedServices = {
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await clientsService.getEnabledClients()
-      cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch clients from database:", error)
-      return []
-    }
+    const data = await clientsService.getEnabledClients()
+    cache.set(cacheKey, data)
+    return data
   },
 
   async getProjects(): Promise<Project[]> {
@@ -714,14 +877,9 @@ export const cachedServices = {
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await projectsService.getProjects()
-      cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch projects from database:", error)
-      return []
-    }
+    const data = await projectsService.getProjects()
+    cache.set(cacheKey, data)
+    return data
   },
 
   async getFeaturedProjects(): Promise<Project[]> {
@@ -729,14 +887,9 @@ export const cachedServices = {
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await projectsService.getFeaturedProjects()
-      cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch featured projects from database:", error)
-      return []
-    }
+    const data = await projectsService.getFeaturedProjects()
+    cache.set(cacheKey, data)
+    return data
   },
 
   async getEnabledServices(): Promise<Service[]> {
@@ -744,14 +897,9 @@ export const cachedServices = {
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await servicesService.getEnabledServices()
-      cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch services from database:", error)
-      return []
-    }
+    const data = await servicesService.getEnabledServices()
+    cache.set(cacheKey, data)
+    return data
   },
 
   async getSettings(): Promise<Record<string, boolean>> {
@@ -759,31 +907,8 @@ export const cachedServices = {
     const cached = cache.get(cacheKey)
     if (cached) return cached
 
-    try {
-      const data = await settingsService.getSettings()
-      cache.set(cacheKey, data)
-      return data
-    } catch (error) {
-      console.error("Failed to fetch settings from database:", error)
-      return {
-        website: true,
-        projects_page: true,
-        services_page: true,
-        about_page: true,
-        contact_page: true,
-        resume_page: true,
-        projects_home: true,
-        services_home: true,
-        about_home: true,
-        skills: true,
-        why_work_with_me: true,
-        clients: true,
-        contact_home: true,
-        freelance_platforms: true,
-        payment_methods: true,
-        contact_form: true,
-        calendly_feature: true,
-      }
-    }
+    const data = await settingsService.getSettings()
+    cache.set(cacheKey, data)
+    return data
   },
 }
