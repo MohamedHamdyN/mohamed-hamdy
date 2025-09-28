@@ -25,7 +25,6 @@
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-toast": "^1.1.5",
     "@supabase/supabase-js": "latest",
-    "@sveltejs/kit": "latest",
     "@vercel/speed-insights": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -37,10 +36,8 @@
     "react-dom": "^18",
     "react-hook-form": "latest",
     "react-intersection-observer": "latest",
-    "svelte": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "vue": "latest",
     "vue-router": "latest",
     "zod": "^3.22.4"
   },

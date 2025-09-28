@@ -1,31 +1,42 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Supabase configuration
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables")
+if (!supabaseUrl) {
+  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
 }
 
+if (!supabaseAnonKey) {
+  throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
+}
+
+// Client-side Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: false,
+    autoRefreshToken: false,
   },
 })
 
-// Server-side client for admin operations
+// Server-side Supabase client (with service role key for admin operations)
 export function createServerClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Missing Supabase server environment variables")
-    return supabase // Fallback to regular client
+  if (!supabaseServiceKey) {
+    console.warn("SUPABASE_SERVICE_ROLE_KEY not found, using anon key")
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
   }
 
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       persistSession: false,
+      autoRefreshToken: false,
     },
   })
 }
@@ -34,24 +45,23 @@ export function createServerClient() {
 export interface Profile {
   id: number
   name: string
-  title: string
-  title2: string
-  bio: string
-  short_bio: string
-  long_bio: string
   email: string
-  phone: string
-  location: string
-  logo: string
-  favicon: string
-  avatar: string
-  default_project_image: string
-  default_client_logo: string
-  default_platform_logo: string
-  og_image: string
-  resume_url: string
-  calendly_url: string
-  social_links: Record<string, string>
+  phone?: string
+  location?: string
+  short_bio?: string
+  long_bio?: string
+  logo?: string
+  resume_url?: string
+  linkedin_url?: string
+  github_url?: string
+  twitter_url?: string
+  instagram_url?: string
+  facebook_url?: string
+  youtube_url?: string
+  behance_url?: string
+  dribbble_url?: string
+  website_url?: string
+  calendly_url?: string
   created_at: string
   updated_at: string
 }
@@ -59,9 +69,8 @@ export interface Profile {
 export interface Skill {
   id: number
   name: string
-  description: string
-  icon: string
-  color: string
+  level: number
+  icon?: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -71,8 +80,7 @@ export interface WorkReason {
   id: number
   title: string
   description: string
-  icon: string
-  color: string
+  icon?: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -81,11 +89,8 @@ export interface WorkReason {
 export interface Client {
   id: number
   name: string
-  logo: string
-  website: string
-  testimonial: string
-  rating: number
-  last_project: string
+  logo?: string
+  website_url?: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -95,7 +100,6 @@ export interface ProjectCategory {
   id: number
   name: string
   slug: string
-  description: string
   created_at: string
   updated_at: string
 }
@@ -103,15 +107,14 @@ export interface ProjectCategory {
 export interface Project {
   id: number
   title: string
-  short_description: string
-  long_description: string
-  image: string
-  images: string[]
-  technologies: string[]
-  project_url: string
-  github_url: string
-  linkedin_url: string
-  category_id: number
+  description: string
+  long_description?: string
+  image?: string
+  gallery?: string[]
+  technologies?: string[]
+  live_url?: string
+  github_url?: string
+  category_id?: number
   featured: boolean
   enabled: boolean
   date: string
@@ -124,9 +127,9 @@ export interface Service {
   id: number
   title: string
   description: string
-  icon: string
-  price: string
-  features: string[]
+  icon?: string
+  price?: string
+  features?: string[]
   enabled: boolean
   created_at: string
   updated_at: string
@@ -136,15 +139,17 @@ export interface Education {
   id: number
   degree: string
   institution: string
-  year: string
-  description: string
+  location?: string
+  start_date: string
+  end_date?: string
+  description?: string
   created_at: string
   updated_at: string
 }
 
 export interface Journey {
   id: number
-  year: string
+  year: number
   title: string
   description: string
   created_at: string
@@ -156,7 +161,7 @@ export interface Certification {
   name: string
   issuer: string
   date: string
-  url: string
+  url?: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -166,7 +171,7 @@ export interface Stat {
   id: number
   label: string
   value: string
-  icon: string
+  icon?: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -176,7 +181,7 @@ export interface AboutFeature {
   id: number
   title: string
   description: string
-  icon: string
+  icon?: string
   created_at: string
   updated_at: string
 }
@@ -184,10 +189,8 @@ export interface AboutFeature {
 export interface FreelancePlatform {
   id: number
   name: string
-  logo: string
-  profile_url: string
-  rating: number
-  reviews_count: number
+  url: string
+  logo?: string
   enabled: boolean
   created_at: string
   updated_at: string
@@ -196,9 +199,16 @@ export interface FreelancePlatform {
 export interface PaymentMethod {
   id: number
   name: string
-  logo: string
-  details: string
+  icon?: string
   enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Setting {
+  id: number
+  key: string
+  value: boolean
   created_at: string
   updated_at: string
 }
@@ -209,4 +219,22 @@ export interface LanguageSettings {
   default_language: string
   created_at: string
   updated_at: string
+}
+
+// Test connection function
+export async function testSupabaseConnection() {
+  try {
+    const { data, error } = await supabase.from("profile").select("id").limit(1)
+
+    if (error) {
+      console.error("Supabase connection test failed:", error)
+      return false
+    }
+
+    console.log("Supabase connection successful")
+    return true
+  } catch (error) {
+    console.error("Supabase connection test error:", error)
+    return false
+  }
 }
