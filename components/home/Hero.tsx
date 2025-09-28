@@ -2,53 +2,45 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { cachedServices } from "@/lib/database"
+import { profile } from "@/admin/profile"
 import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { getSettings } from "@/lib/settings"
-import type { Profile } from "@/lib/supabase"
+import { universalSettings } from "@/admin/toggle"
 
 export default function Hero() {
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [settings, setSettings] = useState<Record<string, boolean>>({})
+  const t = useTranslations()
+  const { isRTL } = useLanguage()
   const [text, setText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const [loopNum, setLoopNum] = useState(0)
   const [delta, setDelta] = useState(150)
+  const [websiteEnabled, setWebsiteEnabled] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
-  const [loading, setLoading] = useState(true)
 
-  const t = useTranslations()
-  const { isRTL } = useLanguage()
   const period = 2000
   const nameRef = useRef<HTMLSpanElement>(null)
+
+  // Preload critical resources
+  useEffect(() => {
+    // Preload critical images
+    if (profile.logo) {
+      const img = new Image()
+      img.src = profile.logo
+    }
+
+    // Set visibility after mount to prevent hydration issues
+    setIsVisible(true)
+    setWebsiteEnabled(universalSettings.website)
+  }, [])
 
   const textArray = [
     t?.hero?.title || "Data Analyst",
     t?.hero?.title2 || "Financial Accountant",
     `${t?.hero?.title || "Data Analyst"} & ${t?.hero?.title2 || "Financial Accountant"}`,
   ]
-
-  // Fetch data
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [profileData, settingsData] = await Promise.all([cachedServices.getProfile(), getSettings()])
-        setProfile(profileData)
-        setSettings(settingsData)
-      } catch (error) {
-        console.error("Error fetching hero data:", error)
-      } finally {
-        setLoading(false)
-        setIsVisible(true)
-      }
-    }
-
-    fetchData()
-  }, [])
 
   const tick = useCallback(() => {
     const i = loopNum % textArray.length
@@ -101,7 +93,7 @@ export default function Hero() {
     },
   }
 
-  if (loading) {
+  if (!isVisible) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -109,7 +101,7 @@ export default function Hero() {
     )
   }
 
-  if (!settings.website) {
+  if (!websiteEnabled) {
     return (
       <div className="relative isolate overflow-hidden bg-[#020617] min-h-screen flex items-center">
         <div className="absolute inset-0 -z-10">
@@ -162,14 +154,13 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              {profile?.short_bio ||
-                t?.hero?.description ||
+              {t?.hero?.description ||
                 "Transforming complex data into actionable insights that drive business decisions."}
             </motion.p>
 
             <div className="mt-10 flex items-center gap-x-6">
               <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={0}>
-                <a href={`mailto:${profile?.email || "muhamedhamdynour@gmail.com"}`}>
+                <a href="mailto:muhamedhamdynour@gmail.com">
                   <Button size="lg" className="bg-primary hover:bg-primary/90">
                     <FolderOpen className="h-4 w-4 mr-2" />
                     {t?.hero?.cta || "View My Work"}
@@ -178,7 +169,7 @@ export default function Hero() {
               </motion.div>
 
               <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={1}>
-                <a href={profile?.resume_url || "#"} target="_blank" rel="noopener noreferrer">
+                <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="lg">
                     <User className="h-4 w-4 mr-2" />
                     {t?.about?.title || "About Me"}
@@ -198,7 +189,7 @@ export default function Hero() {
               <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
                 <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
                 <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-                <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full filter blur-xl opacity-70"></div>
+                <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
 
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative w-64 h-64">
@@ -296,8 +287,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            {profile?.short_bio ||
-              t?.hero?.description ||
+            {t?.hero?.description ||
               "I help businesses make data-driven decisions through expert financial analysis and reporting."}
           </motion.p>
 
@@ -332,7 +322,7 @@ export default function Hero() {
             <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
               <div className="absolute top-0 left-0 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
               <div className="absolute top-0 right-0 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-              <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full filter blur-xl opacity-70"></div>
+              <div className="absolute bottom-0 left-20 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
 
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative w-64 h-64">

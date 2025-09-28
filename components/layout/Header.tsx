@@ -9,20 +9,17 @@ import { useLanguage } from "@/context/language-context"
 import { useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
-import { cachedServices } from "@/lib/database"
-import { getSettings, getLanguageSettings } from "@/lib/settings"
+import { profile } from "@/admin/profile"
+import { universalSettings } from "@/admin/toggle"
+import { languageSettings } from "@/admin/profile"
 import Image from "next/image"
 import SkipToContent from "./SkipToContent"
-import type { Profile } from "@/lib/supabase"
 
 export default function Header() {
   const [mounted, setMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [logoError, setLogoError] = useState(false)
   const [logoLoaded, setLogoLoaded] = useState(false)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [settings, setSettings] = useState<Record<string, boolean>>({})
-  const [languageSettings, setLanguageSettings] = useState<any>(null)
   const [navItems, setNavItems] = useState([{ name: "Home", href: "/", enabled: true }])
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, isRTL } = useLanguage()
@@ -30,80 +27,36 @@ export default function Header() {
   const pathname = usePathname()
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [profileData, settingsData, langSettings] = await Promise.all([
-          cachedServices.getProfile(),
-          getSettings(),
-          getLanguageSettings(),
-        ])
-        setProfile(profileData)
-        setSettings(settingsData)
-        setLanguageSettings(langSettings)
-      } catch (error) {
-        console.error("Error fetching header data:", error)
-      } finally {
-        setMounted(true)
-      }
-    }
+    setMounted(true)
 
-    fetchData()
-  }, [])
-
-  useEffect(() => {
-    if (mounted && settings) {
-      // Update navigation items based on settings
-      setNavItems([
-        { name: t.nav.home, href: "/", enabled: true },
-        { name: t.nav.projects, href: "/projects", enabled: settings.projects_page },
-        { name: t.nav.about, href: "/about", enabled: settings.about_page },
-        { name: t.nav.services, href: "/services", enabled: settings.services_page },
-        { name: t.nav.contact, href: "/contact", enabled: settings.contact_page },
-      ])
-    }
-  }, [t, language, mounted, settings])
+    // Actualizar elementos de navegación basados en universalSettings
+    setNavItems([
+      { name: t.nav.home, href: "/", enabled: true },
+      { name: t.nav.projects, href: "/projects", enabled: universalSettings.projects_page },
+      { name: t.nav.about, href: "/about", enabled: universalSettings.about_page },
+      { name: t.nav.services, href: "/services", enabled: universalSettings.services_page },
+      { name: t.nav.contact, href: "/contact", enabled: universalSettings.contact_page },
+    ])
+  }, [t, language])
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-  // Change language directly
+  // Cambiar idioma directamente
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "ar" : "en")
   }
 
-  // Filter enabled navigation items
+  // Filtrar elementos de navegación habilitados
   const enabledNavItems = navItems.filter((item) => item.enabled)
 
-  // Handle logo load
+  // Manejar carga del logo
   const handleLogoLoad = () => {
     setLogoLoaded(true)
   }
 
-  // Handle logo error
+  // Manejar error de carga del logo
   const handleLogoError = () => {
     setLogoError(true)
-  }
-
-  if (!mounted) {
-    return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
-          <div className="flex lg:flex-1">
-            <div className="h-8 w-8 bg-muted animate-pulse rounded-full"></div>
-          </div>
-          <div className="hidden lg:flex">
-            <div className="flex space-x-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-8 w-16 bg-muted animate-pulse rounded-full"></div>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-4 lg:flex-1 lg:justify-end">
-            <div className="h-8 w-8 bg-muted animate-pulse rounded-full"></div>
-            <div className="h-8 w-8 bg-muted animate-pulse rounded-full lg:hidden"></div>
-          </div>
-        </nav>
-      </header>
-    )
   }
 
   return (
@@ -118,9 +71,9 @@ export default function Header() {
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2" aria-label="Home">
-              <span className="sr-only">{profile?.name || "Portfolio"}</span>
+              <span className="sr-only">{profile.name}</span>
               <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
-                {!logoError && profile?.logo ? (
+                {!logoError ? (
                   <>
                     {!logoLoaded && (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -143,14 +96,7 @@ export default function Header() {
                   </>
                 ) : (
                   <div className="h-full w-full flex items-center justify-center">
-                    <span className="text-xl font-bold text-primary">
-                      {profile?.name
-                        ? profile.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                        : "MH"}
-                    </span>
+                    <span className="text-xl font-bold text-primary">MH</span>
                   </div>
                 )}
               </div>
@@ -172,18 +118,16 @@ export default function Header() {
                   {item.name}
                 </Link>
               ))}
-              {profile?.resume_url && (
-                <Link
-                  href={profile.resume_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center gap-1.5"
-                  aria-label="Download CV"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  CV
-                </Link>
-              )}
+              <Link
+                href={profile.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center gap-1.5"
+                aria-label="Download CV"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                CV
+              </Link>
             </div>
           </div>
 
@@ -202,7 +146,7 @@ export default function Header() {
               </button>
             )}
 
-            {languageSettings?.enable_language_toggle && (
+            {languageSettings.enableLanguageToggle && (
               <button
                 onClick={toggleLanguage}
                 className="p-2 rounded-full bg-black/10 dark:bg-white/5 backdrop-blur-sm hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
