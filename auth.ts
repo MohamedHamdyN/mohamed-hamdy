@@ -1,24 +1,29 @@
-import NextAuth, { type NextAuthConfig } from "next-auth"
-import Credentials from "next-auth/providers/credentials"
+import NextAuth, { type NextAuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { compare } from "bcryptjs"
 import prisma from "@/lib/db/client"
 
-const config = {
+export const authConfig: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.AUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   providers: [
-    Credentials({
+    CredentialsProvider({
+      name: "Credentials",
       credentials: {
-        email: {},
-        password: {},
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials.email || !credentials.password) {
+        if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required")
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email: credentials.email },
         })
 
         if (!user) {
@@ -29,7 +34,7 @@ const config = {
           throw new Error("User has no password set")
         }
 
-        const passwordMatch = await compare(credentials.password as string, user.password)
+        const passwordMatch = await compare(credentials.password, user.password)
 
         if (!passwordMatch) {
           throw new Error("Incorrect password")
@@ -48,16 +53,19 @@ const config = {
     signIn: "/admin/login",
   },
   callbacks: {
-    authorized({ request, auth }) {
-      const isAdminRoute = request.nextUrl.pathname.startsWith("/admin")
-
-      if (isAdminRoute) {
-        return !!auth
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
       }
-
-      return true
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string
+      }
+      return session
     },
   },
-} satisfies NextAuthConfig
+}
 
-export const { handlers, auth, signIn, signOut } = NextAuth(config)
+export const { handlers, auth } = NextAuth(authConfig)
