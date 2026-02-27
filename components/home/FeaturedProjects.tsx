@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { projects, projectCategoriesName } from "@/admin/projects"
 import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
@@ -11,44 +10,55 @@ import ProjectCard from "@/components/projects/ProjectCard"
 import ProjectModal from "@/components/projects/ProjectModal"
 import { ArrowRight } from "lucide-react"
 import { useTheme } from "next-themes"
+import type { ProjectWithDetails } from "@/lib/queries/projects"
 
-export default function FeaturedProjects() {
+interface FeaturedProjectsProps {
+  projects?: ProjectWithDetails[]
+}
+
+export default function FeaturedProjects({ projects = [] }: FeaturedProjectsProps) {
   const t = useTranslations()
   const { isRTL } = useLanguage()
-  const [filter, setFilter] = useState<number | "all">("all")
+  const [filter, setFilter] = useState<string>("all")
   const [hoveredFilter, setHoveredFilter] = useState<string | null>(null)
-  const [selectedProject, setSelectedProject] = useState<any>(null)
+  const [selectedProject, setSelectedProject] = useState<ProjectWithDetails | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { theme } = useTheme()
 
-  // Contar proyectos por categoría
+  // Count projects by category
   const projectCounts = {
-    all: projects.filter((p) => p.featured).length,
-  } as Record<string | number, number>
+    all: projects.filter((p) => p.status === "published").length,
+  } as Record<string, number>
 
+  // Group projects by category
+  const projectsByCategory: Record<string, ProjectWithDetails[]> = {}
   projects
-    .filter((p) => p.featured)
+    .filter((p) => p.status === "published")
     .forEach((project) => {
-      projectCounts[project.categoryId] = (projectCounts[project.categoryId] || 0) + 1
+      const categoryId = project.category || "uncategorized"
+      if (!projectsByCategory[categoryId]) {
+        projectsByCategory[categoryId] = []
+        projectCounts[categoryId] = 0
+      }
+      projectsByCategory[categoryId].push(project)
+      projectCounts[categoryId]++
     })
 
   // Create categories for the filter with counts
   const categories = [
     { id: "all", label: t?.projects?.filters?.all || "All", count: projectCounts.all },
-    ...Object.entries(projectCategoriesName).map(([id, name]) => {
-      return {
-        id,
-        label: name,
-        count: projectCounts[Number(id)] || 0,
-      }
-    }),
+    ...Object.keys(projectsByCategory).map((catId) => ({
+      id: catId,
+      label: catId.charAt(0).toUpperCase() + catId.slice(1),
+      count: projectCounts[catId] || 0,
+    })),
   ]
 
   // Filter featured projects based on the category selected
   const filteredProjects =
     filter === "all"
-      ? projects.filter((project) => project.featured)
-      : projects.filter((project) => project.categoryId === filter && project.featured)
+      ? projects.filter((project) => project.status === "published")
+      : projects.filter((project) => (project.category || "uncategorized") === filter && project.status === "published")
 
   // Limit to 6 projects maximum
   const displayedProjects = filteredProjects.slice(0, 6)

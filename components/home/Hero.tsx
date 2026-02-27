@@ -2,22 +2,24 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { profile } from "@/admin/profile"
 import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { universalSettings } from "@/admin/toggle"
+import type { ProfileWithSocials } from "@/lib/queries/profile"
 
-export default function Hero() {
+interface HeroProps {
+  profile?: ProfileWithSocials | null
+}
+
+export default function Hero({ profile }: HeroProps) {
   const t = useTranslations()
   const { isRTL } = useLanguage()
   const [text, setText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const [loopNum, setLoopNum] = useState(0)
   const [delta, setDelta] = useState(150)
-  const [websiteEnabled, setWebsiteEnabled] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
 
   const period = 2000
@@ -26,15 +28,15 @@ export default function Hero() {
   // Preload critical resources
   useEffect(() => {
     // Preload critical images
-    if (profile.logo) {
+    if (profile?.logo) {
       const img = new Image()
+      img.crossOrigin = "anonymous"
       img.src = profile.logo
     }
 
     // Set visibility after mount to prevent hydration issues
     setIsVisible(true)
-    setWebsiteEnabled(universalSettings.website)
-  }, [])
+  }, [profile])
 
   const textArray = [
     t?.hero?.title || "Data Analyst",

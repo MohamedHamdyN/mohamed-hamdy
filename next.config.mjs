@@ -19,16 +19,17 @@ const nextConfig = {
   
   // Configuración de imágenes
   images: {
-    domains: [
-      'i.imgur.com',
-      'res.cloudinary.com',
-      'images.unsplash.com',
-      'ibb.co',
-      'i.ibb.co',
-      'i.postimg.cc',
-      'imgur.com',
-      'postimg.cc',
-      'hebbkx1anhila5yf.public.blob.vercel-storage.com'
+    remotePatterns: [
+      { protocol: 'https', hostname: 'i.imgur.com' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'ibb.co' },
+      { protocol: 'https', hostname: 'i.ibb.co' },
+      { protocol: 'https', hostname: 'i.postimg.cc' },
+      { protocol: 'https', hostname: 'imgur.com' },
+      { protocol: 'https', hostname: 'postimg.cc' },
+      { protocol: 'https', hostname: 'hebbkx1anhila5yf.public.blob.vercel-storage.com' },
+      { protocol: 'https', hostname: '**.example.com' },
     ],
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

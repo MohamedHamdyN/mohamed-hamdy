@@ -1,13 +1,17 @@
 "use client"
 
-import { skills } from "@/admin/skills"
 import { useTranslations } from "@/hooks/useTranslations"
 import InfiniteSlider from "@/components/shared/InfiniteSlider"
+import type { SkillWithCategory } from "@/lib/queries/other"
 
-export default function Skills() {
+interface SkillsProps {
+  skills?: SkillWithCategory[]
+}
+
+export default function Skills({ skills = [] }: SkillsProps) {
   const t = useTranslations()
 
-  // Filter enabled skills
+  // Filter enabled skills (all skills from DB are enabled by default)
   const enabledSkills = skills.filter((skill) => skill.enabled !== false)
 
   return (

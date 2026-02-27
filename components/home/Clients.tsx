@@ -2,14 +2,18 @@
 
 import { useRef } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
-import { clients } from "@/admin/clients"
 import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import Image from "next/image"
 import { Star, ExternalLink, FileCode } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { Client } from "@/lib/queries/other"
 
-export default function Clients() {
+interface ClientsProps {
+  clients?: Client[]
+}
+
+export default function Clients({ clients = [] }: ClientsProps) {
   const t = useTranslations()
   const { isRTL } = useLanguage()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -21,7 +25,7 @@ export default function Clients() {
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
   const y = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, 100])
 
-  // Filter enabled clients
+  // Filter enabled clients (all clients from DB are enabled by default)
   const enabledClients = clients.filter((client) => client.enabled !== false)
 
   return (
