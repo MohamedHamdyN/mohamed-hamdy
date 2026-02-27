@@ -1,5 +1,7 @@
-import prisma from "@/lib/db/client"
+import { PrismaClient } from "@prisma/client"
 import { hash } from "bcryptjs"
+
+const prisma = new PrismaClient()
 
 async function main() {
   console.log("[v0] Starting database seed...")
@@ -622,10 +624,11 @@ My approach combines technical expertise with clear communication, ensuring that
     }
 
     console.log("[v0] Seeding completed successfully")
-    process.exit(0)
   } catch (error) {
     console.error("[v0] Seeding failed:", error)
     process.exit(1)
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
