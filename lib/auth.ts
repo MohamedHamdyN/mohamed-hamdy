@@ -1,4 +1,4 @@
-import { sql } from '@neondatabase/serverless'
+import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
@@ -26,7 +26,7 @@ export async function createAdminSession(adminId: number): Promise<string> {
   const token = generateSessionToken()
   const expiresAt = new Date(Date.now() + SESSION_DURATION)
 
-  await sql`
+  await db.query`
     INSERT INTO admin_sessions (admin_id, token, expires_at)
     VALUES (${adminId}, ${token}, ${expiresAt})
   `
@@ -43,7 +43,7 @@ export async function getAdminFromSession(): Promise<{ id: number; email: string
       return null
     }
 
-    const result = await sql`
+    const result = await db.query`
       SELECT a.id, a.email
       FROM admins a
       JOIN admin_sessions s ON a.id = s.admin_id
@@ -72,7 +72,7 @@ export async function logout(): Promise<void> {
     const token = cookieStore.get('admin_session')?.value
 
     if (token) {
-      await sql`
+      await db.query`
         DELETE FROM admin_sessions
         WHERE token = ${token}
       `
