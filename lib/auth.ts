@@ -43,7 +43,7 @@ export async function getAdminFromSession(): Promise<{ id: number; email: string
       return null
     }
 
-    const result = await db.query`
+    const rows = await db.query`
       SELECT a.id, a.email
       FROM admins a
       JOIN admin_sessions s ON a.id = s.admin_id
@@ -52,13 +52,13 @@ export async function getAdminFromSession(): Promise<{ id: number; email: string
       LIMIT 1
     `
 
-    if (result.rows.length === 0) {
+    if (rows.length === 0) {
       return null
     }
 
     return {
-      id: result.rows[0].id as number,
-      email: result.rows[0].email as string,
+      id: rows[0].id as number,
+      email: rows[0].email as string,
     }
   } catch (error) {
     console.error('[v0] Error getting admin from session:', error)

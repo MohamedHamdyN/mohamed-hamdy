@@ -1,6 +1,6 @@
 'use server'
 
-import { sql } from '@neondatabase/serverless'
+import { db } from '@/lib/db'
 import { hashPassword, verifyPassword, createAdminSession, setSessionCookie } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
@@ -16,16 +16,16 @@ export async function loginAdmin(email: string, password: string) {
     }
 
     // Find admin by email
-    const result = await sql`
+    const rows = await db.query`
       SELECT id, password_hash FROM admins WHERE email = ${email}
       LIMIT 1
     `
 
-    if (result.rows.length === 0) {
+    if (rows.length === 0) {
       return { error: 'Invalid email or password' }
     }
 
-    const admin = result.rows[0] as { id: number; password_hash: string }
+    const admin = rows[0] as { id: number; password_hash: string }
 
     // Verify password
     const isValid = await verifyPassword(password, admin.password_hash)
@@ -60,7 +60,7 @@ export async function logoutAdmin() {
 export async function initializeAdmin(email: string, password: string) {
   try {
     console.log('[v0] Starting admin initialization for email:', email)
-    
+
     // Validate input
     if (!email || !password) {
       return { error: 'Email and password are required' }
@@ -72,11 +72,11 @@ export async function initializeAdmin(email: string, password: string) {
 
     // Check if admin already exists
     console.log('[v0] Checking if admin already exists')
-    const existing = await sql`
+    const existing = await db.query`
       SELECT id FROM admins WHERE email = ${email} LIMIT 1
     `
 
-    if (existing.rows.length > 0) {
+    if (existing.length > 0) {
       console.log('[v0] Admin already exists')
       return { error: 'Admin account already exists' }
     }
@@ -85,19 +85,19 @@ export async function initializeAdmin(email: string, password: string) {
     console.log('[v0] Hashing password and creating admin account')
     const passwordHash = await hashPassword(password)
 
-    const result = await sql`
+    const result = await db.query`
       INSERT INTO admins (email, password_hash)
       VALUES (${email}, ${passwordHash})
       RETURNING id
     `
 
-    if (!result.rows || result.rows.length === 0) {
+    if (!result || result.length === 0) {
       console.log('[v0] Failed to create admin - no rows returned')
       return { error: 'Failed to create admin account' }
     }
 
-    console.log('[v0] Admin created successfully with ID:', (result.rows[0] as any).id)
-    return { success: true, adminId: (result.rows[0] as any).id }
+    console.log('[v0] Admin created successfully with ID:', (result[0] as any).id)
+    return { success: true, adminId: (result[0] as any).id }
   } catch (error) {
     console.error('[v0] Initialize admin error:', error)
     const errorMessage = error instanceof Error ? error.message : 'An error occurred while creating admin account'
