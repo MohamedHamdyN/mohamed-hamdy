@@ -1,13 +1,17 @@
 "use client"
 
-import { reasons } from "@/admin/work-reasons"
 import { useTranslations } from "@/hooks/useTranslations"
 import InfiniteSlider from "@/components/shared/InfiniteSlider"
+import type { AboutSection } from "@/lib/queries/profile"
 
-export default function WhyWorkWithMe() {
+interface WhyWorkWithMeProps {
+  reasons?: AboutSection[]
+}
+
+export default function WhyWorkWithMe({ reasons = [] }: WhyWorkWithMeProps) {
   const t = useTranslations()
 
-  // Filter enabled reasons
+  // Filter enabled reasons (all reasons from DB are enabled by default)
   const enabledReasons = reasons.filter((reason) => reason.enabled !== false)
 
   return (
