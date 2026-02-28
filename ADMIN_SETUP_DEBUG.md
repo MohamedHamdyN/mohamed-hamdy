@@ -54,7 +54,7 @@ If you see errors like:
 ### Common Issues and Solutions:
 
 **Issue**: "An error occurred while creating admin account"
-- Check browser console (F12) for detailed error logs
+- Check browser console (F12) for detailed error logsi
 - Verify DATABASE_URL is set
 - Test the `/api/test-db` endpoint directly
 

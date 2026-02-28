@@ -1,6 +1,6 @@
 'use server'
 
-import { sql } from '@neondatabase/serverless'
+import { db } from '@/lib/db'
 import { getAdminFromSession } from '@/lib/auth'
 import { Profile, Skill, Project, Service, Client, SocialLink, SiteSettings } from '@/lib/db'
 
@@ -31,10 +31,10 @@ function generateSlug(title: string): string {
 
 export async function getProfile(): Promise<Profile | null> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT * FROM profiles LIMIT 1
     `
-    return result.rows[0] as Profile | undefined || null
+    return result[0] as Profile | undefined || null
   } catch (error) {
     console.error('Error getting profile:', error)
     return null
@@ -45,7 +45,7 @@ export async function updateProfile(data: Partial<Profile>) {
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       UPDATE profiles 
       SET 
         name = COALESCE(${data.name}, name),
@@ -62,7 +62,7 @@ export async function updateProfile(data: Partial<Profile>) {
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating profile:', error)
     return { error: 'Failed to update profile' }
@@ -73,10 +73,10 @@ export async function updateProfile(data: Partial<Profile>) {
 
 export async function getSkills(): Promise<Skill[]> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT * FROM skills ORDER BY "order" ASC
     `
-    return result.rows as Skill[]
+    return result as Skill[]
   } catch (error) {
     console.error('Error getting skills:', error)
     return []
@@ -87,13 +87,13 @@ export async function createSkill(data: Omit<Skill, 'id' | 'created_at' | 'updat
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       INSERT INTO skills (name, description, icon, color, enabled, "order")
       VALUES (${data.name}, ${data.description}, ${data.icon}, ${data.color}, ${data.enabled}, ${data.order})
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating skill:', error)
     return { error: 'Failed to create skill' }
@@ -104,7 +104,7 @@ export async function updateSkill(id: number, data: Partial<Skill>) {
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       UPDATE skills 
       SET 
         name = COALESCE(${data.name}, name),
@@ -118,7 +118,7 @@ export async function updateSkill(id: number, data: Partial<Skill>) {
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating skill:', error)
     return { error: 'Failed to update skill' }
@@ -129,7 +129,7 @@ export async function deleteSkill(id: number) {
   try {
     await requireAdmin()
 
-    await sql`
+    await db.query`
       DELETE FROM skills WHERE id = ${id}
     `
 
@@ -144,16 +144,11 @@ export async function deleteSkill(id: number) {
 
 export async function getProjects(includeDraft = false): Promise<Project[]> {
   try {
-    let query = sql`SELECT * FROM projects`
+    const result = includeDraft
+      ? await db.query`SELECT * FROM projects ORDER BY "order" DESC, date DESC`
+      : await db.query`SELECT * FROM projects WHERE draft = false ORDER BY "order" DESC, date DESC`
 
-    if (!includeDraft) {
-      query = sql`SELECT * FROM projects WHERE draft = false`
-    }
-
-    query = sql`${query} ORDER BY "order" DESC, date DESC`
-    const result = await query
-
-    return result.rows as Project[]
+    return result as Project[]
   } catch (error) {
     console.error('Error getting projects:', error)
     return []
@@ -162,10 +157,10 @@ export async function getProjects(includeDraft = false): Promise<Project[]> {
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT * FROM projects WHERE slug = ${slug} LIMIT 1
     `
-    return result.rows[0] as Project | undefined || null
+    return result[0] as Project | undefined || null
   } catch (error) {
     console.error('Error getting project:', error)
     return null
@@ -179,21 +174,21 @@ export async function createProject(data: Omit<Project, 'id' | 'slug' | 'created
     const slug = generateSlug(data.title)
 
     // Check slug uniqueness
-    const existing = await sql`
+    const existing = await db.query`
       SELECT id FROM projects WHERE slug = ${slug} LIMIT 1
     `
 
-    if (existing.rows.length > 0) {
+    if (existing.length > 0) {
       return { error: 'A project with this title already exists' }
     }
 
-    const result = await sql`
+    const result = await db.query`
       INSERT INTO projects (title, slug, description, short_description, category_id, image_url, project_url, linkedin_url, technologies, date, featured, draft, "order")
       VALUES (${data.title}, ${slug}, ${data.description}, ${data.short_description}, ${data.category_id}, ${data.image_url}, ${data.project_url}, ${data.linkedin_url}, ${JSON.stringify(data.technologies)}, ${data.date}, ${data.featured}, ${data.draft}, 0)
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating project:', error)
     return { error: 'Failed to create project' }
@@ -204,7 +199,7 @@ export async function updateProject(id: number, data: Partial<Project>) {
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       UPDATE projects 
       SET 
         title = COALESCE(${data.title}, title),
@@ -224,7 +219,7 @@ export async function updateProject(id: number, data: Partial<Project>) {
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating project:', error)
     return { error: 'Failed to update project' }
@@ -235,7 +230,7 @@ export async function deleteProject(id: number) {
   try {
     await requireAdmin()
 
-    await sql`
+    await db.query`
       DELETE FROM projects WHERE id = ${id}
     `
 
@@ -250,10 +245,10 @@ export async function deleteProject(id: number) {
 
 export async function getServices(): Promise<Service[]> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT * FROM services ORDER BY "order" ASC
     `
-    return result.rows as Service[]
+    return result as Service[]
   } catch (error) {
     console.error('Error getting services:', error)
     return []
@@ -264,13 +259,13 @@ export async function createService(data: Omit<Service, 'id' | 'created_at' | 'u
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       INSERT INTO services (title, description, icon, color, features, enabled, "order")
       VALUES (${data.title}, ${data.description}, ${data.icon}, ${data.color}, ${JSON.stringify(data.features)}, ${data.enabled}, ${data.order})
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating service:', error)
     return { error: 'Failed to create service' }
@@ -281,7 +276,7 @@ export async function updateService(id: number, data: Partial<Service>) {
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       UPDATE services 
       SET 
         title = COALESCE(${data.title}, title),
@@ -296,7 +291,7 @@ export async function updateService(id: number, data: Partial<Service>) {
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating service:', error)
     return { error: 'Failed to update service' }
@@ -307,7 +302,7 @@ export async function deleteService(id: number) {
   try {
     await requireAdmin()
 
-    await sql`
+    await db.query`
       DELETE FROM services WHERE id = ${id}
     `
 
@@ -322,10 +317,10 @@ export async function deleteService(id: number) {
 
 export async function getClients(): Promise<Client[]> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT * FROM clients ORDER BY "order" ASC
     `
-    return result.rows as Client[]
+    return result as Client[]
   } catch (error) {
     console.error('Error getting clients:', error)
     return []
@@ -336,13 +331,13 @@ export async function createClient(data: Omit<Client, 'id' | 'created_at' | 'upd
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       INSERT INTO clients (name, logo_url, testimonial, rating, website, enabled, "order")
       VALUES (${data.name}, ${data.logo_url}, ${data.testimonial}, ${data.rating}, ${data.website}, ${data.enabled}, ${data.order})
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating client:', error)
     return { error: 'Failed to create client' }
@@ -353,10 +348,10 @@ export async function updateClient(id: number, data: Partial<Client>) {
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       UPDATE clients 
       SET 
-        name = COALESCE(${data.name}, name),
+        name = COALESCE(${data.name ?? null}, name),
         logo_url = COALESCE(${data.logo_url}, logo_url),
         testimonial = COALESCE(${data.testimonial}, testimonial),
         rating = COALESCE(${data.rating}, rating),
@@ -368,7 +363,7 @@ export async function updateClient(id: number, data: Partial<Client>) {
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating client:', error)
     return { error: 'Failed to update client' }
@@ -379,7 +374,7 @@ export async function deleteClient(id: number) {
   try {
     await requireAdmin()
 
-    await sql`
+    await db.query`
       DELETE FROM clients WHERE id = ${id}
     `
 
@@ -394,10 +389,10 @@ export async function deleteClient(id: number) {
 
 export async function getSocialLinks(): Promise<SocialLink[]> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT * FROM social_links ORDER BY "order" ASC
     `
-    return result.rows as SocialLink[]
+    return result as SocialLink[]
   } catch (error) {
     console.error('Error getting social links:', error)
     return []
@@ -408,13 +403,13 @@ export async function createSocialLink(data: Omit<SocialLink, 'id' | 'created_at
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       INSERT INTO social_links (platform, url, enabled, "order")
       VALUES (${data.platform}, ${data.url}, ${data.enabled}, ${data.order})
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating social link:', error)
     return { error: 'Failed to create social link' }
@@ -425,7 +420,7 @@ export async function updateSocialLink(id: number, data: Partial<SocialLink>) {
   try {
     await requireAdmin()
 
-    const result = await sql`
+    const result = await db.query`
       UPDATE social_links 
       SET 
         platform = COALESCE(${data.platform}, platform),
@@ -437,7 +432,7 @@ export async function updateSocialLink(id: number, data: Partial<SocialLink>) {
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating social link:', error)
     return { error: 'Failed to update social link' }
@@ -448,7 +443,7 @@ export async function deleteSocialLink(id: number) {
   try {
     await requireAdmin()
 
-    await sql`
+    await db.query`
       DELETE FROM social_links WHERE id = ${id}
     `
 
@@ -463,13 +458,13 @@ export async function deleteSocialLink(id: number) {
 
 export async function getSiteSettings(): Promise<Record<string, any>> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT key, value, type FROM site_settings
     `
 
     const settings: Record<string, any> = {}
 
-    result.rows.forEach((row: any) => {
+    result.forEach((row: any) => {
       const value = row.value
       if (row.type === 'json') {
         settings[row.key] = JSON.parse(value)
@@ -493,7 +488,7 @@ export async function updateSiteSettings(key: string, value: any, type: 'string'
 
     const stringValue = typeof value === 'string' ? value : JSON.stringify(value)
 
-    const result = await sql`
+    const result = await db.query`
       INSERT INTO site_settings (key, value, type, updated_at)
       VALUES (${key}, ${stringValue}, ${type}, NOW())
       ON CONFLICT (key)
@@ -501,7 +496,7 @@ export async function updateSiteSettings(key: string, value: any, type: 'string'
       RETURNING *
     `
 
-    return { success: true, data: result.rows[0] }
+    return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating site settings:', error)
     return { error: 'Failed to update site settings' }
