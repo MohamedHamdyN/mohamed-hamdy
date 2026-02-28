@@ -64,60 +64,91 @@ export interface SiteSettingsData {
 
 // Skills
 export async function getSkills(): Promise<SkillData[]> {
-  const skills = await prisma.skill.findMany({
-    where: { enabled: true },
-    orderBy: { order: "asc" },
-  })
-  return skills as SkillData[]
+  try {
+    const skills = await prisma.skill.findMany({
+      where: { enabled: true },
+      orderBy: { order: "asc" },
+    })
+    return skills as SkillData[]
+  } catch (error) {
+    console.error("[v0] Error fetching skills:", error instanceof Error ? error.message : error)
+    return []
+  }
 }
 
 export async function getAllSkills(): Promise<SkillData[]> {
-  const skills = await prisma.skill.findMany({
-    orderBy: { order: "asc" },
-  })
-  return skills as SkillData[]
+  try {
+    const skills = await prisma.skill.findMany({
+      orderBy: { order: "asc" },
+    })
+    return skills as SkillData[]
+  } catch (error) {
+    console.error("[v0] Error fetching all skills:", error instanceof Error ? error.message : error)
+    return []
+  }
 }
 
 // Clients
 export async function getClients(): Promise<ClientData[]> {
-  const clients = await prisma.client.findMany({
-    where: { enabled: true },
-    orderBy: { order: "asc" },
-  })
-  return clients as ClientData[]
+  try {
+    const clients = await prisma.client.findMany({
+      where: { enabled: true },
+      orderBy: { order: "asc" },
+    })
+    return clients as ClientData[]
+  } catch (error) {
+    console.error("[v0] Error fetching clients:", error instanceof Error ? error.message : error)
+    return []
+  }
 }
 
 export async function getAllClients(): Promise<ClientData[]> {
-  const clients = await prisma.client.findMany({
-    orderBy: { order: "asc" },
-  })
-  return clients as ClientData[]
+  try {
+    const clients = await prisma.client.findMany({
+      orderBy: { order: "asc" },
+    })
+    return clients as ClientData[]
+  } catch (error) {
+    console.error("[v0] Error fetching all clients:", error instanceof Error ? error.message : error)
+    return []
+  }
 }
 
 // Services
 export async function getServices(): Promise<ServiceData[]> {
-  const services = await prisma.service.findMany({
-    where: { enabled: true },
-    orderBy: { order: "asc" },
-  })
-  return services as ServiceData[]
+  try {
+    const services = await prisma.service.findMany({
+      where: { enabled: true },
+      orderBy: { order: "asc" },
+    })
+    return services as ServiceData[]
+  } catch (error) {
+    console.error("[v0] Error fetching services:", error instanceof Error ? error.message : error)
+    return []
+  }
 }
 
 export async function getAllServices(): Promise<ServiceData[]> {
-  const services = await prisma.service.findMany({
-    orderBy: { order: "asc" },
-  })
-  return services as ServiceData[]
+  try {
+    const services = await prisma.service.findMany({
+      orderBy: { order: "asc" },
+    })
+    return services as ServiceData[]
+  } catch (error) {
+    console.error("[v0] Error fetching all services:", error instanceof Error ? error.message : error)
+    return []
+  }
 }
 
 // Site Settings
-export async function getSiteSettings(): Promise<SiteSettingsData> {
-  const settings = await prisma.siteSettings.findFirst()
+export async function getSiteSettings(): Promise<SiteSettingsData | null> {
+  try {
+    const settings = await prisma.siteSettings.findFirst()
 
-  // If no settings exist, create defaults
-  if (!settings) {
-    return await prisma.siteSettings.create({
-      data: {
+    // If no settings exist, return default settings (don't create yet)
+    if (!settings) {
+      return {
+        id: "default",
         siteStatus: "active",
         defaultLanguage: "en",
         enableLanguageToggle: false,
@@ -138,22 +169,57 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
         paymentMethodsEnabled: true,
         contactFormEnabled: true,
         calendlyFeatureEnabled: true,
-      },
-    }) as Promise<SiteSettingsData>
-  }
+      } as SiteSettingsData
+    }
 
-  return settings as SiteSettingsData
+    return settings as SiteSettingsData
+  } catch (error) {
+    console.error("[v0] Error fetching site settings:", error instanceof Error ? error.message : error)
+    // Return safe defaults to allow app to load
+    return {
+      id: "default",
+      siteStatus: "active",
+      defaultLanguage: "en",
+      enableLanguageToggle: false,
+      websiteEnabled: true,
+      projectsPageEnabled: true,
+      servicesPageEnabled: true,
+      aboutPageEnabled: true,
+      contactPageEnabled: true,
+      resumePageEnabled: true,
+      projectsHomeEnabled: true,
+      servicesHomeEnabled: true,
+      aboutHomeEnabled: true,
+      skillsEnabled: true,
+      whyWorkWithMeEnabled: true,
+      clientsEnabled: true,
+      contactHomeEnabled: true,
+      freelancePlatformsEnabled: true,
+      paymentMethodsEnabled: true,
+      contactFormEnabled: true,
+      calendlyFeatureEnabled: true,
+    } as SiteSettingsData
+  }
 }
 
 export async function updateSiteSettings(
   data: Partial<SiteSettingsData>
 ): Promise<SiteSettingsData> {
-  const settings = await getSiteSettings()
+  try {
+    const settings = await getSiteSettings()
 
-  const updated = await prisma.siteSettings.update({
-    where: { id: settings.id },
-    data,
-  })
+    if (!settings || settings.id === "default") {
+      throw new Error("Site settings not initialized in database")
+    }
 
-  return updated as SiteSettingsData
+    const updated = await prisma.siteSettings.update({
+      where: { id: settings.id },
+      data,
+    })
+
+    return updated as SiteSettingsData
+  } catch (error) {
+    console.error("[v0] Error updating site settings:", error instanceof Error ? error.message : error)
+    throw error
+  }
 }

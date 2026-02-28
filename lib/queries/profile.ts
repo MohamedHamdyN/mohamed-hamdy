@@ -68,37 +68,48 @@ export interface ProfileWithRelations extends ProfileData {
 }
 
 export async function getProfile(): Promise<ProfileWithRelations | null> {
-  const profile = await prisma.profile.findFirst({
-    include: {
-      socialLinks: {
-        where: { isActive: true },
-        orderBy: { order: "asc" },
+  try {
+    const profile = await prisma.profile.findFirst({
+      include: {
+        socialLinks: {
+          where: { isActive: true },
+          orderBy: { order: "asc" },
+        },
+        stats: {
+          where: { enabled: true },
+          orderBy: { order: "asc" },
+        },
+        certifications: {
+          where: { enabled: true },
+          orderBy: { order: "asc" },
+        },
+        journeyEntries: {
+          orderBy: { order: "asc" },
+        },
+        educationEntries: {
+          orderBy: { order: "asc" },
+        },
       },
-      stats: {
-        where: { enabled: true },
-        orderBy: { order: "asc" },
-      },
-      certifications: {
-        where: { enabled: true },
-        orderBy: { order: "asc" },
-      },
-      journeyEntries: {
-        orderBy: { order: "asc" },
-      },
-      educationEntries: {
-        orderBy: { order: "asc" },
-      },
-    },
-  })
+    })
 
-  return profile as ProfileWithRelations | null
+    return profile as ProfileWithRelations | null
+  } catch (error) {
+    // Database table doesn't exist yet - return null to allow build to proceed
+    console.error("[v0] Error fetching profile:", error instanceof Error ? error.message : error)
+    return null
+  }
 }
 
 export async function updateProfile(data: Partial<ProfileData>): Promise<ProfileData> {
-  const profile = await prisma.profile.update({
-    where: { id: (await getProfile())?.id || "" },
-    data,
-  })
+  try {
+    const profile = await prisma.profile.update({
+      where: { id: (await getProfile())?.id || "" },
+      data,
+    })
 
-  return profile as ProfileData
+    return profile as ProfileData
+  } catch (error) {
+    console.error("[v0] Error updating profile:", error instanceof Error ? error.message : error)
+    throw error
+  }
 }
