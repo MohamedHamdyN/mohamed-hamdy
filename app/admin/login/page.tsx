@@ -20,15 +20,22 @@ export default function AdminLoginPage() {
     setIsLoading(true)
 
     try {
+      console.log('[v0] Attempting login for:', email)
       const result = await loginAdmin(email, password)
 
+      console.log('[v0] Login result:', result)
+      
       if (result.error) {
+        console.error('[v0] Login error:', result.error)
         setError(result.error)
       } else if (result.success) {
+        console.log('[v0] Login successful, redirecting to dashboard')
         router.push('/admin/dashboard')
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      console.error('[v0] Unexpected error during login:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }

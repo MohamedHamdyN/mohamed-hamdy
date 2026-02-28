@@ -36,7 +36,7 @@ export async function createAdminSession(adminId: number): Promise<string> {
 
 export async function getAdminFromSession(): Promise<{ id: number; email: string } | null> {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const token = cookieStore.get('admin_session')?.value
 
     if (!token) {
@@ -61,31 +61,42 @@ export async function getAdminFromSession(): Promise<{ id: number; email: string
       email: result.rows[0].email as string,
     }
   } catch (error) {
-    console.error('Error getting admin from session:', error)
+    console.error('[v0] Error getting admin from session:', error)
     return null
   }
 }
 
 export async function logout(): Promise<void> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('admin_session')?.value
+  try {
+    const cookieStore = cookies()
+    const token = cookieStore.get('admin_session')?.value
 
-  if (token) {
-    await sql`
-      DELETE FROM admin_sessions
-      WHERE token = ${token}
-    `
+    if (token) {
+      await sql`
+        DELETE FROM admin_sessions
+        WHERE token = ${token}
+      `
+    }
+
+    cookieStore.delete('admin_session')
+  } catch (error) {
+    console.error('[v0] Error during logout:', error)
+    throw error
   }
-
-  cookieStore.delete('admin_session')
 }
 
 export async function setSessionCookie(token: string): Promise<void> {
-  const cookieStore = await cookies()
-  cookieStore.set('admin_session', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: SESSION_DURATION / 1000,
-  })
+  try {
+    const cookieStore = cookies()
+    cookieStore.set('admin_session', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: SESSION_DURATION / 1000,
+      path: '/',
+    })
+  } catch (error) {
+    console.error('[v0] Error setting session cookie:', error)
+    throw error
+  }
 }
