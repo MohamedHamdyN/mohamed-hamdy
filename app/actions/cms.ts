@@ -3,7 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { getAdminFromSession } from '@/lib/auth'
-import { Profile, Skill, Project, Service, Client, SocialLink } from '@/lib/db'
+import {
+  Profile,
+  Skill,
+  Project,
+  Service,
+  Client,
+  SocialLink,
+} from '@/lib/db'
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
@@ -32,6 +39,99 @@ function revalidatePublic() {
   revalidatePath('/about')
   revalidatePath('/services')
   revalidatePath('/contact')
+}
+
+// ✅ مهم: تحويل JS array إلى Postgres text[] literal
+function toPgTextArray(value: unknown): string | null {
+  if (value == null) return null
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return '{}'
+
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (Array.isArray(parsed)) return toPgTextArray(parsed)
+      } catch { }
+    }
+
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed
+    return `{${escapePgArrayItem(trimmed)}}`
+  }
+
+  if (Array.isArray(value)) {
+    const items = value
+      .filter((x) => x !== undefined && x !== null)
+      .map((x) => String(x))
+    return `{${items.map(escapePgArrayItem).join(',')}}`
+  }
+
+  return `{${escapePgArrayItem(String(value))}}`
+}
+
+function escapePgArrayItem(item: string): string {
+  const escaped = item.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  return `"${escaped}"`
+}
+
+// ===================== ABOUT TYPES (مؤقتًا هنا) =====================
+// تقدر تنقلهم لـ lib/db.ts لاحقًا لو عايز
+
+export interface AboutStats {
+  id: number
+  years_of_experience: number
+  linkedin_followers: number
+  completed_courses: number
+  updated_at: string
+}
+
+export interface Experience {
+  id: number
+  title: string
+  company: string
+  location: string | null
+  start_date: string // ISO أو date
+  end_date: string | null
+  is_current: boolean
+  description: string | null
+  order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Education {
+  id: number
+  degree: string
+  institution: string
+  field: string | null
+  start_date: string | null
+  end_date: string | null
+  description: string | null
+  order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface Certification {
+  id: number
+  title: string
+  issuer: string
+  issue_date: string | null
+  credential_url: string | null
+  badge_url: string | null
+  description: string | null
+  order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ResumeSkill {
+  id: number
+  name: string
+  order: number
+  created_at: string
+  updated_at: string
 }
 
 // ============= PROFILE CRUD =============
@@ -181,7 +281,8 @@ export async function createProject(
     const existing = await db.query`SELECT id FROM projects WHERE slug = ${slug} LIMIT 1`
     if (existing.length > 0) return { error: 'A project with this title already exists' }
 
-    // ✅ technologies: array مباشرة
+    const technologiesPg = toPgTextArray(data.technologies)
+
     const result = await db.query`
       INSERT INTO projects (
         title, slug, description, short_description, category_id, image_url,
@@ -189,7 +290,7 @@ export async function createProject(
       )
       VALUES (
         ${data.title}, ${slug}, ${data.description}, ${data.short_description}, ${data.category_id}, ${data.image_url},
-        ${data.project_url}, ${data.linkedin_url}, ${data.technologies}, ${data.date}, ${data.featured}, ${data.draft}, 0
+        ${data.project_url ?? null}, ${data.linkedin_url ?? null}, ${technologiesPg}::text[], ${data.date}, ${data.featured}, ${data.draft}, 0
       )
       RETURNING *
     `
@@ -206,6 +307,9 @@ export async function updateProject(id: number, data: Partial<Project>) {
   try {
     await requireAdmin()
 
+    const technologiesPg =
+      data.technologies === undefined ? undefined : toPgTextArray(data.technologies)
+
     const result = await db.query`
       UPDATE projects
       SET
@@ -216,7 +320,7 @@ export async function updateProject(id: number, data: Partial<Project>) {
         image_url = COALESCE(${data.image_url ?? null}, image_url),
         project_url = COALESCE(${data.project_url ?? null}, project_url),
         linkedin_url = COALESCE(${data.linkedin_url ?? null}, linkedin_url),
-        technologies = COALESCE(${data.technologies ?? null}, technologies),
+        technologies = COALESCE(${technologiesPg ?? null}::text[], technologies),
         date = COALESCE(${data.date ?? null}, date),
         featured = COALESCE(${data.featured ?? null}, featured),
         draft = COALESCE(${data.draft ?? null}, draft),
@@ -264,10 +368,11 @@ export async function createService(data: Omit<Service, 'id' | 'created_at' | 'u
   try {
     await requireAdmin()
 
-    // ✅ features: array مباشرة
+    const featuresPg = toPgTextArray((data as any).features)
+
     const result = await db.query`
       INSERT INTO services (title, description, icon, color, features, enabled, "order")
-      VALUES (${data.title}, ${data.description}, ${data.icon}, ${data.color}, ${data.features}, ${data.enabled}, ${data.order})
+      VALUES (${data.title}, ${data.description}, ${data.icon}, ${data.color}, ${featuresPg}::text[], ${data.enabled}, ${data.order})
       RETURNING *
     `
 
@@ -283,6 +388,9 @@ export async function updateService(id: number, data: Partial<Service>) {
   try {
     await requireAdmin()
 
+    const featuresPg =
+      (data as any).features === undefined ? undefined : toPgTextArray((data as any).features)
+
     const result = await db.query`
       UPDATE services
       SET
@@ -290,7 +398,7 @@ export async function updateService(id: number, data: Partial<Service>) {
         description = COALESCE(${data.description ?? null}, description),
         icon = COALESCE(${data.icon ?? null}, icon),
         color = COALESCE(${data.color ?? null}, color),
-        features = COALESCE(${data.features ?? null}, features),
+        features = COALESCE(${featuresPg ?? null}::text[], features),
         enabled = COALESCE(${data.enabled ?? null}, enabled),
         "order" = COALESCE(${data.order ?? null}, "order"),
         updated_at = NOW()
@@ -338,7 +446,7 @@ export async function createClient(data: Omit<Client, 'id' | 'created_at' | 'upd
 
     const result = await db.query`
       INSERT INTO clients (name, logo_url, testimonial, rating, website, enabled, "order")
-      VALUES (${data.name}, ${data.logo_url}, ${data.testimonial}, ${data.rating}, ${data.website}, ${data.enabled}, ${data.order})
+      VALUES (${data.name}, ${data.logo_url}, ${data.testimonial ?? null}, ${data.rating}, ${data.website ?? null}, ${data.enabled}, ${data.order})
       RETURNING *
     `
 
@@ -441,7 +549,7 @@ export async function updateSocialLink(id: number, data: Partial<SocialLink>) {
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating social link:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update social link' }
+    return { error: error instanceof Error ? error.message : 'Failed to delete social link' }
   }
 }
 
@@ -459,6 +567,74 @@ export async function deleteSocialLink(id: number) {
   }
 }
 
+// ===================== ABOUT (READ) =====================
+
+export async function getAboutStats(): Promise<AboutStats | null> {
+  try {
+    const result = await db.query`SELECT * FROM about_stats LIMIT 1`
+    return (result[0] as AboutStats | undefined) ?? null
+  } catch (error) {
+    console.error('Error getting about stats:', error)
+    return null
+  }
+}
+
+export async function getAboutSectionFull(language: "en" | "ar" = "en"): Promise<string | null> {
+  try {
+    const result = await db.query`
+      SELECT content
+      FROM about_sections
+      WHERE type = 'full' AND language = ${language}
+      ORDER BY updated_at DESC
+      LIMIT 1
+    `
+    return (result[0]?.content as string | undefined) ?? null
+  } catch (error) {
+    console.error("Error getting about full section:", error)
+    return null
+  }
+}
+
+export async function getExperiences(): Promise<Experience[]> {
+  try {
+    const result = await db.query`SELECT * FROM experiences ORDER BY "order" ASC, start_date DESC`
+    return result as Experience[]
+  } catch (error) {
+    console.error('Error getting experiences:', error)
+    return []
+  }
+}
+
+export async function getEducations(): Promise<Education[]> {
+  try {
+    const result = await db.query`SELECT * FROM educations ORDER BY "order" ASC, start_date DESC`
+    return result as Education[]
+  } catch (error) {
+    console.error('Error getting educations:', error)
+    return []
+  }
+}
+
+export async function getCertifications(): Promise<Certification[]> {
+  try {
+    const result = await db.query`SELECT * FROM certifications ORDER BY "order" ASC`
+    return result as Certification[]
+  } catch (error) {
+    console.error('Error getting certifications:', error)
+    return []
+  }
+}
+
+export async function getResumeSkills(): Promise<ResumeSkill[]> {
+  try {
+    const result = await db.query`SELECT * FROM resume_skills ORDER BY "order" ASC`
+    return result as ResumeSkill[]
+  } catch (error) {
+    console.error('Error getting resume skills:', error)
+    return []
+  }
+}
+
 // ============= SITE SETTINGS CRUD =============
 
 export async function getSiteSettings(): Promise<Record<string, any>> {
@@ -468,13 +644,9 @@ export async function getSiteSettings(): Promise<Record<string, any>> {
     const settings: Record<string, any> = {}
     result.forEach((row: any) => {
       const value = row.value
-      if (row.type === 'json') {
-        settings[row.key] = JSON.parse(value)
-      } else if (row.type === 'boolean') {
-        settings[row.key] = value === 'true'
-      } else {
-        settings[row.key] = value
-      }
+      if (row.type === 'json') settings[row.key] = JSON.parse(value)
+      else if (row.type === 'boolean') settings[row.key] = value === 'true'
+      else settings[row.key] = value
     })
 
     return settings
@@ -493,9 +665,11 @@ export async function updateSiteSettings(
     await requireAdmin()
 
     const stringValue =
-      type === 'json' ? JSON.stringify(value) :
-        type === 'boolean' ? String(Boolean(value)) :
-          String(value)
+      type === 'json'
+        ? JSON.stringify(value)
+        : type === 'boolean'
+          ? String(Boolean(value))
+          : String(value)
 
     const result = await db.query`
       INSERT INTO site_settings (key, value, type, updated_at)

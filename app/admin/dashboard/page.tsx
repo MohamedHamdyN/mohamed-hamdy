@@ -114,9 +114,7 @@ export default function AdminDashboard() {
                   href="/admin/profile"
                   className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-blue-400 transition">
-                    Profile
-                  </h3>
+                  <h3 className="font-semibold text-white group-hover:text-blue-400 transition">Profile</h3>
                   <p className="text-sm text-slate-400 mt-1">Edit your profile information</p>
                 </Link>
 
@@ -124,9 +122,7 @@ export default function AdminDashboard() {
                   href="/admin/skills"
                   className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-purple-400 transition">
-                    Skills
-                  </h3>
+                  <h3 className="font-semibold text-white group-hover:text-purple-400 transition">Skills</h3>
                   <p className="text-sm text-slate-400 mt-1">Manage your professional skills</p>
                 </Link>
 
@@ -134,9 +130,7 @@ export default function AdminDashboard() {
                   href="/admin/projects"
                   className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-blue-400 transition">
-                    Projects
-                  </h3>
+                  <h3 className="font-semibold text-white group-hover:text-blue-400 transition">Projects</h3>
                   <p className="text-sm text-slate-400 mt-1">Create and manage projects</p>
                 </Link>
 
@@ -144,9 +138,7 @@ export default function AdminDashboard() {
                   href="/admin/services"
                   className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-green-400 transition">
-                    Services
-                  </h3>
+                  <h3 className="font-semibold text-white group-hover:text-green-400 transition">Services</h3>
                   <p className="text-sm text-slate-400 mt-1">Manage your services</p>
                 </Link>
 
@@ -154,9 +146,7 @@ export default function AdminDashboard() {
                   href="/admin/clients"
                   className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-orange-400 transition">
-                    Clients
-                  </h3>
+                  <h3 className="font-semibold text-white group-hover:text-orange-400 transition">Clients</h3>
                   <p className="text-sm text-slate-400 mt-1">Manage client testimonials</p>
                 </Link>
 
@@ -164,9 +154,7 @@ export default function AdminDashboard() {
                   href="/admin/social"
                   className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-pink-400 transition">
-                    Social Links
-                  </h3>
+                  <h3 className="font-semibold text-white group-hover:text-pink-400 transition">Social Links</h3>
                   <p className="text-sm text-slate-400 mt-1">Update social media links</p>
                 </Link>
 
@@ -174,11 +162,55 @@ export default function AdminDashboard() {
                   href="/admin/settings"
                   className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
                 >
-                  <h3 className="font-semibold text-white group-hover:text-cyan-400 transition">
-                    Site Settings
-                  </h3>
+                  <h3 className="font-semibold text-white group-hover:text-cyan-400 transition">Site Settings</h3>
                   <p className="text-sm text-slate-400 mt-1">Configure site-wide settings</p>
                 </Link>
+
+                {/* NEW: About Management */}
+                <Link
+                  href="/admin/about"
+                  className="block p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition group"
+                >
+                  <h3 className="font-semibold text-white group-hover:text-indigo-400 transition">About Page</h3>
+                  <p className="text-sm text-slate-400 mt-1">Manage About content (stats, resume, certifications)</p>
+                </Link>
+              </div>
+
+              {/* Optional quick links for About sub-sections */}
+              <div className="mt-8 border-t border-slate-700 pt-6">
+                <h3 className="text-lg font-semibold text-white mb-3">About Quick Links</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href="/admin/about/stats"
+                    className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm"
+                  >
+                    Stats
+                  </Link>
+                  <Link
+                    href="/admin/about/experience"
+                    className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm"
+                  >
+                    Experience
+                  </Link>
+                  <Link
+                    href="/admin/about/education"
+                    className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm"
+                  >
+                    Education
+                  </Link>
+                  <Link
+                    href="/admin/about/resume-skills"
+                    className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm"
+                  >
+                    Resume Skills
+                  </Link>
+                  <Link
+                    href="/admin/about/certifications"
+                    className="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm"
+                  >
+                    Certifications
+                  </Link>
+                </div>
               </div>
             </div>
           </>
