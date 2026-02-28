@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react"
+import { redirect } from "next/navigation"
 import Hero from "@/components/home/Hero"
 import LazySection from "@/components/shared/LazySection"
 import { getSiteSettings } from "@/lib/queries/other"
@@ -6,6 +7,7 @@ import { getProfile } from "@/lib/queries/profile"
 import { getSkills } from "@/lib/queries/other"
 import { getClients } from "@/lib/queries/other"
 import { getFeaturedProjects } from "@/lib/queries/projects"
+import { isDatabaseInitialized } from "@/lib/utils/db-check"
 
 // Lazy load components
 const Skills = lazy(() => import("@/components/home/Skills"))
@@ -17,6 +19,13 @@ const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
 export const revalidate = 10 // ISR with 10 second revalidation
 
 export default async function Home() {
+  // Check if database is initialized
+  const dbInitialized = await isDatabaseInitialized()
+  
+  if (!dbInitialized) {
+    redirect("/setup")
+  }
+
   // Fetch settings and data from database
   const [siteSettings, profile, skills, clients, featuredProjects] = await Promise.all([
     getSiteSettings(),
