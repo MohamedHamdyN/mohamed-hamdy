@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@neondatabase/serverless'
+import { db } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,15 +11,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Test basic connection
-    const result = await sql`SELECT 1 as connected`
-    
+    const result = await db.query`SELECT 1 as connected`
+
     // Check admins table
-    const adminsResult = await sql`SELECT COUNT(*) as count FROM admins`
-    
+    const adminsResult = await db.query`SELECT COUNT(*) as count FROM admins`
+
     return NextResponse.json({
       success: true,
       database: 'Connected',
-      adminCount: (adminsResult.rows[0] as any).count,
+      adminCount: (adminsResult[0] as any).count,
     })
   } catch (error) {
     console.error('[v0] Database test error:', error)
