@@ -1,23 +1,21 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { getAdminFromSession } from '@/lib/auth'
-import { Profile, Skill, Project, Service, Client, SocialLink, SiteSettings } from '@/lib/db'
+import { Profile, Skill, Project, Service, Client, SocialLink } from '@/lib/db'
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 
-// Helper function to check admin auth
+// ---------- helpers ----------
 async function requireAdmin() {
   const admin = await getAdminFromSession()
-  if (!admin) {
-    throw new Error('Unauthorized')
-  }
+  if (!admin) throw new Error('Unauthorized')
   return admin
 }
 
-// Generate slug from title
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -27,14 +25,21 @@ function generateSlug(title: string): string {
     .replace(/-+/g, '-')
 }
 
+// عدّل/قلّل المسارات حسب صفحاتك الفعلية
+function revalidatePublic() {
+  revalidatePath('/')
+  revalidatePath('/projects')
+  revalidatePath('/about')
+  revalidatePath('/services')
+  revalidatePath('/contact')
+}
+
 // ============= PROFILE CRUD =============
 
 export async function getProfile(): Promise<Profile | null> {
   try {
-    const result = await db.query`
-      SELECT * FROM profiles LIMIT 1
-    `
-    return result[0] as Profile | undefined || null
+    const result = await db.query`SELECT * FROM profiles LIMIT 1`
+    return (result[0] as Profile | undefined) ?? null
   } catch (error) {
     console.error('Error getting profile:', error)
     return null
@@ -46,26 +51,27 @@ export async function updateProfile(data: Partial<Profile>) {
     await requireAdmin()
 
     const result = await db.query`
-      UPDATE profiles 
-      SET 
-        name = COALESCE(${data.name}, name),
-        title = COALESCE(${data.title}, title),
-        email = COALESCE(${data.email}, email),
-        bio = COALESCE(${data.bio}, bio),
-        avatar_url = COALESCE(${data.avatar_url}, avatar_url),
-        resume_url = COALESCE(${data.resume_url}, resume_url),
-        calendly_url = COALESCE(${data.calendly_url}, calendly_url),
-        location = COALESCE(${data.location}, location),
-        phone = COALESCE(${data.phone}, phone),
+      UPDATE profiles
+      SET
+        name = COALESCE(${data.name ?? null}, name),
+        title = COALESCE(${data.title ?? null}, title),
+        email = COALESCE(${data.email ?? null}, email),
+        bio = COALESCE(${data.bio ?? null}, bio),
+        avatar_url = COALESCE(${data.avatar_url ?? null}, avatar_url),
+        resume_url = COALESCE(${data.resume_url ?? null}, resume_url),
+        calendly_url = COALESCE(${data.calendly_url ?? null}, calendly_url),
+        location = COALESCE(${data.location ?? null}, location),
+        phone = COALESCE(${data.phone ?? null}, phone),
         updated_at = NOW()
       WHERE id = (SELECT id FROM profiles LIMIT 1)
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating profile:', error)
-    return { error: 'Failed to update profile' }
+    return { error: error instanceof Error ? error.message : 'Failed to update profile' }
   }
 }
 
@@ -73,9 +79,7 @@ export async function updateProfile(data: Partial<Profile>) {
 
 export async function getSkills(): Promise<Skill[]> {
   try {
-    const result = await db.query`
-      SELECT * FROM skills ORDER BY "order" ASC
-    `
+    const result = await db.query`SELECT * FROM skills ORDER BY "order" ASC`
     return result as Skill[]
   } catch (error) {
     console.error('Error getting skills:', error)
@@ -93,10 +97,11 @@ export async function createSkill(data: Omit<Skill, 'id' | 'created_at' | 'updat
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating skill:', error)
-    return { error: 'Failed to create skill' }
+    return { error: error instanceof Error ? error.message : 'Failed to create skill' }
   }
 }
 
@@ -105,23 +110,24 @@ export async function updateSkill(id: number, data: Partial<Skill>) {
     await requireAdmin()
 
     const result = await db.query`
-      UPDATE skills 
-      SET 
-        name = COALESCE(${data.name}, name),
-        description = COALESCE(${data.description}, description),
-        icon = COALESCE(${data.icon}, icon),
-        color = COALESCE(${data.color}, color),
-        enabled = COALESCE(${data.enabled}, enabled),
-        "order" = COALESCE(${data.order}, "order"),
+      UPDATE skills
+      SET
+        name = COALESCE(${data.name ?? null}, name),
+        description = COALESCE(${data.description ?? null}, description),
+        icon = COALESCE(${data.icon ?? null}, icon),
+        color = COALESCE(${data.color ?? null}, color),
+        enabled = COALESCE(${data.enabled ?? null}, enabled),
+        "order" = COALESCE(${data.order ?? null}, "order"),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating skill:', error)
-    return { error: 'Failed to update skill' }
+    return { error: error instanceof Error ? error.message : 'Failed to update skill' }
   }
 }
 
@@ -129,14 +135,13 @@ export async function deleteSkill(id: number) {
   try {
     await requireAdmin()
 
-    await db.query`
-      DELETE FROM skills WHERE id = ${id}
-    `
+    await db.query`DELETE FROM skills WHERE id = ${id}`
 
+    revalidatePublic()
     return { success: true }
   } catch (error) {
     console.error('Error deleting skill:', error)
-    return { error: 'Failed to delete skill' }
+    return { error: error instanceof Error ? error.message : 'Failed to delete skill' }
   }
 }
 
@@ -157,41 +162,43 @@ export async function getProjects(includeDraft = false): Promise<Project[]> {
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
-    const result = await db.query`
-      SELECT * FROM projects WHERE slug = ${slug} LIMIT 1
-    `
-    return result[0] as Project | undefined || null
+    const result = await db.query`SELECT * FROM projects WHERE slug = ${slug} LIMIT 1`
+    return (result[0] as Project | undefined) ?? null
   } catch (error) {
     console.error('Error getting project:', error)
     return null
   }
 }
 
-export async function createProject(data: Omit<Project, 'id' | 'slug' | 'created_at' | 'updated_at' | 'order'>) {
+export async function createProject(
+  data: Omit<Project, 'id' | 'slug' | 'created_at' | 'updated_at' | 'order'>
+) {
   try {
     await requireAdmin()
 
     const slug = generateSlug(data.title)
 
-    // Check slug uniqueness
-    const existing = await db.query`
-      SELECT id FROM projects WHERE slug = ${slug} LIMIT 1
-    `
+    const existing = await db.query`SELECT id FROM projects WHERE slug = ${slug} LIMIT 1`
+    if (existing.length > 0) return { error: 'A project with this title already exists' }
 
-    if (existing.length > 0) {
-      return { error: 'A project with this title already exists' }
-    }
-
+    // ✅ technologies: array مباشرة
     const result = await db.query`
-      INSERT INTO projects (title, slug, description, short_description, category_id, image_url, project_url, linkedin_url, technologies, date, featured, draft, "order")
-      VALUES (${data.title}, ${slug}, ${data.description}, ${data.short_description}, ${data.category_id}, ${data.image_url}, ${data.project_url}, ${data.linkedin_url}, ${JSON.stringify(data.technologies)}, ${data.date}, ${data.featured}, ${data.draft}, 0)
+      INSERT INTO projects (
+        title, slug, description, short_description, category_id, image_url,
+        project_url, linkedin_url, technologies, date, featured, draft, "order"
+      )
+      VALUES (
+        ${data.title}, ${slug}, ${data.description}, ${data.short_description}, ${data.category_id}, ${data.image_url},
+        ${data.project_url}, ${data.linkedin_url}, ${data.technologies}, ${data.date}, ${data.featured}, ${data.draft}, 0
+      )
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating project:', error)
-    return { error: 'Failed to create project' }
+    return { error: error instanceof Error ? error.message : 'Failed to create project' }
   }
 }
 
@@ -200,29 +207,30 @@ export async function updateProject(id: number, data: Partial<Project>) {
     await requireAdmin()
 
     const result = await db.query`
-      UPDATE projects 
-      SET 
-        title = COALESCE(${data.title}, title),
-        description = COALESCE(${data.description}, description),
-        short_description = COALESCE(${data.short_description}, short_description),
-        category_id = COALESCE(${data.category_id}, category_id),
-        image_url = COALESCE(${data.image_url}, image_url),
-        project_url = COALESCE(${data.project_url}, project_url),
-        linkedin_url = COALESCE(${data.linkedin_url}, linkedin_url),
-        technologies = COALESCE(${data.technologies ? JSON.stringify(data.technologies) : null}, technologies),
-        date = COALESCE(${data.date}, date),
-        featured = COALESCE(${data.featured}, featured),
-        draft = COALESCE(${data.draft}, draft),
-        "order" = COALESCE(${data.order}, "order"),
+      UPDATE projects
+      SET
+        title = COALESCE(${data.title ?? null}, title),
+        description = COALESCE(${data.description ?? null}, description),
+        short_description = COALESCE(${data.short_description ?? null}, short_description),
+        category_id = COALESCE(${data.category_id ?? null}, category_id),
+        image_url = COALESCE(${data.image_url ?? null}, image_url),
+        project_url = COALESCE(${data.project_url ?? null}, project_url),
+        linkedin_url = COALESCE(${data.linkedin_url ?? null}, linkedin_url),
+        technologies = COALESCE(${data.technologies ?? null}, technologies),
+        date = COALESCE(${data.date ?? null}, date),
+        featured = COALESCE(${data.featured ?? null}, featured),
+        draft = COALESCE(${data.draft ?? null}, draft),
+        "order" = COALESCE(${data.order ?? null}, "order"),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating project:', error)
-    return { error: 'Failed to update project' }
+    return { error: error instanceof Error ? error.message : 'Failed to update project' }
   }
 }
 
@@ -230,14 +238,13 @@ export async function deleteProject(id: number) {
   try {
     await requireAdmin()
 
-    await db.query`
-      DELETE FROM projects WHERE id = ${id}
-    `
+    await db.query`DELETE FROM projects WHERE id = ${id}`
 
+    revalidatePublic()
     return { success: true }
   } catch (error) {
     console.error('Error deleting project:', error)
-    return { error: 'Failed to delete project' }
+    return { error: error instanceof Error ? error.message : 'Failed to delete project' }
   }
 }
 
@@ -245,9 +252,7 @@ export async function deleteProject(id: number) {
 
 export async function getServices(): Promise<Service[]> {
   try {
-    const result = await db.query`
-      SELECT * FROM services ORDER BY "order" ASC
-    `
+    const result = await db.query`SELECT * FROM services ORDER BY "order" ASC`
     return result as Service[]
   } catch (error) {
     console.error('Error getting services:', error)
@@ -259,16 +264,18 @@ export async function createService(data: Omit<Service, 'id' | 'created_at' | 'u
   try {
     await requireAdmin()
 
+    // ✅ features: array مباشرة
     const result = await db.query`
       INSERT INTO services (title, description, icon, color, features, enabled, "order")
-      VALUES (${data.title}, ${data.description}, ${data.icon}, ${data.color}, ${JSON.stringify(data.features)}, ${data.enabled}, ${data.order})
+      VALUES (${data.title}, ${data.description}, ${data.icon}, ${data.color}, ${data.features}, ${data.enabled}, ${data.order})
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating service:', error)
-    return { error: 'Failed to create service' }
+    return { error: error instanceof Error ? error.message : 'Failed to create service' }
   }
 }
 
@@ -277,24 +284,25 @@ export async function updateService(id: number, data: Partial<Service>) {
     await requireAdmin()
 
     const result = await db.query`
-      UPDATE services 
-      SET 
-        title = COALESCE(${data.title}, title),
-        description = COALESCE(${data.description}, description),
-        icon = COALESCE(${data.icon}, icon),
-        color = COALESCE(${data.color}, color),
-        features = COALESCE(${data.features ? JSON.stringify(data.features) : null}, features),
-        enabled = COALESCE(${data.enabled}, enabled),
-        "order" = COALESCE(${data.order}, "order"),
+      UPDATE services
+      SET
+        title = COALESCE(${data.title ?? null}, title),
+        description = COALESCE(${data.description ?? null}, description),
+        icon = COALESCE(${data.icon ?? null}, icon),
+        color = COALESCE(${data.color ?? null}, color),
+        features = COALESCE(${data.features ?? null}, features),
+        enabled = COALESCE(${data.enabled ?? null}, enabled),
+        "order" = COALESCE(${data.order ?? null}, "order"),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating service:', error)
-    return { error: 'Failed to update service' }
+    return { error: error instanceof Error ? error.message : 'Failed to update service' }
   }
 }
 
@@ -302,14 +310,13 @@ export async function deleteService(id: number) {
   try {
     await requireAdmin()
 
-    await db.query`
-      DELETE FROM services WHERE id = ${id}
-    `
+    await db.query`DELETE FROM services WHERE id = ${id}`
 
+    revalidatePublic()
     return { success: true }
   } catch (error) {
     console.error('Error deleting service:', error)
-    return { error: 'Failed to delete service' }
+    return { error: error instanceof Error ? error.message : 'Failed to delete service' }
   }
 }
 
@@ -317,9 +324,7 @@ export async function deleteService(id: number) {
 
 export async function getClients(): Promise<Client[]> {
   try {
-    const result = await db.query`
-      SELECT * FROM clients ORDER BY "order" ASC
-    `
+    const result = await db.query`SELECT * FROM clients ORDER BY "order" ASC`
     return result as Client[]
   } catch (error) {
     console.error('Error getting clients:', error)
@@ -337,10 +342,11 @@ export async function createClient(data: Omit<Client, 'id' | 'created_at' | 'upd
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating client:', error)
-    return { error: 'Failed to create client' }
+    return { error: error instanceof Error ? error.message : 'Failed to create client' }
   }
 }
 
@@ -349,24 +355,25 @@ export async function updateClient(id: number, data: Partial<Client>) {
     await requireAdmin()
 
     const result = await db.query`
-      UPDATE clients 
-      SET 
+      UPDATE clients
+      SET
         name = COALESCE(${data.name ?? null}, name),
-        logo_url = COALESCE(${data.logo_url}, logo_url),
-        testimonial = COALESCE(${data.testimonial}, testimonial),
-        rating = COALESCE(${data.rating}, rating),
-        website = COALESCE(${data.website}, website),
-        enabled = COALESCE(${data.enabled}, enabled),
-        "order" = COALESCE(${data.order}, "order"),
+        logo_url = COALESCE(${data.logo_url ?? null}, logo_url),
+        testimonial = COALESCE(${data.testimonial ?? null}, testimonial),
+        rating = COALESCE(${data.rating ?? null}, rating),
+        website = COALESCE(${data.website ?? null}, website),
+        enabled = COALESCE(${data.enabled ?? null}, enabled),
+        "order" = COALESCE(${data.order ?? null}, "order"),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating client:', error)
-    return { error: 'Failed to update client' }
+    return { error: error instanceof Error ? error.message : 'Failed to update client' }
   }
 }
 
@@ -374,14 +381,13 @@ export async function deleteClient(id: number) {
   try {
     await requireAdmin()
 
-    await db.query`
-      DELETE FROM clients WHERE id = ${id}
-    `
+    await db.query`DELETE FROM clients WHERE id = ${id}`
 
+    revalidatePublic()
     return { success: true }
   } catch (error) {
     console.error('Error deleting client:', error)
-    return { error: 'Failed to delete client' }
+    return { error: error instanceof Error ? error.message : 'Failed to delete client' }
   }
 }
 
@@ -389,9 +395,7 @@ export async function deleteClient(id: number) {
 
 export async function getSocialLinks(): Promise<SocialLink[]> {
   try {
-    const result = await db.query`
-      SELECT * FROM social_links ORDER BY "order" ASC
-    `
+    const result = await db.query`SELECT * FROM social_links ORDER BY "order" ASC`
     return result as SocialLink[]
   } catch (error) {
     console.error('Error getting social links:', error)
@@ -409,10 +413,11 @@ export async function createSocialLink(data: Omit<SocialLink, 'id' | 'created_at
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error creating social link:', error)
-    return { error: 'Failed to create social link' }
+    return { error: error instanceof Error ? error.message : 'Failed to create social link' }
   }
 }
 
@@ -421,21 +426,22 @@ export async function updateSocialLink(id: number, data: Partial<SocialLink>) {
     await requireAdmin()
 
     const result = await db.query`
-      UPDATE social_links 
-      SET 
-        platform = COALESCE(${data.platform}, platform),
-        url = COALESCE(${data.url}, url),
-        enabled = COALESCE(${data.enabled}, enabled),
-        "order" = COALESCE(${data.order}, "order"),
+      UPDATE social_links
+      SET
+        platform = COALESCE(${data.platform ?? null}, platform),
+        url = COALESCE(${data.url ?? null}, url),
+        enabled = COALESCE(${data.enabled ?? null}, enabled),
+        "order" = COALESCE(${data.order ?? null}, "order"),
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating social link:', error)
-    return { error: 'Failed to update social link' }
+    return { error: error instanceof Error ? error.message : 'Failed to update social link' }
   }
 }
 
@@ -443,14 +449,13 @@ export async function deleteSocialLink(id: number) {
   try {
     await requireAdmin()
 
-    await db.query`
-      DELETE FROM social_links WHERE id = ${id}
-    `
+    await db.query`DELETE FROM social_links WHERE id = ${id}`
 
+    revalidatePublic()
     return { success: true }
   } catch (error) {
     console.error('Error deleting social link:', error)
-    return { error: 'Failed to delete social link' }
+    return { error: error instanceof Error ? error.message : 'Failed to delete social link' }
   }
 }
 
@@ -458,12 +463,9 @@ export async function deleteSocialLink(id: number) {
 
 export async function getSiteSettings(): Promise<Record<string, any>> {
   try {
-    const result = await db.query`
-      SELECT key, value, type FROM site_settings
-    `
+    const result = await db.query`SELECT key, value, type FROM site_settings`
 
     const settings: Record<string, any> = {}
-
     result.forEach((row: any) => {
       const value = row.value
       if (row.type === 'json') {
@@ -482,11 +484,18 @@ export async function getSiteSettings(): Promise<Record<string, any>> {
   }
 }
 
-export async function updateSiteSettings(key: string, value: any, type: 'string' | 'json' | 'boolean' = 'string') {
+export async function updateSiteSettings(
+  key: string,
+  value: any,
+  type: 'string' | 'json' | 'boolean' = 'string'
+) {
   try {
     await requireAdmin()
 
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value)
+    const stringValue =
+      type === 'json' ? JSON.stringify(value) :
+        type === 'boolean' ? String(Boolean(value)) :
+          String(value)
 
     const result = await db.query`
       INSERT INTO site_settings (key, value, type, updated_at)
@@ -496,9 +505,10 @@ export async function updateSiteSettings(key: string, value: any, type: 'string'
       RETURNING *
     `
 
+    revalidatePublic()
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating site settings:', error)
-    return { error: 'Failed to update site settings' }
+    return { error: error instanceof Error ? error.message : 'Failed to update site settings' }
   }
 }

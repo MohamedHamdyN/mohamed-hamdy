@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import "./globals.css"
 import { Inter, Cairo } from "next/font/google"
 import { Analytics } from "@vercel/analytics/react"

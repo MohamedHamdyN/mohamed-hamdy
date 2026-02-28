@@ -1,4 +1,4 @@
-import { sql } from '@neondatabase/serverless'
+import { db } from '@/lib/db'
 import { Metadata } from 'next'
 
 if (!process.env.DATABASE_URL) {
@@ -12,14 +12,14 @@ export async function getDynamicMetadata(): Promise<{
   siteUrl: string
 }> {
   try {
-    const result = await sql`
+    const result = await db.query`
       SELECT key, value FROM site_settings
       WHERE key IN ('site_title', 'site_description', 'og_image', 'site_url')
     `
 
     const settings: Record<string, string> = {}
 
-    result.rows.forEach((row: any) => {
+    result.forEach((row: any) => {
       settings[row.key] = row.value
     })
 
