@@ -1,3 +1,143 @@
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS admin_sessions CASCADE;
+DROP TABLE IF EXISTS admins CASCADE;
+DROP TABLE IF EXISTS project_images CASCADE;
+DROP TABLE IF EXISTS project_details CASCADE;
+DROP TABLE IF EXISTS projects CASCADE;
+DROP TABLE IF EXISTS clients CASCADE;
+DROP TABLE IF EXISTS services CASCADE;
+DROP TABLE IF EXISTS social_links CASCADE;
+DROP TABLE IF EXISTS skills CASCADE;
+DROP TABLE IF EXISTS about_sections CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+DROP TABLE IF EXISTS site_settings CASCADE;
+
+-- Create profiles table
+CREATE TABLE profiles (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  title VARCHAR(255),
+  email VARCHAR(255),
+  phone VARCHAR(20),
+  location VARCHAR(255),
+  bio TEXT,
+  avatar_url VARCHAR(2048),
+  resume_url VARCHAR(2048),
+  calendly_url VARCHAR(2048),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create admin table
+CREATE TABLE admins (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create admin sessions table
+CREATE TABLE admin_sessions (
+  id SERIAL PRIMARY KEY,
+  admin_id INTEGER NOT NULL,
+  token VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+);
+
+-- Create social_links table
+CREATE TABLE social_links (
+  id SERIAL PRIMARY KEY,
+  platform VARCHAR(100) NOT NULL,
+  url VARCHAR(2048) NOT NULL,
+  enabled BOOLEAN DEFAULT true,
+  "order" INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create skills table
+CREATE TABLE skills (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon VARCHAR(100),
+  color VARCHAR(100),
+  enabled BOOLEAN DEFAULT true,
+  "order" INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create projects table
+CREATE TABLE projects (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) UNIQUE NOT NULL,
+  short_description TEXT,
+  description TEXT,
+  category_id INTEGER NOT NULL,
+  image_url VARCHAR(2048),
+  project_url VARCHAR(2048),
+  linkedin_url VARCHAR(2048),
+  technologies TEXT[],
+  date VARCHAR(10),
+  featured BOOLEAN DEFAULT false,
+  draft BOOLEAN DEFAULT false,
+  "order" INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create services table
+CREATE TABLE services (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  icon VARCHAR(100),
+  color VARCHAR(100),
+  features TEXT[],
+  enabled BOOLEAN DEFAULT true,
+  "order" INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create clients table
+CREATE TABLE clients (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  logo_url VARCHAR(2048),
+  testimonial TEXT,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  website VARCHAR(2048),
+  enabled BOOLEAN DEFAULT true,
+  "order" INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create site_settings table
+CREATE TABLE site_settings (
+  id SERIAL PRIMARY KEY,
+  key VARCHAR(255) UNIQUE NOT NULL,
+  value TEXT,
+  type VARCHAR(50) DEFAULT 'string',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_projects_slug ON projects(slug);
+CREATE INDEX idx_projects_featured ON projects(featured);
+CREATE INDEX idx_projects_draft ON projects(draft);
+CREATE INDEX idx_social_links_enabled ON social_links(enabled);
+CREATE INDEX idx_skills_enabled ON skills(enabled);
+CREATE INDEX idx_clients_enabled ON clients(enabled);
+CREATE INDEX idx_services_enabled ON services(enabled);
+CREATE INDEX idx_site_settings_key ON site_settings(key);
+
 -- Seed profile data
 INSERT INTO profiles (name, title, email, bio, avatar_url, resume_url, calendly_url, location, phone)
 VALUES (
@@ -10,7 +150,7 @@ VALUES (
   'https://calendly.com/mohamedhamdynour/30min',
   '',
   ''
-) ON CONFLICT DO NOTHING;
+);
 
 -- Seed social links
 INSERT INTO social_links (platform, url, enabled, "order")
@@ -20,8 +160,7 @@ VALUES
   ('Twitter', 'https://twitter.com/MoBinHamdy', true, 3),
   ('Instagram', 'https://instagram.com/mohamedhamdyn', true, 4),
   ('DataCamp', 'https://www.datacamp.com/portfolio/mohamedhamdynour', true, 5),
-  ('Facebook', 'https://facebook.com/mohamedhamdyn', true, 6)
-ON CONFLICT DO NOTHING;
+  ('Facebook', 'https://facebook.com/mohamedhamdyn', true, 6);
 
 -- Seed skills
 INSERT INTO skills (name, description, icon, color, enabled, "order")
@@ -35,8 +174,7 @@ VALUES
   ('Power BI', 'Building interactive financial dashboards', 'TrendingUp', 'text-orange-500', true, 7),
   ('Cost and Budget Analysis', 'Analyzing budgets and cost structures', 'DollarSign', 'text-indigo-500', true, 8),
   ('Financial Forecasting', 'Predicting financial trends using data models', 'Activity', 'text-teal-500', true, 9),
-  ('Risk Analysis', 'Assessing financial risks through data analytics', 'Shield', 'text-gray-500', true, 10)
-ON CONFLICT DO NOTHING;
+  ('Risk Analysis', 'Assessing financial risks through data analytics', 'Shield', 'text-gray-500', true, 10);
 
 -- Seed projects
 INSERT INTO projects (title, slug, short_description, description, category_id, image_url, project_url, linkedin_url, technologies, date, featured, draft, "order")
@@ -50,7 +188,7 @@ VALUES
     'https://imgur.com/BJcBweu.png',
     'https://example.com/project1',
     'https://linkedin.com/in/mohamedhamdynour/project1',
-    '{"Power BI", "SQL", "Excel", "DAX"}',
+    ARRAY['Power BI', 'SQL', 'Excel', 'DAX'],
     '2023-05',
     true,
     false,
@@ -65,7 +203,7 @@ VALUES
     '',
     '',
     '',
-    '{"Python", "Scikit-learn", "TensorFlow", "Pandas", "Matplotlib"}',
+    ARRAY['Python', 'Scikit-learn', 'TensorFlow', 'Pandas', 'Matplotlib'],
     '2023-03',
     true,
     false,
@@ -80,7 +218,7 @@ VALUES
     '',
     '',
     'https://linkedin.com/in/mohamedhamdynour/project3',
-    '{"Tableau", "Excel", "SQL", "R"}',
+    ARRAY['Tableau', 'Excel', 'SQL', 'R'],
     '2023-01',
     true,
     false,
@@ -95,13 +233,12 @@ VALUES
     '',
     'https://example.com/project4',
     '',
-    '{"R", "SPSS", "Python", "Pandas", "NumPy"}',
+    ARRAY['R', 'SPSS', 'Python', 'Pandas', 'NumPy'],
     '2022-11',
     true,
     false,
     4
-  )
-ON CONFLICT (slug) DO NOTHING;
+  );
 
 -- Seed services
 INSERT INTO services (title, description, icon, color, features, enabled, "order")
@@ -111,7 +248,7 @@ VALUES
     'Comprehensive analysis of your data to extract valuable insights',
     'BarChart2',
     'bg-blue-500',
-    '{"Exploratory data analysis", "Pattern recognition", "Trend identification", "Anomaly detection", "Correlation analysis"}',
+    ARRAY['Exploratory data analysis', 'Pattern recognition', 'Trend identification', 'Anomaly detection', 'Correlation analysis'],
     true,
     1
   ),
@@ -120,7 +257,7 @@ VALUES
     'Transform complex data into clear, compelling visual stories',
     'PieChart',
     'bg-purple-500',
-    '{"Interactive dashboards", "Custom charts and graphs", "Infographics", "Real-time data visualization", "Executive reports"}',
+    ARRAY['Interactive dashboards', 'Custom charts and graphs', 'Infographics', 'Real-time data visualization', 'Executive reports'],
     true,
     2
   ),
@@ -129,7 +266,7 @@ VALUES
     'Transform raw data into actionable business insights',
     'Activity',
     'bg-yellow-500',
-    '{"KPI development and tracking", "Performance analytics", "Competitive analysis", "Market research", "Strategic recommendations"}',
+    ARRAY['KPI development and tracking', 'Performance analytics', 'Competitive analysis', 'Market research', 'Strategic recommendations'],
     true,
     3
   ),
@@ -138,11 +275,10 @@ VALUES
     'Custom machine learning models to solve complex business problems',
     'Brain',
     'bg-cyan-500',
-    '{"Classification models", "Regression models", "Clustering algorithms", "Natural language processing", "Computer vision solutions"}',
+    ARRAY['Classification models', 'Regression models', 'Clustering algorithms', 'Natural language processing', 'Computer vision solutions'],
     true,
     4
-  )
-ON CONFLICT DO NOTHING;
+  );
 
 -- Seed clients
 INSERT INTO clients (name, logo_url, testimonial, rating, website, enabled, "order")
@@ -191,8 +327,7 @@ VALUES
     'https://brightlearn-academy.com',
     true,
     5
-  )
-ON CONFLICT DO NOTHING;
+  );
 
 -- Seed site settings
 INSERT INTO site_settings (key, value, type)
@@ -201,5 +336,4 @@ VALUES
   ('site_description', 'Data Analyst & Financial Accountant with expertise in transforming complex data into actionable insights.', 'string'),
   ('og_image', 'https://i.imgur.com/zziw256.png', 'string'),
   ('site_url', 'https://yourdomain.com', 'string'),
-  ('maintenance_mode', 'false', 'boolean')
-ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+  ('maintenance_mode', 'false', 'boolean');

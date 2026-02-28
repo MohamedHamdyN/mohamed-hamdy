@@ -1,5 +1,6 @@
 import "./globals.css"
 import { Inter, Cairo } from "next/font/google"
+import { Analytics } from "@vercel/analytics/react"
 import { ThemeProvider } from "@/context/theme-context"
 import { LanguageProvider } from "@/context/language-context"
 import { profile } from "@/admin/profile"
@@ -12,6 +13,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary"
 import type { Metadata } from "next"
 import SpeedInsightsWrapper from "@/components/shared/SpeedInsightsWrapper"
 import { toggleSettings } from "@/admin/toggle"
+import { getDynamicMetadata } from "@/lib/seo"
 
 // Optimize font loading
 const inter = Inter({
@@ -28,69 +30,73 @@ const cairo = Cairo({
   preload: true,
 })
 
-// Define metadata for better SEO
-export const metadata: Metadata = {
-  title: {
-    template: `%s | ${profile.name || "Portfolio"}`,
-    default: `${profile.name || "Portfolio"} | ${profile.title || "Data Analyst"}`,
-  },
-  description: profile.shortBio || "Professional portfolio",
-  keywords: ["data analyst", "financial accountant", "data visualization", "analytics", profile.name || "portfolio"],
-  authors: [{ name: profile.name || "Author" }],
-  creator: profile.name || "Creator",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://yourwebsite.com"),
-  alternates: {
-    canonical: "/",
-    languages: {
-      "en-US": "/en",
-      "ar-EG": "/ar",
+// Dynamic metadata from database
+export async function generateMetadata(): Promise<Metadata> {
+  const dynamicMetadata = await getDynamicMetadata()
+
+  return {
+    title: {
+      template: `%s | ${dynamicMetadata.title}`,
+      default: dynamicMetadata.title,
     },
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://yourwebsite.com",
-    title: `${profile.name || "Portfolio"} | ${profile.title || "Data Analyst"}`,
-    description: profile.shortBio || "Professional portfolio",
-    siteName: `${profile.name || "Portfolio"} | Portfolio`,
-    images: [
-      {
-        url: profile.ogImage || "/logo.png",
-        width: 1200,
-        height: 630,
-        alt: profile.name || "Portfolio",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `${profile.name || "Portfolio"} | ${profile.title || "Data Analyst"}`,
-    description: profile.shortBio || "Professional portfolio",
+    description: dynamicMetadata.description,
+    keywords: ["data analyst", "financial accountant", "data visualization", "analytics", profile.name || "portfolio"],
+    authors: [{ name: profile.name || "Author" }],
     creator: profile.name || "Creator",
-    images: [profile.ogImage || "/logo.png"],
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png" },
-    ],
-    apple: [{ url: "/apple-icon.png" }],
-    shortcut: ["/shortcut-icon.png"],
-  },
-  verification: {
-    google: "google-site-verification-code",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    metadataBase: new URL(dynamicMetadata.siteUrl),
+    alternates: {
+      canonical: "/",
+      languages: {
+        "en-US": "/en",
+        "ar-EG": "/ar",
+      },
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: dynamicMetadata.siteUrl,
+      title: dynamicMetadata.title,
+      description: dynamicMetadata.description,
+      siteName: dynamicMetadata.title,
+      images: [
+        {
+          url: dynamicMetadata.ogImage,
+          width: 1200,
+          height: 630,
+          alt: dynamicMetadata.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: dynamicMetadata.title,
+      description: dynamicMetadata.description,
+      creator: profile.name || "Creator",
+      images: [dynamicMetadata.ogImage],
+    },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/icon.png", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-icon.png" }],
+      shortcut: ["/shortcut-icon.png"],
+    },
+    verification: {
+      google: "google-site-verification-code",
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
     generator: 'v0.app'
+  }
 }
 
 export default function RootLayout({
@@ -119,6 +125,7 @@ export default function RootLayout({
               {websiteEnabled && <Footer />}
               <FloatingActionButton />
               <SpeedInsightsWrapper />
+              <Analytics />
             </ErrorBoundary>
           </LanguageProvider>
         </ThemeProvider>

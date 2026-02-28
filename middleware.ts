@@ -1,9 +1,34 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+const PROTECTED_ROUTES = [
+  '/admin/dashboard',
+  '/admin/profile',
+  '/admin/skills',
+  '/admin/projects',
+  '/admin/services',
+  '/admin/clients',
+  '/admin/social',
+  '/admin/settings',
+]
+
 export function middleware(request: NextRequest) {
-  // Simple middleware that doesn't rely on any external files
   const url = request.nextUrl.clone()
+  const pathname = request.nextUrl.pathname
+
+  // Check if this is a protected admin route
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route))
+
+  if (isProtectedRoute) {
+    // Check for admin session cookie
+    const sessionToken = request.cookies.get('admin_session')?.value
+
+    if (!sessionToken) {
+      // Redirect to login
+      const loginUrl = new URL('/admin/login', request.url)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
 
   // Get toggle settings from environment variables
   const websiteEnabled = process.env.DISABLE_WEBSITE !== "true"

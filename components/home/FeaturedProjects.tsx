@@ -1,25 +1,54 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { projects, projectCategoriesName } from "@/admin/projects"
-import { useTranslations } from "@/hooks/useTranslations"
-import { useLanguage } from "@/context/language-context"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import ProjectCard from "@/components/projects/ProjectCard"
-import ProjectModal from "@/components/projects/ProjectModal"
-import { ArrowRight } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { getProjects } from '@/app/actions/cms'
+import { useTranslations } from '@/hooks/useTranslations'
+import { useLanguage } from '@/context/language-context'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import ProjectCard from '@/components/projects/ProjectCard'
+import ProjectModal from '@/components/projects/ProjectModal'
+import { ArrowRight } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { Project } from '@/lib/db'
+
+const CATEGORIES: Record<number, string> = {
+  1: 'Data Visualization',
+  2: 'Machine Learning',
+  3: 'Business Intelligence',
+  4: 'Statistical Analysis',
+  5: 'Data Engineering',
+}
 
 export default function FeaturedProjects() {
   const t = useTranslations()
   const { isRTL } = useLanguage()
-  const [filter, setFilter] = useState<number | "all">("all")
+  const [projects, setProjects] = useState<Project[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [filter, setFilter] = useState<number | 'all'>('all')
   const [hoveredFilter, setHoveredFilter] = useState<string | null>(null)
   const [selectedProject, setSelectedProject] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { theme } = useTheme()
+
+  useEffect(() => {
+    async function loadProjects() {
+      try {
+        const data = await getProjects(false) // Exclude drafts
+        // Filter featured projects
+        const featured = data.filter((p) => p.featured && !p.draft)
+        setProjects(featured)
+      } catch (error) {
+        console.error('Error loading projects:', error)
+        setProjects([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadProjects()
+  }, [])
 
   // Contar proyectos por categoría
   const projectCounts = {
@@ -29,13 +58,13 @@ export default function FeaturedProjects() {
   projects
     .filter((p) => p.featured)
     .forEach((project) => {
-      projectCounts[project.categoryId] = (projectCounts[project.categoryId] || 0) + 1
+      projectCounts[project.category_id] = (projectCounts[project.category_id] || 0) + 1
     })
 
   // Create categories for the filter with counts
   const categories = [
-    { id: "all", label: t?.projects?.filters?.all || "All", count: projectCounts.all },
-    ...Object.entries(projectCategoriesName).map(([id, name]) => {
+    { id: 'all', label: t?.projects?.filters?.all || 'All', count: projectCounts.all },
+    ...Object.entries(CATEGORIES).map(([id, name]) => {
       return {
         id,
         label: name,
@@ -46,9 +75,9 @@ export default function FeaturedProjects() {
 
   // Filter featured projects based on the category selected
   const filteredProjects =
-    filter === "all"
+    filter === 'all'
       ? projects.filter((project) => project.featured)
-      : projects.filter((project) => project.categoryId === filter && project.featured)
+      : projects.filter((project) => project.category_id === filter && project.featured)
 
   // Limit to 6 projects maximum
   const displayedProjects = filteredProjects.slice(0, 6)
@@ -60,6 +89,14 @@ export default function FeaturedProjects() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
+  }
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 text-center text-slate-400">Loading projects...</div>
+      </section>
+    )
   }
 
   return (
@@ -99,12 +136,12 @@ export default function FeaturedProjects() {
               {categories
                 .filter((cat) => cat.count > 0)
                 .map((category) => {
-                  const isActive = filter === (category.id === "all" ? "all" : Number.parseInt(category.id))
+                  const isActive = filter === (category.id === 'all' ? 'all' : Number.parseInt(category.id as string))
 
                   return (
                     <motion.button
                       key={category.id}
-                      onClick={() => setFilter(category.id === "all" ? "all" : Number.parseInt(category.id))}
+                      onClick={() => setFilter(category.id === 'all' ? 'all' : Number.parseInt(category.id as string))}
                       className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                         isActive
                           ? "bg-primary text-white"
@@ -140,7 +177,7 @@ export default function FeaturedProjects() {
           </AnimatePresence>
         </motion.div>
 
-        {projects.filter((p) => p.featured).length > 0 && (
+        {projects.length > 0 && (
           <div className="text-center mt-12">
             <Link href="/projects">
               <Button
@@ -149,7 +186,7 @@ export default function FeaturedProjects() {
                 className="group relative overflow-hidden border-primary/30 hover:border-primary"
               >
                 <span className="relative z-10 flex items-center gap-2 transition-transform duration-300 group-hover:translate-x-[-5px]">
-                  {t?.projects?.viewAll || "View All Projects"}
+                  {t?.projects?.viewAll || 'View All Projects'}
                   <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
