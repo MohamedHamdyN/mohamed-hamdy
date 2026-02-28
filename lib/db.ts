@@ -1,11 +1,12 @@
-import { sql } from '@neondatabase/serverless'
+import { neon } from '@neondatabase/serverless'
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
+const query = neon(process.env.DATABASE_URL)
 
 export const db = {
-  query: sql,
+  query,
 }
 
 export type QueryResult<T> = {
