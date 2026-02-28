@@ -1,21 +1,10 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { auth } from "@/auth"
 
-export async function middleware(request: NextRequest) {
-  // Get the pathname
-  const pathname = request.nextUrl.pathname
-
-  // Admin routes require authentication
-  if (pathname.startsWith("/admin")) {
-    const session = await auth()
-    
-    if (!session) {
-      // Redirect to login if not authenticated
-      return NextResponse.redirect(new URL("/admin/login", request.url))
-    }
-  }
-
+export function middleware(request: NextRequest) {
+  // Middleware runs on Edge Runtime which doesn't support dynamic code (next-auth)
+  // Authentication is handled server-side in API routes and server actions
+  // This middleware is a pass-through - auth checks happen in protected routes
   return NextResponse.next()
 }
 
