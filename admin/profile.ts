@@ -148,6 +148,6 @@ My approach combines technical expertise with clear communication, ensuring that
 
 // إعدادات اللغة
 export const languageSettings = {
-  enableLanguageToggle: true,
+  enableLanguageToggle: false,
   defaultLanguage: "en", // en, ar
 }

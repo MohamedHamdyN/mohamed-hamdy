@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
 import { languageSettings } from "@/admin/profile"
 
 type Language = "en" | "ar"
@@ -18,45 +17,38 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const defaultLang = (languageSettings.defaultLanguage as Language) || "en"
 
-  // ✅ start with a stable value to match SSR
   const [language, setLanguage] = useState<Language>(defaultLang)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const saved = localStorage.getItem("language") as Language | null
-    if (saved === "en" || saved === "ar") {
-      setLanguage(saved)
-    }
+    if (saved === "en" || saved === "ar") setLanguage(saved)
+    setMounted(true)
   }, [])
-
-  const isRTL = useMemo(() => language === "ar", [language])
 
   useEffect(() => {
     if (!mounted) return
 
-    document.documentElement.dir = isRTL ? "rtl" : "ltr"
+    document.documentElement.dir = language === "ar" ? "rtl" : "ltr"
 
-    if (isRTL) {
-      document.documentElement.classList.add("font-cairo")
-      document.documentElement.classList.remove("font-inter")
-    } else {
-      document.documentElement.classList.add("font-inter")
-      document.documentElement.classList.remove("font-cairo")
-    }
-
+    // الأفضل: بلاش تلعب في html classList نهائيًا وقت الهيدرشن
+    // خليه على body class داخل layout/client wrapper (هنقولها تحت)
     localStorage.setItem("language", language)
-  }, [language, isRTL, mounted])
+  }, [language, mounted])
 
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, isRTL, mounted }}>
-      {children}
-    </LanguageContext.Provider>
+  const value = useMemo(
+    () => ({ language, setLanguage, isRTL: language === "ar", mounted }),
+    [language]
   )
+
+  // ده يمنع mismatch: نفس HTML اللي السيرفر عمله لحد ما العميل يثبت
+  if (!mounted) return null
+
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext)
-  if (!context) throw new Error("useLanguage must be used within a LanguageProvider")
-  return context
+  const ctx = useContext(LanguageContext)
+  if (!ctx) throw new Error("useLanguage must be used within a LanguageProvider")
+  return ctx
 }
