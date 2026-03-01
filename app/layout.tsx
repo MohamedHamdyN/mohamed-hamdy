@@ -105,15 +105,34 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const websiteEnabled = toggleSettings.website
+
+  const dbProfile = await getProfile() // ✅ من الداتا بيز
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <ClientOnly>
-          <LanguageProvider>
-            {children}
-          </LanguageProvider>
-        </ClientOnly>
+    <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
+      <head>...</head>
+      <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <ClientOnly>
+            <LanguageProvider>
+              <ProfileProvider profile={dbProfile}>
+                <ErrorBoundary>
+                  <SkipToContent />
+                  {websiteEnabled && <Header />}
+                  <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
+                    {children}
+                  </main>
+                  {websiteEnabled && <Footer />}
+                  <FloatingActionButton />
+                  <SpeedInsightsWrapper />
+                  <Analytics />
+                </ErrorBoundary>
+              </ProfileProvider>
+            </LanguageProvider>
+          </ClientOnly>
+        </ThemeProvider>
       </body>
     </html>
   )
