@@ -208,6 +208,15 @@ export async function upsertProfile(data: Partial<Profile>) {
   return { success: true, data: result[0] }
 }
 
+export async function updateProfile(input: Record<string, any>) {
+  // await db.profile.update({ where: { id: 1 }, data: input })
+
+  // revalidate pages that depend on profile
+  revalidatePath("/")
+  revalidatePath("/about")
+  revalidatePath("/contact")
+  return { ok: true }
+}
 // ============= SKILLS CRUD =============
 
 export async function getSkills(): Promise<Skill[]> {
