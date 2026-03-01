@@ -1,5 +1,7 @@
+"use client"
+
 import Head from "next/head"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
 
 interface SEOHeadProps {
   title?: string
@@ -12,38 +14,42 @@ interface SEOHeadProps {
 
 export default function SEOHead({
   title,
-  description = profile.shortBio,
+  description,
   keywords = "data analyst, financial accountant, data visualization, analytics",
   ogImage = "/og-image.jpg",
   ogType = "website",
   canonicalUrl,
 }: SEOHeadProps) {
-  const pageTitle = title ? `${title} | ${profile.name}` : `${profile.name} | ${profile.title}`
+  const profile = useProfile()
+
+  const name = profile?.name ?? (profile as any)?.full_name ?? "Mohamed Hamdy"
+  const profileTitle = (profile as any)?.title ?? profile?.title ?? "Data Analyst"
+  const shortBio = (profile as any)?.shortBio ?? (profile as any)?.short_bio ?? profile?.short_bio ?? ""
+  const favicon = (profile as any)?.favicon ?? "/favicon.ico"
+
+  const finalDescription = description ?? shortBio
+  const pageTitle = title ? `${title} | ${name}` : `${name} | ${profileTitle}`
 
   return (
     <Head>
       <title>{pageTitle}</title>
-      <meta name="description" content={description} />
+      <meta name="description" content={finalDescription} />
       <meta name="keywords" content={keywords} />
 
-      {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} />
       <meta property="og:title" content={pageTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={finalDescription} />
       <meta property="og:image" content={ogImage} />
 
-      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={pageTitle} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:description" content={finalDescription} />
       <meta name="twitter:image" content={ogImage} />
 
-      {/* Canonical URL */}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
-      {/* Favicon */}
-      <link rel="icon" href={profile.favicon} />
-      <link rel="apple-touch-icon" href={profile.favicon} />
+      <link rel="icon" href={favicon} />
+      <link rel="apple-touch-icon" href={favicon} />
     </Head>
   )
 }

@@ -1,15 +1,44 @@
-"use client"
+'use client'
 
-import { motion } from "framer-motion"
-import { services } from "@/admin/services"
-import { useTranslations } from "@/hooks/useTranslations"
-import ServiceCard from "./ServiceCard"
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { getServices } from '@/app/actions/cms'
+import { useTranslations } from '@/hooks/useTranslations'
+import ServiceCard from './ServiceCard'
+import { Service } from '@/lib/db'
 
 export default function ServicesGrid() {
   const t = useTranslations()
+  const [services, setServices] = useState<Service[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // تصفية الخدمات المفعلة
-  const enabledServices = services.filter((service) => service.enabled)
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const data = await getServices()
+        // تصفية الخدمات المفعلة
+        const enabledServices = data.filter((service) => service.enabled)
+        setServices(enabledServices)
+      } catch (error) {
+        console.error('Error loading services:', error)
+        setServices([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadServices()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <section id="services-grid" className="py-20 bg-background">
+        <div className="container mx-auto px-4 text-center text-slate-400">Loading services...</div>
+      </section>
+    )
+  }
+
+  const enabledServices = services
 
   return (
     <section id="services-grid" className="py-20 bg-background relative">

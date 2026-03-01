@@ -5,6 +5,8 @@ import { motion, useInView, useAnimation } from "framer-motion"
 import * as LucideIcons from "lucide-react"
 import { PuzzlePiece } from "@/components/shared/CustomIcons"
 import { useMobile } from "@/hooks/use-mobile"
+import type { ElementType } from "react"
+import type { LucideProps } from "lucide-react"
 
 interface SliderItem {
   id: number
@@ -24,6 +26,11 @@ interface InfiniteSliderProps {
   pauseOnHover?: boolean
 }
 
+// ✅ type-guard: هل ده React Component؟
+function isReactComponent(value: unknown): value is ElementType {
+  return typeof value === "function" || (typeof value === "object" && value !== null)
+}
+
 export default function InfiniteSlider({
   items,
   title,
@@ -39,10 +46,7 @@ export default function InfiniteSlider({
   const [isPaused, setIsPaused] = useState(false)
   const isMobile = useMobile()
 
-  // Filter enabled items
   const enabledItems = items.filter((item) => item.enabled !== false)
-
-  // Reduce repetition - only duplicate items once instead of twice
   const displayItems = [...enabledItems, ...enabledItems]
 
   useEffect(() => {
@@ -53,7 +57,7 @@ export default function InfiniteSlider({
           x: {
             repeat: Number.POSITIVE_INFINITY,
             repeatType: "loop",
-            duration: 60, // Slower animation (increased from 30 to 60)
+            duration: 60,
             ease: "linear",
           },
         },
@@ -72,10 +76,15 @@ export default function InfiniteSlider({
       return <PuzzlePiece className="h-6 w-6" aria-hidden="true" />
     }
 
-    const Icon = LucideIcons[iconName as keyof typeof LucideIcons]
-    if (Icon) {
+    // ✅ خُد export من lucide-react
+    const maybeIcon = (LucideIcons as Record<string, unknown>)[iconName]
+
+    // ✅ اتأكد انه Component
+    if (isReactComponent(maybeIcon)) {
+      const Icon = maybeIcon as ElementType<LucideProps>
       return <Icon className="h-6 w-6" aria-hidden="true" />
     }
+
     return <LucideIcons.Star className="h-6 w-6" aria-hidden="true" />
   }
 
@@ -103,23 +112,14 @@ export default function InfiniteSlider({
               animate={isInView ? { width: "100%" } : { width: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
               aria-hidden="true"
-            ></motion.span>
+            />
           </h2>
           {description && <p className="text-muted-foreground max-w-2xl mx-auto">{description}</p>}
         </motion.div>
 
         <div className="relative w-full overflow-hidden">
-          {/* Left fade effect */}
-          <div
-            className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-background to-transparent z-10"
-            aria-hidden="true"
-          ></div>
-
-          {/* Right fade effect */}
-          <div
-            className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-background to-transparent z-10"
-            aria-hidden="true"
-          ></div>
+          <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-background to-transparent z-10" />
+          <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-background to-transparent z-10" />
 
           <div
             className="w-full overflow-hidden"

@@ -1,28 +1,63 @@
-"use client"
+'use client'
 
-import { useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { clients } from "@/admin/clients"
-import { useTranslations } from "@/hooks/useTranslations"
-import { useLanguage } from "@/context/language-context"
-import Image from "next/image"
-import { Star, ExternalLink, FileCode } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useRef, useState, useEffect } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { getClients } from '@/app/actions/cms'
+import { useTranslations } from '@/hooks/useTranslations'
+import { useLanguage } from '@/context/language-context'
+import Image from 'next/image'
+import { Star, ExternalLink, FileCode } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Client } from '@/lib/db'
 
 export default function Clients() {
   const t = useTranslations()
   const { isRTL } = useLanguage()
   const containerRef = useRef<HTMLDivElement>(null)
+  const [clients, setClients] = useState<Client[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start end", "end start"],
+    offset: ['start end', 'end start'],
   })
 
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
   const y = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, 100])
 
-  // Filter enabled clients
-  const enabledClients = clients.filter((client) => client.enabled !== false)
+  useEffect(() => {
+    async function loadClients() {
+      try {
+        const data = await getClients()
+        // Filter enabled clients
+        const enabledClients = data.filter((client) => client.enabled !== false)
+        setClients(enabledClients)
+      } catch (error) {
+        console.error('Error loading clients:', error)
+        setClients([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadClients()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <section ref={containerRef} className="py-20 bg-background overflow-hidden">
+        <div className="container mx-auto px-4 text-center text-slate-400">Loading clients...</div>
+      </section>
+    )
+  }
+
+  if (clients.length === 0) {
+    return (
+      <section ref={containerRef} className="py-20 bg-background overflow-hidden">
+        <div className="container mx-auto px-4 text-center text-slate-400">No clients to display</div>
+      </section>
+    )
+  }
 
   return (
     <section ref={containerRef} className="py-20 bg-background overflow-hidden">
@@ -36,7 +71,7 @@ export default function Clients() {
 
         <div className="flex overflow-x-auto pb-8 hide-scrollbar">
           <div className="flex space-x-6 animate-scroll">
-            {enabledClients.map((client) => (
+            {clients.map((client) => (
               <motion.div
                 key={client.id}
                 className="flex-shrink-0 w-80 p-6 rounded-xl border border-border bg-card hover:border-primary/50 transition-all duration-300"
@@ -45,7 +80,7 @@ export default function Clients() {
                 <div className="flex items-center mb-4">
                   <div className="relative w-16 h-16 mr-4 overflow-hidden rounded-full">
                     <Image
-                      src={client.logo || "/placeholder.svg"}
+                      src={client.logo_url || '/placeholder.svg'}
                       alt={client.name}
                       fill
                       className="object-cover"
@@ -74,22 +109,10 @@ export default function Clients() {
                       variant="outline"
                       size="sm"
                       className="w-full flex items-center justify-center gap-2"
-                      onClick={() => window.open(client.website, "_blank")}
+                      onClick={() => window.open(client.website!, '_blank')}
                     >
                       <ExternalLink className="h-4 w-4" />
                       Visit Website
-                    </Button>
-                  )}
-
-                  {client.lastProject && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full flex items-center justify-center gap-2"
-                      onClick={() => window.open(client.lastProject, "_blank")}
-                    >
-                      <FileCode className="h-4 w-4" />
-                      {t?.projects?.lastProject || "Last Project"}
                     </Button>
                   )}
                 </div>

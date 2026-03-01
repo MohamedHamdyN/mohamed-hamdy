@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
 import { Linkedin, Github, Twitter, Facebook, Instagram, ExternalLink } from "lucide-react"
 
 interface SocialLinksProps {
@@ -9,54 +9,55 @@ interface SocialLinksProps {
   centered?: boolean
 }
 
+type SocialMap = Record<string, string>
+
+function safeParseJSON(value: unknown): any {
+  if (typeof value !== "string") return value
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
+}
+
+function normalizeSocialLinks(profile: any): SocialMap {
+  if (!profile) return {}
+
+  // ✅ supports: socialLinks OR social_links (object or json string)
+  const raw = safeParseJSON(profile.socialLinks ?? profile.social_links)
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as SocialMap
+
+  // ✅ fallback if you store as separate columns
+  const map: SocialMap = {
+    linkedin: profile.linkedin ?? profile.linkedin_url ?? "",
+    github: profile.github ?? profile.github_url ?? "",
+    twitter: profile.twitter ?? profile.twitter_url ?? "",
+    facebook: profile.facebook ?? profile.facebook_url ?? "",
+    instagram: profile.instagram ?? profile.instagram_url ?? "",
+  }
+
+  Object.keys(map).forEach((k) => {
+    if (!map[k] || !String(map[k]).trim()) delete map[k]
+  })
+
+  return map
+}
+
 export default function SocialLinks({ size = "md", centered = false }: SocialLinksProps) {
-  const getSizeClass = () => {
-    switch (size) {
-      case "sm":
-        return "h-4 w-4"
-      case "md":
-        return "h-5 w-5"
-      case "lg":
-        return "h-6 w-6"
-      default:
-        return "h-5 w-5"
-    }
-  }
+  const profile = useProfile()
+  const socialLinks = normalizeSocialLinks(profile as any)
 
-  const getContainerClass = () => {
-    switch (size) {
-      case "sm":
-        return "p-2"
-      case "md":
-        return "p-2.5"
-      case "lg":
-        return "p-3"
-      default:
-        return "p-2.5"
-    }
-  }
+  const iconSize = size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5"
+  const containerSize = size === "sm" ? "p-2" : size === "lg" ? "p-3" : "p-2.5"
 
-  const iconSize = getSizeClass()
-  const containerSize = getContainerClass()
-
-  // Icono personalizado para Datacamp
-  const DatacampIcon = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-      <path d="M12.946 18.151v-5.239L21.209 8.033v4.962l-8.263 5.156zm-1.825.468L2.791 13.25V8.033l8.33 5.418v5.168zM12 0L0 7.165v8.496l12 7.339 12-7.339V7.165L12 0z" />
-    </svg>
-  )
-
-  // Definir iconos conocidos
   const knownIcons: Record<string, JSX.Element> = {
     linkedin: <Linkedin className={iconSize} />,
     github: <Github className={iconSize} />,
     twitter: <Twitter className={iconSize} />,
     facebook: <Facebook className={iconSize} />,
     instagram: <Instagram className={iconSize} />,
-    datacamp: <DatacampIcon className={iconSize} />,
   }
 
-  // Definir colores conocidos
   const knownColors: Record<string, string> = {
     linkedin: "bg-[#0077B5]/10 text-[#0077B5] hover:bg-[#0077B5]",
     github:
@@ -65,33 +66,32 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
     facebook: "bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2]",
     instagram:
       "bg-gradient-to-br from-[#833AB4]/10 via-[#FD1D1D]/10 to-[#FCAF45]/10 text-[#FD1D1D] hover:bg-gradient-to-br hover:from-[#833AB4] hover:via-[#FD1D1D] hover:to-[#FCAF45]",
-    datacamp: "bg-[#03EF62]/10 text-[#03EF62] hover:bg-[#03EF62]",
   }
 
-  // Crear un array de redes sociales a partir del objeto socialLinks
-  const socialNetworks = Object.entries(profile.socialLinks)
-    .filter(([_, url]) => url && url.trim() !== "")
-    .map(([key, url]) => ({
-      key,
-      url,
-      icon: knownIcons[key] || <ExternalLink className={iconSize} />,
-      color: knownColors[key] || "bg-gray-500/10 text-gray-500 hover:bg-gray-500",
-    }))
+  const networks = Object.entries(socialLinks).map(([key, url]) => ({
+    key,
+    url,
+    icon: knownIcons[key] || <ExternalLink className={iconSize} />,
+    color: knownColors[key] || "bg-gray-500/10 text-gray-500 hover:bg-gray-500",
+  }))
+
+  // لو فاضي فعلاً، طبيعي مش هيظهر
+  if (networks.length === 0) return null
 
   return (
     <div className={`flex gap-3 flex-wrap ${centered ? "justify-center" : ""}`}>
-      {socialNetworks.map((network) => (
+      {networks.map((n) => (
         <motion.a
-          key={network.key}
-          href={network.url}
+          key={n.key}
+          href={n.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${containerSize} ${network.color} rounded-full hover:text-white transition-colors`}
+          className={`${containerSize} ${n.color} rounded-full hover:text-white transition-colors`}
           whileHover={{ y: -5 }}
           whileTap={{ scale: 0.95 }}
-          aria-label={`Visit ${network.key}`}
+          aria-label={`Visit ${n.key}`}
         >
-          {network.icon}
+          {n.icon}
         </motion.a>
       ))}
     </div>

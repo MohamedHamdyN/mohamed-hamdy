@@ -1,92 +1,44 @@
 "use client"
 
-import type React from "react"
-
-import { motion, AnimatePresence } from "framer-motion"
-import { type Project, projectCategories, projectCategoriesName } from "@/admin/projects"
-import { useTranslations } from "@/hooks/useTranslations"
-import { Button } from "@/components/ui/button"
-import { X, Linkedin, Calendar, Tag, BarChart } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useMemo, useState } from "react"
+import { motion } from "framer-motion"
+import { useProfile } from "@/context/profile-context"
+import { ArrowUpRight, Calendar, ExternalLink } from "lucide-react"
 import Image from "next/image"
-import { profile } from "@/admin/profile"
+import { Button } from "@/components/ui/button"
+import { useTranslations } from "@/hooks/useTranslations"
+import { projectCategories, projectCategoriesName } from "@/admin/projects"
 
-interface ProjectModalProps {
-  project: Project
-  isOpen: boolean
-  onClose: () => void
-}
-
-export default function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
+export default function ProjectCard({ project, onClick = () => { } }: any) {
   const t = useTranslations()
-  const modalRef = useRef<HTMLDivElement>(null)
-  const [imageLoaded, setImageLoaded] = useState(false)
+  const profile = useProfile()
   const [imageError, setImageError] = useState(false)
 
-  // Get category display name
+  const normalized = useMemo(() => {
+    // ✅ normalize DB fields
+    const categoryId = project.categoryId ?? project.category_id ?? project.category ?? null
+    return {
+      id: project.id,
+      title: project.title ?? "Project Title",
+      date: project.date ?? project.created_at ?? project.createdAt ?? "",
+      image: project.image ?? project.image_url ?? project.imageUrl ?? "",
+      description: project.shortDescription ?? project.short_description ?? project.description ?? "",
+      technologies: project.technologies ?? project.tech_stack ?? project.techStack ?? [],
+      projectUrl: project.projectUrl ?? project.project_url ?? project.url ?? "",
+      categoryId,
+    }
+  }, [project])
+
+  const defaultProjectImage =
+    (profile as any)?.defaultProjectImage ??
+    (profile as any)?.default_project_image ??
+    "/placeholder.svg?height=600&width=800"
+
   const categoryName =
-    projectCategoriesName[project.categoryId as keyof typeof projectCategoriesName] ||
-    projectCategories[project.categoryId as keyof typeof projectCategories]
+    projectCategoriesName[normalized.categoryId as keyof typeof projectCategoriesName] ||
+    projectCategories[normalized.categoryId as keyof typeof projectCategories] ||
+    "Category"
 
-  // Handle escape key press
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose()
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [isOpen, onClose])
-
-  // Handle focus trap
-  useEffect(() => {
-    if (isOpen && modalRef.current) {
-      const focusableElements = modalRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      )
-
-      if (focusableElements.length > 0) {
-        const firstElement = focusableElements[0] as HTMLElement
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
-
-        firstElement.focus()
-
-        const handleTabKey = (e: KeyboardEvent) => {
-          if (e.key === "Tab") {
-            if (e.shiftKey && document.activeElement === firstElement) {
-              e.preventDefault()
-              lastElement.focus()
-            } else if (!e.shiftKey && document.activeElement === lastElement) {
-              e.preventDefault()
-              firstElement.focus()
-            }
-          }
-        }
-
-        modalRef.current.addEventListener("keydown", handleTabKey)
-        return () => {
-          if (modalRef.current) {
-            modalRef.current.removeEventListener("keydown", handleTabKey)
-          }
-        }
-      }
-    }
-  }, [isOpen])
-
-  // Handle click outside to close
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
-  }
-
-  const handleImageError = () => {
-    setImageError(true)
-  }
-
-  // Define technology colors
   const techColors = [
     "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
@@ -97,111 +49,84 @@ export default function ProjectModal({ project, isOpen, onClose }: ProjectModalP
   ]
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
-          onClick={handleBackdropClick}
-        >
-          <motion.div
-            ref={modalRef}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
-            className="bg-card rounded-xl overflow-hidden border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()} // Prevent clicks inside modal from closing it
-          >
-            <div className="relative h-64">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background"
-                onClick={onClose}
-                aria-label="Close modal"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </Button>
+    <motion.div
+      className="group relative bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col cursor-pointer"
+      whileHover={{ y: -5 }}
+      onClick={() => onClick(normalized)}
+    >
+      <div className="relative h-48 overflow-hidden">
+        <Image
+          src={imageError ? defaultProjectImage : (normalized.image || defaultProjectImage)}
+          alt={normalized.title}
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={() => setImageError(true)}
+          fill
+          unoptimized
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
 
-              <div
-                className="absolute inset-0 flex items-center justify-center bg-muted/20 backdrop-blur-sm z-10 transition-opacity duration-300"
-                style={{ opacity: imageLoaded ? 0 : 1 }}
-              >
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-              </div>
-
-              <Image
-                src={imageError ? profile.defaultProjectImage : project.image || profile.defaultProjectImage}
-                alt={`Project banner for ${project.title}`}
-                fill
-                className="object-cover"
-                priority
-                unoptimized
-                onLoad={() => setImageLoaded(true)}
-                onError={handleImageError}
-              />
-            </div>
-            <div className="p-6">
-              <h2 id="modal-title" className="text-2xl font-bold mb-2">
-                {project.title}
-              </h2>
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4 mr-1" aria-hidden="true" />
-                  <time dateTime={project.date}>{project.date}</time>
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Tag className="h-4 w-4 mr-1" aria-hidden="true" />
-                  <span>{categoryName}</span>
-                </div>
-              </div>
-
-              <p className="text-foreground mb-6">{project.description}</p>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Technologies</h3>
-                <div className="flex flex-wrap gap-2">
-                  {project.technologies.map((tech, index) => (
-                    <span
-                      key={index}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${techColors[index % techColors.length]}`}
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-4">
-                {project.linkedinUrl && (
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
-                    onClick={() => window.open(project.linkedinUrl, "_blank", "noopener noreferrer")}
-                  >
-                    <Linkedin className="h-5 w-5" aria-hidden="true" />
-                    <span>{t.projects.viewOnLinkedIn}</span>
-                  </Button>
-                )}
-                {project.projectUrl && (
-                  <Button
-                    variant="default"
-                    className="flex items-center gap-2"
-                    onClick={() => window.open(project.projectUrl, "_blank", "noopener noreferrer")}
-                  >
-                    <BarChart className="h-5 w-5" aria-hidden="true" />
-                    <span>Preview Dashboard</span>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </motion.div>
+      <div className="p-5 flex-grow flex flex-col">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-bold line-clamp-1">{normalized.title}</h3>
+          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full capitalize">
+            {categoryName}
+          </span>
         </div>
-      )}
-    </AnimatePresence>
+
+        {!!normalized.date && (
+          <div className="flex items-center text-xs text-muted-foreground mb-3">
+            <Calendar className="h-3 w-3 mr-1" />
+            <time>{normalized.date}</time>
+          </div>
+        )}
+
+        <p className="text-muted-foreground text-sm mb-4 line-clamp-2 flex-grow">
+          {normalized.description || "Project description"}
+        </p>
+
+        <div className="flex flex-wrap gap-1 mb-4">
+          {(normalized.technologies || []).slice(0, 3).map((tech: string, index: number) => (
+            <span key={index} className={`text-xs px-2 py-1 rounded-full font-medium ${techColors[index % techColors.length]}`}>
+              {tech}
+            </span>
+          ))}
+          {(normalized.technologies || []).length > 3 && (
+            <span className="text-xs bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 px-2 py-1 rounded-full">
+              +{normalized.technologies.length - 3}
+            </span>
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-auto">
+          <Button
+            size="sm"
+            className="flex-1 flex items-center justify-center gap-1"
+            onClick={(e) => {
+              e.stopPropagation()
+              onClick(normalized)
+            }}
+          >
+            <span>{t.projects.viewProject}</span>
+            <ArrowUpRight className="h-3 w-3" />
+          </Button>
+
+          {!!normalized.projectUrl && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="aspect-square"
+              onClick={(e) => {
+                e.stopPropagation()
+                window.open(normalized.projectUrl, "_blank", "noopener,noreferrer")
+              }}
+              aria-label="Open project"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </motion.div>
   )
 }

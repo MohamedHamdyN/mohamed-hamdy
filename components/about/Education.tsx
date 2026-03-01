@@ -1,75 +1,73 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useInView } from "react-intersection-observer"
+import { useProfileSafe } from "@/context/useProfileSafe"
 import { useTranslations } from "@/hooks/useTranslations"
-import { profile } from "@/admin/profile"
+
+type EducationItem = {
+  title?: string
+  institution?: string
+  year?: string
+  description?: string
+}
 
 export default function Education() {
   const t = useTranslations()
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  })
+  const profile = useProfileSafe()
+
+  const education: EducationItem[] =
+    (profile as any)?.education ??
+    (profile as any)?.educations ??
+    (profile as any)?.education_history ??
+    []
+
+  if (!education || education.length === 0) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 text-center text-muted-foreground">
+          "No education items to display"
+        </div>
+      </section>
+    )
+  }
 
   return (
-    <section className="py-16 bg-gradient-to-b from-background/50 to-background relative overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-primary/5 rounded-full filter blur-3xl"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-secondary/5 rounded-full filter blur-3xl"></div>
-      </div>
-
+    <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
           className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6"
-          >
-            <span className="text-sm font-medium">{t.about.education}</span>
-          </motion.div>
-
-          <motion.h2
-            className="text-3xl md:text-4xl font-bold mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            {t.about.education}
-          </motion.h2>
+          <h2 className="text-3xl font-bold mb-3">{t?.about?.education || "Education"}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            {t.about.description}
+          </p>
         </motion.div>
 
-        <motion.div ref={ref} initial="hidden" animate={inView ? "visible" : "hidden"} className="max-w-4xl mx-auto">
-          {profile.education.map((item, index) => (
+        <div className="max-w-4xl mx-auto grid gap-6">
+          {education.map((item, idx) => (
             <motion.div
-              key={index}
+              key={idx}
+              className="bg-card border border-border rounded-xl p-6"
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-              className="bg-card border border-border rounded-2xl p-6 mb-6 hover:shadow-lg transition-all duration-300"
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: idx * 0.05 }}
             >
-              <div className="flex flex-col md:flex-row justify-between mb-4">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-primary">{item.degree}</h3>
-                  <p className="text-muted-foreground">{item.institution}</p>
+                  <h3 className="text-xl font-bold">{item.title || "Education Item"}</h3>
+                  <p className="text-muted-foreground">{item.institution || ""}</p>
                 </div>
-                <div className="mt-2 md:mt-0">
-                  <span className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                    {item.year}
-                  </span>
-                </div>
+                {item.year && <span className="text-sm font-medium text-primary">{item.year}</span>}
               </div>
-              <p className="text-muted-foreground">{item.details}</p>
+              {item.description && <p className="mt-4 text-muted-foreground">{item.description}</p>}
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   )

@@ -2,13 +2,16 @@
 
 import Link from "next/link"
 import { useTranslations } from "@/hooks/useTranslations"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
 import SocialLinks from "@/components/shared/SocialLinks"
 import { Heart } from "lucide-react"
 
 export default function Footer() {
   const t = useTranslations()
+  const profile = useProfile()
   const currentYear = new Date().getFullYear()
+
+  const name = profile?.name ?? "Mohamed Hamdy"
 
   return (
     <footer className="bg-background border-t border-border">
@@ -52,11 +55,11 @@ export default function Footer() {
 
         <div className="mt-10 flex flex-col items-center">
           <p className="text-center text-sm leading-5 text-muted-foreground">
-            &copy; {currentYear} {profile.name}. {t.footer.rights}
+            &copy; {currentYear} {name}. {t.footer.rights}
           </p>
           <p className="mt-2 text-center text-sm leading-5 text-muted-foreground flex items-center">
             {t.footer.madeWith} <Heart className="h-4 w-4 mx-1 text-red-500" />{" "}
-            {t.footer.madeWith === "Made with" ? "by" : "بواسطة"} Mohamed Hamdy
+            {t.footer.madeWith === "Made with" ? "by" : "بواسطة"} {name}
           </p>
         </div>
       </div>

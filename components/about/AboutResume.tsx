@@ -1,20 +1,51 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { profile } from "@/admin/profile"
 import { useTranslations } from "@/hooks/useTranslations"
-import { skills } from "@/admin/skills"
 import { FileText, Calendar, Briefcase, GraduationCap, FileDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import type { Skill } from "@/lib/db"
 
-export default function AboutResume() {
+type Experience = {
+  id: number
+  year: string
+  title: string
+  details: string
+  enabled?: boolean
+  order?: number
+}
+
+type Education = {
+  id: number
+  year: string
+  degree: string
+  institution: string
+  details: string
+  enabled?: boolean
+  order?: number
+}
+
+function sortByOrder<T extends { order?: number; id: number }>(items: T[]) {
+  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+}
+
+export default function AboutResume({
+  resumeUrl,
+  experiences,
+  educations,
+  skills,
+}: {
+  resumeUrl: string
+  experiences: Experience[]
+  educations: Education[]
+  skills: Skill[]
+}) {
   const t = useTranslations()
 
-  // Filter journey events by type
-  const experiences = profile.journey.filter(
-    (event) => !event.title.includes("Degree") && !event.title.includes("Certification"),
-  )
+  const exp = sortByOrder((experiences ?? []).filter((x) => x.enabled !== false))
+  const edu = sortByOrder((educations ?? []).filter((x) => x.enabled !== false))
+  const sk = sortByOrder((skills ?? []).filter((s) => (s as any).enabled !== false))
 
   return (
     <section className="py-16 bg-gradient-to-b from-background/50 to-background relative overflow-hidden">
@@ -49,28 +80,31 @@ export default function AboutResume() {
             {t.resume.title}
           </motion.h2>
 
-          <motion.div
-            className="flex justify-center mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Link href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
-              <Button
-                size="lg"
-                className="group relative overflow-hidden rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-primary/25 hover:shadow-xl"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  <FileDown className="h-5 w-5" />
-                  {t.about.downloadResume}
-                </span>
-                <span className="absolute inset-0 z-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
-              </Button>
-            </Link>
-          </motion.div>
+          {resumeUrl ? (
+            <motion.div
+              className="flex justify-center mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <Link href={resumeUrl} target="_blank" rel="noopener noreferrer">
+                <Button
+                  size="lg"
+                  className="group relative overflow-hidden rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-primary/25 hover:shadow-xl"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    <FileDown className="h-5 w-5" />
+                    {t.about.downloadResume}
+                  </span>
+                  <span className="absolute inset-0 z-0 bg-gradient-to-r from-primary via-primary/80 to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+                </Button>
+              </Link>
+            </motion.div>
+          ) : null}
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-12">
+          {/* Experience */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -84,27 +118,28 @@ export default function AboutResume() {
               <h3 className="text-2xl font-bold">{t.resume.experience}</h3>
             </div>
 
-            {experiences.map((experience, index) => (
+            {exp.map((x, i) => (
               <motion.div
-                key={index}
+                key={x.id}
                 className="border-l-2 border-primary/30 pl-4 ml-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
               >
                 <div className="relative">
                   <div className="absolute w-3 h-3 bg-primary rounded-full -left-[1.4rem] top-1.5"></div>
                   <div className="flex items-center gap-2 mb-1">
                     <Calendar className="h-4 w-4 text-primary" />
-                    <span className="text-primary font-medium">{experience.year}</span>
+                    <span className="text-primary font-medium">{x.year}</span>
                   </div>
-                  <h4 className="text-xl font-bold">{experience.title}</h4>
-                  <p className="text-muted-foreground mt-2">{experience.details}</p>
+                  <h4 className="text-xl font-bold">{x.title}</h4>
+                  <p className="text-muted-foreground mt-2">{x.details}</p>
                 </div>
               </motion.div>
             ))}
           </motion.div>
 
+          {/* Education + Skills */}
           <div className="space-y-12">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -119,23 +154,23 @@ export default function AboutResume() {
                 <h3 className="text-2xl font-bold">{t.resume.education}</h3>
               </div>
 
-              {profile.education.map((edu, index) => (
+              {edu.map((x, i) => (
                 <motion.div
-                  key={index}
+                  key={x.id}
                   className="border-l-2 border-secondary/30 pl-4 ml-2"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                  transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
                 >
                   <div className="relative">
                     <div className="absolute w-3 h-3 bg-secondary rounded-full -left-[1.4rem] top-1.5"></div>
                     <div className="flex items-center gap-2 mb-1">
                       <Calendar className="h-4 w-4 text-secondary" />
-                      <span className="text-secondary font-medium">{edu.year}</span>
+                      <span className="text-secondary font-medium">{x.year}</span>
                     </div>
-                    <h4 className="text-xl font-bold">{edu.degree}</h4>
-                    <p className="text-muted-foreground mt-1">{edu.institution}</p>
-                    <p className="text-muted-foreground mt-2">{edu.details}</p>
+                    <h4 className="text-xl font-bold">{x.degree}</h4>
+                    <p className="text-muted-foreground mt-1">{x.institution}</p>
+                    <p className="text-muted-foreground mt-2">{x.details}</p>
                   </div>
                 </motion.div>
               ))}
@@ -148,9 +183,9 @@ export default function AboutResume() {
             >
               <h3 className="text-2xl font-bold mb-6 text-primary">{t.skills.title}</h3>
               <div className="grid grid-cols-2 gap-4">
-                {skills.map((skill) => (
+                {sk.map((skill) => (
                   <div key={skill.id} className="flex items-center gap-2">
-                    <div className={`${skill.color} rounded-full p-1`}>
+                    <div className={`${skill.color ?? "text-primary"} rounded-full p-1`}>
                       <div className="w-2 h-2 bg-current rounded-full"></div>
                     </div>
                     <span>{skill.name}</span>

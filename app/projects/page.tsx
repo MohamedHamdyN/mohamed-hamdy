@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { toggleSettings } from "@/admin/toggle"
 import { notFound } from "next/navigation"
 import ProjectsGrid from "@/components/projects/ProjectsGrid"

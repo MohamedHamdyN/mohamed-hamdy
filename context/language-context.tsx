@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
 import { languageSettings } from "@/admin/profile"
 
 type Language = "en" | "ar"
@@ -10,54 +10,53 @@ interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   isRTL: boolean
+  mounted: boolean
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const defaultLang = (languageSettings.defaultLanguage as Language) || "en"
+
+  // ✅ start with a stable value to match SSR
   const [language, setLanguage] = useState<Language>(defaultLang)
-  const [isRTL, setIsRTL] = useState<boolean>(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Check if there's a saved language preference
-    if (typeof window !== "undefined") {
-      const savedLanguage = localStorage.getItem("language") as Language
-      if (savedLanguage) {
-        setLanguage(savedLanguage)
-      }
+    setMounted(true)
+    const saved = localStorage.getItem("language") as Language | null
+    if (saved === "en" || saved === "ar") {
+      setLanguage(saved)
     }
   }, [])
 
+  const isRTL = useMemo(() => language === "ar", [language])
+
   useEffect(() => {
-    // Update RTL state based on language
-    setIsRTL(language === "ar")
+    if (!mounted) return
 
-    // Update HTML dir attribute
-    if (typeof document !== "undefined") {
-      document.documentElement.dir = language === "ar" ? "rtl" : "ltr"
+    document.documentElement.dir = isRTL ? "rtl" : "ltr"
 
-      // Update font family based on language
-      if (language === "ar") {
-        document.documentElement.classList.add("font-cairo")
-        document.documentElement.classList.remove("font-inter")
-      } else {
-        document.documentElement.classList.add("font-inter")
-        document.documentElement.classList.remove("font-cairo")
-      }
-
-      // Save language preference
-      localStorage.setItem("language", language)
+    if (isRTL) {
+      document.documentElement.classList.add("font-cairo")
+      document.documentElement.classList.remove("font-inter")
+    } else {
+      document.documentElement.classList.add("font-inter")
+      document.documentElement.classList.remove("font-cairo")
     }
-  }, [language])
 
-  return <LanguageContext.Provider value={{ language, setLanguage, isRTL }}>{children}</LanguageContext.Provider>
+    localStorage.setItem("language", language)
+  }, [language, isRTL, mounted])
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, isRTL, mounted }}>
+      {children}
+    </LanguageContext.Provider>
+  )
 }
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
-  if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider")
-  }
+  if (!context) throw new Error("useLanguage must be used within a LanguageProvider")
   return context
 }

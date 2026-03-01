@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { profile } from "@/admin/profile"
+import { useProfileSafe } from "@/context/useProfileSafe"
 import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"
@@ -13,6 +13,8 @@ import { universalSettings } from "@/admin/toggle"
 export default function Hero() {
   const t = useTranslations()
   const { isRTL } = useLanguage()
+  const profile = useProfileSafe()
+
   const [text, setText] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const [loopNum, setLoopNum] = useState(0)
@@ -23,18 +25,25 @@ export default function Hero() {
   const period = 2000
   const nameRef = useRef<HTMLSpanElement>(null)
 
-  // Preload critical resources
+  // ✅ Fallbacks لتوحيد أسماء الحقول بين القديم والجديد
+  const name = profile?.name ?? (profile as any)?.full_name ?? "Mohamed Hamdy"
+  const resumeUrl = profile?.resumeUrl ?? (profile as any)?.resumeUrl ?? (profile as any)?.resume_url ?? ""
+  const logoOrAvatar =
+    (profile as any)?.logo ??
+    profile?.logo ??
+    (profile as any)?.avatar_url ??
+    ""
+
   useEffect(() => {
-    // Preload critical images
-    if (profile.logo) {
-      const img = new Image()
-      img.src = profile.logo
+    // preload لو عندك لوجو/أفاتار
+    if (logoOrAvatar) {
+      const img = new window.Image()
+      img.src = logoOrAvatar
     }
 
-    // Set visibility after mount to prevent hydration issues
     setIsVisible(true)
     setWebsiteEnabled(universalSettings.website)
-  }, [])
+  }, [logoOrAvatar])
 
   const textArray = [
     t?.hero?.title || "Data Analyst",
@@ -49,11 +58,8 @@ export default function Hero() {
 
     setText(updatedText)
 
-    if (isDeleting) {
-      setDelta(75)
-    } else {
-      setDelta(150)
-    }
+    if (isDeleting) setDelta(75)
+    else setDelta(150)
 
     if (!isDeleting && updatedText === fullText) {
       setIsDeleting(true)
@@ -63,35 +69,17 @@ export default function Hero() {
       setLoopNum(loopNum + 1)
       setDelta(150)
     }
-  }, [text, isDeleting, loopNum, period])
+  }, [text, isDeleting, loopNum, period, textArray])
 
   useEffect(() => {
     if (!isVisible) return
-
     const ticker = setInterval(tick, delta)
     return () => clearInterval(ticker)
   }, [tick, delta, isVisible])
 
-  // Optimized button variants with reduced complexity
-  const buttonVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: (custom: number) => ({
-      opacity: 1,
-      scale: 1,
-      transition: {
-        delay: custom * 0.2,
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    }),
-    hover: {
-      scale: 1.02,
-      transition: {
-        duration: 0.2,
-        ease: "easeInOut",
-      },
-    },
-  }
+  // ✅ Transition ثابتة (بدون Variants) لتجنب خطأ TS
+  const easeOut = [0.16, 1, 0.3, 1] as const
+  const easeInOut = [0.4, 0, 0.2, 1] as const
 
   if (!isVisible) {
     return (
@@ -115,7 +103,7 @@ export default function Hero() {
               className="text-base font-semibold leading-7 text-primary"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.5, ease: easeOut }}
             >
               {t?.hero?.greeting || "Hello, I'm"}
             </motion.p>
@@ -131,7 +119,7 @@ export default function Hero() {
                   ref={nameRef}
                   className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-secondary"
                 >
-                  {profile?.name || "Mohamed Hamdy"}
+                  {name}
                 </span>
               </motion.h1>
             </div>
@@ -140,7 +128,7 @@ export default function Hero() {
               className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl min-h-[40px] text-primary"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: easeOut }}
             >
               <span className="inline-block">
                 {text}
@@ -152,15 +140,20 @@ export default function Hero() {
               className="mt-6 text-lg leading-8 text-muted-foreground"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.3, ease: easeOut }}
             >
               {t?.hero?.description ||
                 "Transforming complex data into actionable insights that drive business decisions."}
             </motion.p>
 
             <div className="mt-10 flex items-center gap-x-6">
-              <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={0}>
-                <a href="mailto:muhamedhamdynour@gmail.com">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ delay: 0 * 0.2, duration: 0.6, ease: easeOut }}
+              >
+                <a href={`mailto:${profile?.email ?? "muhamedhamdynour@gmail.com"}`}>
                   <Button size="lg" className="bg-primary hover:bg-primary/90">
                     <FolderOpen className="h-4 w-4 mr-2" />
                     {t?.hero?.cta || "View My Work"}
@@ -168,9 +161,14 @@ export default function Hero() {
                 </a>
               </motion.div>
 
-              <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={1}>
-                <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="lg">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ delay: 1 * 0.2, duration: 0.6, ease: easeOut }}
+              >
+                <a href={resumeUrl || "#"} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="lg" disabled={!resumeUrl}>
                     <User className="h-4 w-4 mr-2" />
                     {t?.about?.title || "About Me"}
                   </Button>
@@ -183,7 +181,7 @@ export default function Hero() {
             className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none lg:flex-none xl:ml-32"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
+            transition={{ duration: 0.8, delay: 0.5, ease: easeOut }}
           >
             <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
               <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
@@ -197,7 +195,7 @@ export default function Hero() {
                       className="absolute top-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                       initial={{ x: -50, y: -50, opacity: 0 }}
                       animate={{ x: 0, y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.7 }}
+                      transition={{ duration: 0.5, delay: 0.7, ease: easeOut }}
                     >
                       <ChartBar className="h-8 w-8 text-primary mb-2" />
                       <div className="w-32 h-2 bg-primary/30 rounded-full"></div>
@@ -208,7 +206,7 @@ export default function Hero() {
                       className="absolute bottom-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                       initial={{ x: -50, y: 50, opacity: 0 }}
                       animate={{ x: 0, y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.9 }}
+                      transition={{ duration: 0.5, delay: 0.9, ease: easeOut }}
                     >
                       <Database className="h-8 w-8 text-secondary mb-2" />
                       <div className="w-32 h-2 bg-secondary/30 rounded-full"></div>
@@ -219,7 +217,7 @@ export default function Hero() {
                       className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                       initial={{ x: 50, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.8 }}
+                      transition={{ duration: 0.5, delay: 0.8, ease: easeOut }}
                     >
                       <LineChart className="h-8 w-8 text-accent mb-2" />
                       <div className="w-32 h-2 bg-accent/30 rounded-full"></div>
@@ -248,7 +246,7 @@ export default function Hero() {
             className="text-base font-semibold leading-7 text-primary"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, ease: easeOut }}
           >
             {t?.hero?.greeting || "Hello, I'm"}
           </motion.p>
@@ -264,7 +262,7 @@ export default function Hero() {
                 ref={nameRef}
                 className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-400 to-secondary"
               >
-                {profile?.name || "Mohamed Hamdy"}
+                {name}
               </span>
             </motion.h1>
           </div>
@@ -273,7 +271,7 @@ export default function Hero() {
             className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl min-h-[40px] text-primary"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: easeOut }}
           >
             <span className="inline-block">
               {text}
@@ -285,14 +283,19 @@ export default function Hero() {
             className="mt-6 text-lg leading-8 text-muted-foreground"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: easeOut }}
           >
             {t?.hero?.description ||
               "I help businesses make data-driven decisions through expert financial analysis and reporting."}
           </motion.p>
 
           <div className="mt-10 flex items-center gap-x-6">
-            <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={0}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ delay: 0 * 0.2, duration: 0.6, ease: easeOut }}
+            >
               <Link href="/projects">
                 <Button size="lg" className="bg-primary hover:bg-primary/90">
                   <FolderOpen className="h-4 w-4 mr-2" />
@@ -301,7 +304,12 @@ export default function Hero() {
               </Link>
             </motion.div>
 
-            <motion.div variants={buttonVariants} initial="hidden" animate="visible" whileHover="hover" custom={1}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ delay: 1 * 0.2, duration: 0.6, ease: easeOut }}
+            >
               <Link href="/about">
                 <Button variant="outline" size="lg">
                   <User className="h-4 w-4 mr-2" />
@@ -316,7 +324,7 @@ export default function Hero() {
           className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none lg:flex-none xl:ml-32"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
+          transition={{ duration: 0.8, delay: 0.5, ease: easeOut }}
         >
           <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
             <div className="relative h-[300px] w-[300px] sm:h-[400px] sm:w-[400px]">
@@ -330,7 +338,7 @@ export default function Hero() {
                     className="absolute top-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                     initial={{ x: -50, y: -50, opacity: 0 }}
                     animate={{ x: 0, y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.7 }}
+                    transition={{ duration: 0.5, delay: 0.7, ease: easeOut }}
                   >
                     <ChartBar className="h-8 w-8 text-primary mb-2" />
                     <div className="w-32 h-2 bg-primary/30 rounded-full"></div>
@@ -341,7 +349,7 @@ export default function Hero() {
                     className="absolute bottom-0 left-0 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                     initial={{ x: -50, y: 50, opacity: 0 }}
                     animate={{ x: 0, y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.9 }}
+                    transition={{ duration: 0.5, delay: 0.9, ease: easeOut }}
                   >
                     <Database className="h-8 w-8 text-secondary mb-2" />
                     <div className="w-32 h-2 bg-secondary/30 rounded-full"></div>
@@ -352,7 +360,7 @@ export default function Hero() {
                     className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-background/80 border border-border p-4 rounded-lg shadow-lg backdrop-blur-sm"
                     initial={{ x: 50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.8 }}
+                    transition={{ duration: 0.5, delay: 0.8, ease: easeOut }}
                   >
                     <LineChart className="h-8 w-8 text-accent mb-2" />
                     <div className="w-32 h-2 bg-accent/30 rounded-full"></div>

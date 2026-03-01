@@ -7,7 +7,7 @@ import { universalSettings } from "@/admin/toggle"
 
 // Lazy load components
 const Skills = lazy(() => import("@/components/home/Skills"))
-const WhyWorkWithMe = lazy(() => import("@/components/home/WhyWorkWithMe"))
+const AboutStats = lazy(() => import("@/components/home/AboutStats"))
 const Clients = lazy(() => import("@/components/home/Clients"))
 const FeaturedProjects = lazy(() => import("@/components/home/FeaturedProjects"))
 const ContactCTA = lazy(() => import("@/components/shared/ContactCTA"))
@@ -35,8 +35,8 @@ export default function Home() {
   if (universalSettings.why_work_with_me) {
     sections.push({
       component: (
-        <LazySection key="why-work-with-me" className="py-20">
-          <WhyWorkWithMe />
+        <LazySection key="about-stats" className="py-20">
+          <AboutStats />
         </LazySection>
       ),
       order: 2,
