@@ -3,14 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { getAdminFromSession } from '@/lib/auth'
-import {
-  Profile,
-  Skill,
-  Project,
-  Service,
-  Client,
-  SocialLink,
-} from '@/lib/db'
+import { Profile, Skill, Project, Service, Client, SocialLink } from '@/lib/db'
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
@@ -75,63 +68,53 @@ function escapePgArrayItem(item: string): string {
   return `"${escaped}"`
 }
 
-// ===================== ABOUT TYPES (مؤقتًا هنا) =====================
-// تقدر تنقلهم لـ lib/db.ts لاحقًا لو عايز
+// ===================== ABOUT TYPES (هنا مؤقتًا) =====================
+// متوافقة مع الجداول:
+// about_stats / experiences / educations / certifications
 
-export interface AboutStats {
+export type AboutStats = {
   id: number
   years_of_experience: number
   linkedin_followers: number
   completed_courses: number
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
 
-export interface Experience {
+export type Experience = {
   id: number
+  year: string
   title: string
-  company: string
-  location: string | null
-  start_date: string // ISO أو date
-  end_date: string | null
-  is_current: boolean
-  description: string | null
-  order: number
-  created_at: string
-  updated_at: string
+  details: string
+  enabled?: boolean
+  order?: number
+  created_at?: string
+  updated_at?: string
 }
 
-export interface Education {
+export type Education = {
   id: number
+  year: string
   degree: string
   institution: string
-  field: string | null
-  start_date: string | null
-  end_date: string | null
-  description: string | null
-  order: number
-  created_at: string
-  updated_at: string
+  details: string
+  enabled?: boolean
+  order?: number
+  created_at?: string
+  updated_at?: string
 }
 
-export interface Certification {
+export type Certification = {
   id: number
   title: string
   issuer: string
-  issue_date: string | null
-  credential_url: string | null
-  badge_url: string | null
-  description: string | null
-  order: number
-  created_at: string
-  updated_at: string
-}
-
-export interface ResumeSkill {
-  id: number
-  name: string
-  order: number
-  created_at: string
-  updated_at: string
+  issue_date?: string | null
+  description?: string | null
+  credential_url?: string | null
+  enabled?: boolean
+  order?: number
+  created_at?: string
+  updated_at?: string
 }
 
 // ============= PROFILE CRUD =============
@@ -234,7 +217,6 @@ export async function updateSkill(id: number, data: Partial<Skill>) {
 export async function deleteSkill(id: number) {
   try {
     await requireAdmin()
-
     await db.query`DELETE FROM skills WHERE id = ${id}`
 
     revalidatePublic()
@@ -277,7 +259,6 @@ export async function createProject(
     await requireAdmin()
 
     const slug = generateSlug(data.title)
-
     const existing = await db.query`SELECT id FROM projects WHERE slug = ${slug} LIMIT 1`
     if (existing.length > 0) return { error: 'A project with this title already exists' }
 
@@ -307,8 +288,7 @@ export async function updateProject(id: number, data: Partial<Project>) {
   try {
     await requireAdmin()
 
-    const technologiesPg =
-      data.technologies === undefined ? undefined : toPgTextArray(data.technologies)
+    const technologiesPg = data.technologies === undefined ? undefined : toPgTextArray(data.technologies)
 
     const result = await db.query`
       UPDATE projects
@@ -341,14 +321,13 @@ export async function updateProject(id: number, data: Partial<Project>) {
 export async function deleteProject(id: number) {
   try {
     await requireAdmin()
-
     await db.query`DELETE FROM projects WHERE id = ${id}`
 
     revalidatePublic()
     return { success: true }
   } catch (error) {
     console.error('Error deleting project:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete project' }
+    return { error: error instanceof Error ? error.message : 'Failed to create project' }
   }
 }
 
@@ -388,8 +367,7 @@ export async function updateService(id: number, data: Partial<Service>) {
   try {
     await requireAdmin()
 
-    const featuresPg =
-      (data as any).features === undefined ? undefined : toPgTextArray((data as any).features)
+    const featuresPg = (data as any).features === undefined ? undefined : toPgTextArray((data as any).features)
 
     const result = await db.query`
       UPDATE services
@@ -417,7 +395,6 @@ export async function updateService(id: number, data: Partial<Service>) {
 export async function deleteService(id: number) {
   try {
     await requireAdmin()
-
     await db.query`DELETE FROM services WHERE id = ${id}`
 
     revalidatePublic()
@@ -488,7 +465,6 @@ export async function updateClient(id: number, data: Partial<Client>) {
 export async function deleteClient(id: number) {
   try {
     await requireAdmin()
-
     await db.query`DELETE FROM clients WHERE id = ${id}`
 
     revalidatePublic()
@@ -549,14 +525,13 @@ export async function updateSocialLink(id: number, data: Partial<SocialLink>) {
     return { success: true, data: result[0] }
   } catch (error) {
     console.error('Error updating social link:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete social link' }
+    return { error: error instanceof Error ? error.message : 'Failed to update social link' }
   }
 }
 
 export async function deleteSocialLink(id: number) {
   try {
     await requireAdmin()
-
     await db.query`DELETE FROM social_links WHERE id = ${id}`
 
     revalidatePublic()
@@ -567,19 +542,10 @@ export async function deleteSocialLink(id: number) {
   }
 }
 
-// ===================== ABOUT (READ) =====================
+// ===================== ABOUT (SECTIONS / STATS / LISTS) =====================
 
-export async function getAboutStats(): Promise<AboutStats | null> {
-  try {
-    const result = await db.query`SELECT * FROM about_stats LIMIT 1`
-    return (result[0] as AboutStats | undefined) ?? null
-  } catch (error) {
-    console.error('Error getting about stats:', error)
-    return null
-  }
-}
-
-export async function getAboutSectionFull(language: "en" | "ar" = "en"): Promise<string | null> {
+// ---- about_sections ----
+export async function getAboutSectionFull(language: 'en' | 'ar' = 'en'): Promise<string | null> {
   try {
     const result = await db.query`
       SELECT content
@@ -590,14 +556,96 @@ export async function getAboutSectionFull(language: "en" | "ar" = "en"): Promise
     `
     return (result[0]?.content as string | undefined) ?? null
   } catch (error) {
-    console.error("Error getting about full section:", error)
+    console.error('Error getting about full section:', error)
     return null
   }
 }
 
+export async function upsertAboutSectionFull(content: string, language: 'en' | 'ar' = 'en') {
+  try {
+    await requireAdmin()
+
+    const existing = await db.query`
+      SELECT id FROM about_sections
+      WHERE type = 'full' AND language = ${language}
+      ORDER BY updated_at DESC
+      LIMIT 1
+    `
+
+    let result: any[] = []
+
+    if (existing.length > 0) {
+      result = await db.query`
+        UPDATE about_sections
+        SET content = ${content}, updated_at = NOW()
+        WHERE id = ${existing[0].id}
+        RETURNING *
+      `
+    } else {
+      result = await db.query`
+        INSERT INTO about_sections (type, content, language)
+        VALUES ('full', ${content}, ${language})
+        RETURNING *
+      `
+    }
+
+    revalidatePublic()
+    revalidatePath('/admin/about')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error updating about full section:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to update about section' }
+  }
+}
+
+// ---- about_stats ----
+export async function getAboutStats(): Promise<AboutStats | null> {
+  try {
+    const result = await db.query`SELECT * FROM about_stats ORDER BY id ASC LIMIT 1`
+    return (result[0] as AboutStats | undefined) ?? null
+  } catch (error) {
+    console.error('Error getting about stats:', error)
+    return null
+  }
+}
+
+// ✅ ده اللي هتستخدمه صفحة /admin/about/stats
+export async function upsertAboutStats(data: Partial<AboutStats>) {
+  try {
+    await requireAdmin()
+
+    // ensure row exists
+    await db.query`
+      INSERT INTO about_stats (years_of_experience, linkedin_followers, completed_courses)
+      SELECT 0, 0, 0
+      WHERE NOT EXISTS (SELECT 1 FROM about_stats)
+    `
+
+    const result = await db.query`
+      UPDATE about_stats
+      SET
+        years_of_experience = COALESCE(${data.years_of_experience ?? null}, years_of_experience),
+        linkedin_followers = COALESCE(${data.linkedin_followers ?? null}, linkedin_followers),
+        completed_courses = COALESCE(${data.completed_courses ?? null}, completed_courses),
+        updated_at = NOW()
+      WHERE id = (SELECT id FROM about_stats ORDER BY id ASC LIMIT 1)
+      RETURNING *
+    `
+
+    revalidatePublic()
+    revalidatePath('/admin/about/stats')
+    revalidatePath('/admin/about')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error updating about stats:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to update about stats' }
+  }
+}
+
+// ---- experiences ----
 export async function getExperiences(): Promise<Experience[]> {
   try {
-    const result = await db.query`SELECT * FROM experiences ORDER BY "order" ASC, start_date DESC`
+    const result = await db.query`SELECT * FROM experiences ORDER BY "order" ASC, id ASC`
     return result as Experience[]
   } catch (error) {
     console.error('Error getting experiences:', error)
@@ -605,9 +653,66 @@ export async function getExperiences(): Promise<Experience[]> {
   }
 }
 
+export async function createExperience(data: Omit<Experience, 'id'>) {
+  try {
+    await requireAdmin()
+
+    const result = await db.query`
+      INSERT INTO experiences (year, title, details, enabled, "order")
+      VALUES (${data.year}, ${data.title}, ${data.details}, ${data.enabled ?? true}, ${data.order ?? 0})
+      RETURNING *
+    `
+    revalidatePublic()
+    revalidatePath('/admin/about/experience')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error creating experience:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to create experience' }
+  }
+}
+
+export async function updateExperience(id: number, data: Partial<Experience>) {
+  try {
+    await requireAdmin()
+
+    const result = await db.query`
+      UPDATE experiences
+      SET
+        year = COALESCE(${data.year ?? null}, year),
+        title = COALESCE(${data.title ?? null}, title),
+        details = COALESCE(${data.details ?? null}, details),
+        enabled = COALESCE(${data.enabled ?? null}, enabled),
+        "order" = COALESCE(${data.order ?? null}, "order"),
+        updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+    revalidatePublic()
+    revalidatePath('/admin/about/experience')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error updating experience:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to update experience' }
+  }
+}
+
+export async function deleteExperience(id: number) {
+  try {
+    await requireAdmin()
+    await db.query`DELETE FROM experiences WHERE id = ${id}`
+    revalidatePublic()
+    revalidatePath('/admin/about/experience')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting experience:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to delete experience' }
+  }
+}
+
+// ---- educations ----
 export async function getEducations(): Promise<Education[]> {
   try {
-    const result = await db.query`SELECT * FROM educations ORDER BY "order" ASC, start_date DESC`
+    const result = await db.query`SELECT * FROM educations ORDER BY "order" ASC, id ASC`
     return result as Education[]
   } catch (error) {
     console.error('Error getting educations:', error)
@@ -615,9 +720,67 @@ export async function getEducations(): Promise<Education[]> {
   }
 }
 
+export async function createEducation(data: Omit<Education, 'id'>) {
+  try {
+    await requireAdmin()
+
+    const result = await db.query`
+      INSERT INTO educations (year, degree, institution, details, enabled, "order")
+      VALUES (${data.year}, ${data.degree}, ${data.institution}, ${data.details}, ${data.enabled ?? true}, ${data.order ?? 0})
+      RETURNING *
+    `
+    revalidatePublic()
+    revalidatePath('/admin/about/education')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error creating education:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to create education' }
+  }
+}
+
+export async function updateEducation(id: number, data: Partial<Education>) {
+  try {
+    await requireAdmin()
+
+    const result = await db.query`
+      UPDATE educations
+      SET
+        year = COALESCE(${data.year ?? null}, year),
+        degree = COALESCE(${data.degree ?? null}, degree),
+        institution = COALESCE(${data.institution ?? null}, institution),
+        details = COALESCE(${data.details ?? null}, details),
+        enabled = COALESCE(${data.enabled ?? null}, enabled),
+        "order" = COALESCE(${data.order ?? null}, "order"),
+        updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+    revalidatePublic()
+    revalidatePath('/admin/about/education')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error updating education:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to update education' }
+  }
+}
+
+export async function deleteEducation(id: number) {
+  try {
+    await requireAdmin()
+    await db.query`DELETE FROM educations WHERE id = ${id}`
+    revalidatePublic()
+    revalidatePath('/admin/about/education')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting education:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to delete education' }
+  }
+}
+
+// ---- certifications ----
 export async function getCertifications(): Promise<Certification[]> {
   try {
-    const result = await db.query`SELECT * FROM certifications ORDER BY "order" ASC`
+    const result = await db.query`SELECT * FROM certifications ORDER BY "order" ASC, id ASC`
     return result as Certification[]
   } catch (error) {
     console.error('Error getting certifications:', error)
@@ -625,13 +788,69 @@ export async function getCertifications(): Promise<Certification[]> {
   }
 }
 
-export async function getResumeSkills(): Promise<ResumeSkill[]> {
+export async function createCertification(data: Omit<Certification, 'id'>) {
   try {
-    const result = await db.query`SELECT * FROM resume_skills ORDER BY "order" ASC`
-    return result as ResumeSkill[]
+    await requireAdmin()
+
+    const result = await db.query`
+      INSERT INTO certifications (title, issuer, issue_date, description, credential_url, enabled, "order")
+      VALUES (
+        ${data.title},
+        ${data.issuer},
+        ${data.issue_date ?? null},
+        ${data.description ?? null},
+        ${data.credential_url ?? null},
+        ${data.enabled ?? true},
+        ${data.order ?? 0}
+      )
+      RETURNING *
+    `
+    revalidatePublic()
+    revalidatePath('/admin/about/certifications')
+    return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error getting resume skills:', error)
-    return []
+    console.error('Error creating certification:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to create certification' }
+  }
+}
+
+export async function updateCertification(id: number, data: Partial<Certification>) {
+  try {
+    await requireAdmin()
+
+    const result = await db.query`
+      UPDATE certifications
+      SET
+        title = COALESCE(${data.title ?? null}, title),
+        issuer = COALESCE(${data.issuer ?? null}, issuer),
+        issue_date = COALESCE(${data.issue_date ?? null}, issue_date),
+        description = COALESCE(${data.description ?? null}, description),
+        credential_url = COALESCE(${data.credential_url ?? null}, credential_url),
+        enabled = COALESCE(${data.enabled ?? null}, enabled),
+        "order" = COALESCE(${data.order ?? null}, "order"),
+        updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING *
+    `
+    revalidatePublic()
+    revalidatePath('/admin/about/certifications')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error updating certification:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to update certification' }
+  }
+}
+
+export async function deleteCertification(id: number) {
+  try {
+    await requireAdmin()
+    await db.query`DELETE FROM certifications WHERE id = ${id}`
+    revalidatePublic()
+    revalidatePath('/admin/about/certifications')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting certification:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to delete certification' }
   }
 }
 
