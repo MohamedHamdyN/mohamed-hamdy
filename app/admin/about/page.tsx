@@ -1,75 +1,53 @@
-import { toggleSettings } from "@/admin/toggle"
+import Link from "next/link"
 import { notFound } from "next/navigation"
-import PageHero from "@/components/shared/PageHero"
-import AboutHero from "@/components/about/AboutHero"
-import AboutResume from "@/components/about/AboutResume"
-import Certifications from "@/components/about/Certifications"
-import AboutFeatures from "@/components/about/AboutFeatures"
-import SocialLinks from "@/components/shared/SocialLinks"
-import ContactCTA from "@/components/shared/ContactCTA"
-import { User } from "lucide-react"
+import { getAdminFromSession } from "@/lib/auth"
 
-import {
-  getProfile,
-  getProjects,
-  getSkills,
-  getAboutStats,
-  getAboutSectionFull,
-  getExperiences,
-  getEducations,
-  getCertifications,
-} from "@/app/actions/cms"
+async function requireAdmin() {
+  const admin = await getAdminFromSession()
+  if (!admin) notFound()
+  return admin
+}
 
-export default async function AboutPage() {
-  if (!toggleSettings.about_page) notFound()
-
-  const [profile, projects, skills, aboutStats, longBio, experiences, educations, certifications] = await Promise.all([
-    getProfile(),
-    getProjects(false),
-    getSkills(),
-    getAboutStats(),
-    getAboutSectionFull("en"), // غيّرها حسب نظام اللغات عندك
-    getExperiences(),
-    getEducations(),
-    getCertifications(),
-  ])
+export default async function AdminAboutHomePage() {
+  await requireAdmin()
 
   return (
-    <>
-      <PageHero
-        title="About"
-        description="Learn more about my background, skills, and experience"
-        icon={<User className="h-4 w-4" />}
-      />
+    <div className="min-h-screen bg-slate-900">
+      <div className="container mx-auto px-4 py-8">
+        <Link href="/admin/dashboard" className="text-slate-300 hover:text-white">
+          ← Back to Dashboard
+        </Link>
 
-      <AboutHero
-        profile={profile}
-        longBio={longBio ?? ""}
-        stats={{
-          years: aboutStats?.years_of_experience ?? 0,
-          completedProjects: projects.length,
-          linkedinFollowers: aboutStats?.linkedin_followers ?? 0,
-          completedCourses: aboutStats?.completed_courses ?? 0,
-        }}
-      />
+        <h1 className="text-3xl font-bold text-white mt-4">About Management</h1>
+        <p className="text-slate-400 mt-2">Manage About page content from one place.</p>
 
-      <AboutResume
-        resumeUrl={profile?.resume_url ?? ""}
-        experiences={experiences as any}
-        educations={educations as any}
-        skills={skills}
-      />
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Link href="/admin/about/bio" className="block p-4 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition">
+            <h3 className="font-semibold text-white">Bio (Long/Short)</h3>
+            <p className="text-sm text-slate-400 mt-1">Edit about_sections content</p>
+          </Link>
 
-      <Certifications items={certifications as any} />
+          <Link href="/admin/about/stats" className="block p-4 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition">
+            <h3 className="font-semibold text-white">Stats</h3>
+            <p className="text-sm text-slate-400 mt-1">Years / Followers / Courses</p>
+          </Link>
 
-      <AboutFeatures />
+          <Link href="/admin/about/experience" className="block p-4 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition">
+            <h3 className="font-semibold text-white">Experience</h3>
+            <p className="text-sm text-slate-400 mt-1">Add/Edit experience timeline</p>
+          </Link>
 
-      <div className="container mx-auto px-4 py-12 text-center">
-        <h2 className="text-2xl font-bold mb-6">Connect With Me</h2>
-        <SocialLinks size="lg" centered />
+          <Link href="/admin/about/education" className="block p-4 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition">
+            <h3 className="font-semibold text-white">Education</h3>
+            <p className="text-sm text-slate-400 mt-1">Add/Edit education records</p>
+          </Link>
+
+          <Link href="/admin/about/certifications" className="block p-4 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition">
+            <h3 className="font-semibold text-white">Certifications</h3>
+            <p className="text-sm text-slate-400 mt-1">Add/Edit certifications</p>
+          </Link>
+        </div>
       </div>
-
-      <ContactCTA />
-    </>
+    </div>
   )
 }

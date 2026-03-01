@@ -39,11 +39,13 @@ export default function AboutBioAdminPage() {
     try {
       setSaving(true)
       setError(null)
-      const data = await getAboutSectionFull(LANG)
+
+      const res = await upsertAboutSectionFull(LANG, fullBio)
+
       await upsertAboutSectionFull(LANG, fullBio)
 
-      if ((save as any)?.error) {
-        setError((save as any).error)
+      if ((res as any)?.error) {
+        setError((res as any).error)
         return
       }
 
