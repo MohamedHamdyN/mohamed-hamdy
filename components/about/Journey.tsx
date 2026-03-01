@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react"
 import { motion, useScroll, useSpring, useInView } from "framer-motion"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 import { useTranslations } from "@/hooks/useTranslations"
 import { Calendar, GraduationCap, Briefcase } from "lucide-react"
 

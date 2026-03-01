@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useTranslations } from "@/hooks/useTranslations"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 import SocialLinks from "@/components/shared/SocialLinks"
 import { Heart } from "lucide-react"
 

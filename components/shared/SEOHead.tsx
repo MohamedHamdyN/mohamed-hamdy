@@ -1,5 +1,6 @@
 import Head from "next/head"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 
 interface SEOHeadProps {
   title?: string

@@ -3,7 +3,8 @@
 import { motion } from "framer-motion"
 import { useInView } from "react-intersection-observer"
 import { useTranslations } from "@/hooks/useTranslations"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 
 export default function Education() {
   const t = useTranslations()

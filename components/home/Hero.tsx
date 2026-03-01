@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"

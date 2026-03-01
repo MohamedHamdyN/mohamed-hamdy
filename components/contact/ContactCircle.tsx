@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 import Image from "next/image"
 
 export default function ContactCircle() {

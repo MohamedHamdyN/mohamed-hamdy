@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { X, Linkedin, Calendar, Tag, BarChart } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 
 interface ProjectModalProps {
   project: Project

@@ -9,7 +9,8 @@ import { useLanguage } from "@/context/language-context"
 import { useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 import { universalSettings } from "@/admin/toggle"
 import { languageSettings } from "@/admin/profile"
 import Image from "next/image"
@@ -85,9 +86,8 @@ export default function Header() {
                       alt={profile.name}
                       width={32}
                       height={32}
-                      className={`h-full w-full object-contain p-1 transition-opacity duration-300 ${
-                        logoLoaded ? "opacity-100" : "opacity-0"
-                      }`}
+                      className={`h-full w-full object-contain p-1 transition-opacity duration-300 ${logoLoaded ? "opacity-100" : "opacity-0"
+                        }`}
                       priority
                       unoptimized
                       onLoad={handleLogoLoad}
@@ -110,9 +110,8 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    pathname === item.href ? "bg-primary text-white" : "hover:bg-black/5 dark:hover:bg-white/5"
-                  }`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pathname === item.href ? "bg-primary text-white" : "hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
                   aria-current={pathname === item.href ? "page" : undefined}
                 >
                   {item.name}

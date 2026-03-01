@@ -1,10 +1,11 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
+
 import "./globals.css"
 import { Inter, Cairo } from "next/font/google"
 import { Analytics } from "@vercel/analytics/react"
 import { ThemeProvider } from "@/context/theme-context"
 import { LanguageProvider } from "@/context/language-context"
-import { profile } from "@/admin/profile"
+import { ProfileProvider } from "@/context/profile-context"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import FloatingActionButton from "@/components/shared/FloatingActionButton"
@@ -15,6 +16,7 @@ import type { Metadata } from "next"
 import SpeedInsightsWrapper from "@/components/shared/SpeedInsightsWrapper"
 import { toggleSettings } from "@/admin/toggle"
 import { getDynamicMetadata } from "@/lib/seo"
+import { getProfile } from "@/app/actions/cms"
 
 // Optimize font loading
 const inter = Inter({
@@ -33,7 +35,9 @@ const cairo = Cairo({
 
 // Dynamic metadata from database
 export async function generateMetadata(): Promise<Metadata> {
-  const dynamicMetadata = await getDynamicMetadata()
+  const [dynamicMetadata, profile] = await Promise.all([getDynamicMetadata(), getProfile()])
+
+  const authorName = profile?.name || "Author"
 
   return {
     title: {
@@ -41,9 +45,9 @@ export async function generateMetadata(): Promise<Metadata> {
       default: dynamicMetadata.title,
     },
     description: dynamicMetadata.description,
-    keywords: ["data analyst", "financial accountant", "data visualization", "analytics", profile.name || "portfolio"],
-    authors: [{ name: profile.name || "Author" }],
-    creator: profile.name || "Creator",
+    keywords: ["data analyst", "financial accountant", "data visualization", "analytics", authorName],
+    authors: [{ name: authorName }],
+    creator: authorName,
     metadataBase: new URL(dynamicMetadata.siteUrl),
     alternates: {
       canonical: "/",
@@ -72,7 +76,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: dynamicMetadata.title,
       description: dynamicMetadata.description,
-      creator: profile.name || "Creator",
+      creator: authorName,
       images: [dynamicMetadata.ogImage],
     },
     icons: {
@@ -96,16 +100,19 @@ export async function generateMetadata(): Promise<Metadata> {
         "max-snippet": -1,
       },
     },
-    generator: 'v0.app'
+    generator: "v0.app",
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const websiteEnabled = toggleSettings.website
+
+  // ✅ جلب الـProfile مرة واحدة لكل رندر
+  const profile = await getProfile()
 
   return (
     <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
@@ -114,20 +121,23 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#000000" />
       </head>
+
       <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <LanguageProvider>
-            <ErrorBoundary>
-              <SkipToContent />
-              {websiteEnabled && <Header />}
-              <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
-                {children}
-              </main>
-              {websiteEnabled && <Footer />}
-              <FloatingActionButton />
-              <SpeedInsightsWrapper />
-              <Analytics />
-            </ErrorBoundary>
+            <ProfileProvider profile={profile}>
+              <ErrorBoundary>
+                <SkipToContent />
+                {websiteEnabled && <Header />}
+                <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
+                  {children}
+                </main>
+                {websiteEnabled && <Footer />}
+                <FloatingActionButton />
+                <SpeedInsightsWrapper />
+                <Analytics />
+              </ErrorBoundary>
+            </ProfileProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>

@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 import { toggleSettings } from "@/admin/toggle"
 import { Mail, Phone, MapPin, Calendar, ExternalLink } from "lucide-react"
 import SocialLinks from "@/components/shared/SocialLinks"

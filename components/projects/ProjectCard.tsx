@@ -2,14 +2,15 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { profile } from "@/admin/profile"
+import { useProfile } from "@/context/profile-context"
+const profile = useProfile()
 import { projectCategories, projectCategoriesName } from "@/admin/projects"
 import { useTranslations } from "@/hooks/useTranslations"
 import { ArrowUpRight, Calendar, ExternalLink } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 
-export default function ProjectCard({ project, onClick = () => {} }) {
+export default function ProjectCard({ project, onClick = () => { } }) {
   const t = useTranslations()
   const [imageError, setImageError] = useState(false)
 
