@@ -52,11 +52,6 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    if (pathname.startsWith("/resume") && !resumeEnabled) {
-      url.pathname = "/"
-      return NextResponse.redirect(url)
-    }
-
     if (pathname.startsWith("/projects") && !projectsEnabled) {
       url.pathname = "/"
       return NextResponse.redirect(url)

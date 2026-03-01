@@ -23,6 +23,7 @@ const nextConfig = {
       'i.imgur.com',
       "lh3.googleusercontent.com",
       "drive.google.com",
+      "photos.app.goo.gl",
       'res.cloudinary.com',
       'images.unsplash.com',
       'ibb.co',

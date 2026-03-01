@@ -121,42 +121,91 @@ export type Certification = {
 
 export async function getProfile(): Promise<Profile | null> {
   try {
-    const result = await db.query`SELECT * FROM profiles LIMIT 1`
+    const result = await db.query`SELECT * FROM profile ORDER BY id ASC LIMIT 1`
     return (result[0] as Profile | undefined) ?? null
-  } catch (error) {
-    console.error('Error getting profile:', error)
+  } catch (e) {
+    console.error("Error getting profile:", e)
     return null
   }
 }
 
-export async function updateProfile(data: Partial<Profile>) {
-  try {
-    await requireAdmin()
+export async function upsertProfile(data: Partial<Profile>) {
+  await requireAdmin()
 
-    const result = await db.query`
-      UPDATE profiles
+  const existing = await db.query`SELECT id FROM profile ORDER BY id ASC LIMIT 1`
+
+  let result: any[]
+  if (existing.length > 0) {
+    result = await db.query`
+      UPDATE profile
       SET
         name = COALESCE(${data.name ?? null}, name),
         title = COALESCE(${data.title ?? null}, title),
+        short_title = COALESCE(${data.short_title ?? null}, short_title),
+
+        hero_description = COALESCE(${data.hero_description ?? null}, hero_description),
+        hero_image_type = COALESCE(${data.hero_image_type ?? null}, hero_image_type),
+        hero_image_url = COALESCE(${data.hero_image_url ?? null}, hero_image_url),
+
+        location = COALESCE(${data.location ?? null}, location),
+        open_to_work = COALESCE(${data.open_to_work ?? null}, open_to_work),
         email = COALESCE(${data.email ?? null}, email),
+        phone = COALESCE(${data.phone ?? null}, phone),
+
         bio = COALESCE(${data.bio ?? null}, bio),
-        avatar_url = COALESCE(${data.avatar_url ?? null}, avatar_url),
+        short_bio = COALESCE(${data.short_bio ?? null}, short_bio),
+        long_bio = COALESCE(${data.long_bio ?? null}, long_bio),
+        about_intro = COALESCE(${data.about_intro ?? null}, about_intro),
+
         resume_url = COALESCE(${data.resume_url ?? null}, resume_url),
         calendly_url = COALESCE(${data.calendly_url ?? null}, calendly_url),
-        location = COALESCE(${data.location ?? null}, location),
-        phone = COALESCE(${data.phone ?? null}, phone),
+        avatar_url = COALESCE(${data.avatar_url ?? null}, avatar_url),
+        og_image_url = COALESCE(${data.og_image_url ?? null}, og_image_url),
+
         updated_at = NOW()
-      WHERE id = (SELECT id FROM profiles LIMIT 1)
+      WHERE id = ${existing[0].id}
       RETURNING *
     `
-
-    revalidatePublic()
-    revalidatePath('/admin/profile')
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error updating profile:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update profile' }
+  } else {
+    result = await db.query`
+      INSERT INTO profile (
+        name, title, short_title, hero_description, hero_image_type, hero_image_url,
+        location, open_to_work, email, phone,
+        bio, short_bio, long_bio, about_intro,
+        resume_url, calendly_url, avatar_url, og_image_url,
+        updated_at
+      )
+      VALUES (
+        ${data.name ?? "Portfolio"},
+        ${data.title ?? null},
+        ${data.short_title ?? null},
+        ${data.hero_description ?? null},
+        ${data.hero_image_type ?? "logo"},
+        ${data.hero_image_url ?? null},
+        ${data.location ?? null},
+        ${data.open_to_work ?? false},
+        ${data.email ?? null},
+        ${data.phone ?? null},
+        ${data.bio ?? null},
+        ${data.short_bio ?? null},
+        ${data.long_bio ?? null},
+        ${data.about_intro ?? null},
+        ${data.resume_url ?? null},
+        ${data.calendly_url ?? null},
+        ${data.avatar_url ?? null},
+        ${data.og_image_url ?? null},
+        NOW()
+      )
+      RETURNING *
+    `
   }
+
+  revalidatePath("/")
+  revalidatePath("/about")
+  revalidatePath("/contact")
+  revalidatePath("/admin/profile")
+
+  return { success: true, data: result[0] }
 }
 
 // ============= SKILLS CRUD =============

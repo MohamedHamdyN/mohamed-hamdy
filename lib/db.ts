@@ -14,19 +14,28 @@ export type QueryResult<T> = {
 }
 
 // Helper types
-export interface Profile {
+export type Profile = {
   id: number
   name: string
-  title: string
-  email: string
-  bio: string
-  avatar_url: string
-  resume_url: string
-  calendly_url: string
-  location: string
-  phone: string
-  created_at: string
-  updated_at: string
+  title: string | null
+  short_title: string | null
+  hero_description: string | null
+  hero_image_type: string | null
+  hero_image_url: string | null
+  location: string | null
+  open_to_work: boolean
+  email: string | null
+  phone: string | null
+  bio: string | null
+  short_bio: string | null
+  long_bio: string | null
+  about_intro: string | null
+  resume_url: string | null
+  calendly_url: string | null
+  avatar_url: string | null
+  og_image_url: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Skill {
