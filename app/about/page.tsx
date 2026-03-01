@@ -1,7 +1,6 @@
 // app/about/page.ts
 import { toggleSettings } from "@/admin/toggle"
 import { notFound } from "next/navigation"
-
 import PageHero from "@/components/shared/PageHero"
 import AboutHero from "@/components/about/AboutHero"
 import AboutResume from "@/components/about/AboutResume"
@@ -38,7 +37,7 @@ export default async function AboutPage() {
   ])
 
   const longBio = normalizeLongBio(longBioRaw)
-
+  const effectiveLongBio = longBio ?? profile?.bio ?? ""
   // مؤقتًا لحد ما نعمل جدول about_stats
   const aboutStats = {
     years_of_experience: 0,
@@ -61,7 +60,7 @@ export default async function AboutPage() {
 
       <AboutHero
         profile={profile}
-        longBio={longBio}
+        longBio={effectiveLongBio}
         stats={{
           years: Number(aboutStats.years_of_experience) || 0,
           completedProjects: Array.isArray(projects) ? projects.length : 0,
