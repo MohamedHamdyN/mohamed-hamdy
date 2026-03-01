@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless'
+import { profile } from 'console'
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
@@ -120,3 +121,5 @@ export interface Admin {
   created_at: string
   updated_at: string
 }
+
+console.log(profile)

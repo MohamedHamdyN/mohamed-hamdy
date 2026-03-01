@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useTheme } from "next-themes"
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
@@ -10,54 +11,61 @@ import { useTranslations } from "@/hooks/useTranslations"
 import { Menu, X, FileText, Sun, Moon } from "lucide-react"
 import FullScreenMenu from "@/components/layout/FullScreenMenu"
 import { useProfile } from "@/context/profile-context"
-const profile = useProfile()
 import { universalSettings } from "@/admin/toggle"
 import { languageSettings } from "@/admin/profile"
-import Image from "next/image"
 import SkipToContent from "./SkipToContent"
 
 export default function Header() {
+  const profile = useProfile()
   const [mounted, setMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [logoError, setLogoError] = useState(false)
   const [logoLoaded, setLogoLoaded] = useState(false)
-  const [navItems, setNavItems] = useState([{ name: "Home", href: "/", enabled: true }])
+
   const { theme, setTheme } = useTheme()
-  const { language, setLanguage, isRTL } = useLanguage()
+  const { language, setLanguage } = useLanguage()
   const t = useTranslations()
   const pathname = usePathname()
 
-  useEffect(() => {
-    setMounted(true)
+  useEffect(() => setMounted(true), [])
 
-    // Actualizar elementos de navegación basados en universalSettings
-    setNavItems([
+  const navItems = useMemo(() => {
+    return [
       { name: t.nav.home, href: "/", enabled: true },
       { name: t.nav.projects, href: "/projects", enabled: universalSettings.projects_page },
       { name: t.nav.about, href: "/about", enabled: universalSettings.about_page },
       { name: t.nav.services, href: "/services", enabled: universalSettings.services_page },
       { name: t.nav.contact, href: "/contact", enabled: universalSettings.contact_page },
-    ])
+    ].filter((x) => x.enabled)
   }, [t, language])
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+  const toggleMenu = () => setIsMenuOpen((v) => !v)
+  const toggleLanguage = () => setLanguage(language === "en" ? "ar" : "en")
 
-  // Cambiar idioma directamente
-  const toggleLanguage = () => {
-    setLanguage(language === "en" ? "ar" : "en")
-  }
+  // ✅ normalize profile fields (DB snake_case vs UI camelCase)
+  const name = profile?.name ?? (profile as any)?.full_name ?? "Mohamed Hamdy"
+  const logo = (profile as any)?.logo ?? profile?.avatar_url ?? (profile as any)?.logo_url ?? ""
+  const resumeUrl =
+    (profile as any)?.resumeUrl ??
+    (profile as any)?.resume_url ??
+    profile?.resume_url ??
+    ""
 
-  // Filtrar elementos de navegación habilitados
-  const enabledNavItems = navItems.filter((item) => item.enabled)
-
-  // Manejar carga del logo
-  const handleLogoLoad = () => {
-    setLogoLoaded(true)
-  }
-
-  // Manejar error de carga del logo
-  const handleLogoError = () => {
-    setLogoError(true)
+  // لو البروفايل لسه null، اعرض Header minimal بدون كسر
+  // (مهم لتجنب hydration issues لو الداتا بتوصل بعدين)
+  if (!profile) {
+    return (
+      <motion.header
+        className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
+          <Link href="/" className="-m-1.5 p-1.5 font-bold">MH</Link>
+        </nav>
+      </motion.header>
+    )
   }
 
   return (
@@ -72,26 +80,27 @@ export default function Header() {
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5 flex items-center gap-2" aria-label="Home">
-              <span className="sr-only">{profile.name}</span>
+              <span className="sr-only">{name}</span>
+
               <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 bg-background/80 backdrop-blur-sm shadow-sm">
-                {!logoError ? (
+                {!logoError && logo ? (
                   <>
                     {!logoLoaded && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
                     )}
                     <Image
-                      src={profile.logo || "/placeholder.svg"}
-                      alt={profile.name}
+                      src={logo || "/placeholder.svg"}
+                      alt={name}
                       width={32}
                       height={32}
                       className={`h-full w-full object-contain p-1 transition-opacity duration-300 ${logoLoaded ? "opacity-100" : "opacity-0"
                         }`}
                       priority
                       unoptimized
-                      onLoad={handleLogoLoad}
-                      onError={handleLogoError}
+                      onLoad={() => setLogoLoaded(true)}
+                      onError={() => setLogoError(true)}
                     />
                   </>
                 ) : (
@@ -103,12 +112,12 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop */}
           <div className="hidden lg:flex">
             <div className="relative bg-black/10 dark:bg-white/5 backdrop-blur-sm rounded-full p-1.5 flex space-x-1">
-              {enabledNavItems.map((item) => (
+              {navItems.map((item) => (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pathname === item.href ? "bg-primary text-white" : "hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
@@ -117,16 +126,19 @@ export default function Header() {
                   {item.name}
                 </Link>
               ))}
-              <Link
-                href={profile.resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center gap-1.5"
-                aria-label="Download CV"
-              >
-                <FileText className="h-3.5 w-3.5" />
-                CV
-              </Link>
+
+              {!!resumeUrl && (
+                <Link
+                  href={resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-secondary text-secondary-foreground hover:bg-secondary/90 flex items-center gap-1.5"
+                  aria-label="Download CV"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  CV
+                </Link>
+              )}
             </div>
           </div>
 
@@ -137,11 +149,7 @@ export default function Header() {
                 className="p-2 rounded-full bg-black/10 dark:bg-white/5 backdrop-blur-sm hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
                 aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5 text-yellow-400" />
-                ) : (
-                  <Moon className="h-5 w-5 text-blue-500" />
-                )}
+                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
             )}
 
@@ -167,7 +175,7 @@ export default function Header() {
         </nav>
       </motion.header>
 
-      <FullScreenMenu isOpen={isMenuOpen} onClose={toggleMenu} items={enabledNavItems} />
+      <FullScreenMenu isOpen={isMenuOpen} onClose={toggleMenu} items={navItems} />
     </>
   )
 }

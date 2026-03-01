@@ -5,7 +5,6 @@ import { Inter, Cairo } from "next/font/google"
 import { Analytics } from "@vercel/analytics/react"
 import { ThemeProvider } from "@/context/theme-context"
 import { LanguageProvider } from "@/context/language-context"
-import { ProfileProvider } from "@/context/profile-context"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import FloatingActionButton from "@/components/shared/FloatingActionButton"
@@ -16,6 +15,7 @@ import type { Metadata } from "next"
 import SpeedInsightsWrapper from "@/components/shared/SpeedInsightsWrapper"
 import { toggleSettings } from "@/admin/toggle"
 import { getDynamicMetadata } from "@/lib/seo"
+import { ProfileProvider } from "@/context/profile-context"
 import { getProfile } from "@/app/actions/cms"
 
 // Optimize font loading
@@ -104,28 +104,18 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const websiteEnabled = toggleSettings.website
 
-  // ✅ جلب الـProfile مرة واحدة لكل رندر
-  const profile = await getProfile()
+  const dbProfile = await getProfile() // ✅ من الداتا بيز
 
   return (
     <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
-      <head>
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="theme-color" content="#000000" />
-      </head>
-
+      <head>...</head>
       <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <LanguageProvider>
-            <ProfileProvider profile={profile}>
+            <ProfileProvider profile={dbProfile}>
               <ErrorBoundary>
                 <SkipToContent />
                 {websiteEnabled && <Header />}

@@ -239,10 +239,11 @@ export const translations = {
       success: "تم الاشتراك بنجاح!",
     },
   },
-}
+} as const
 
-type Language = "en" | "ar"
+export type Language = keyof typeof translations // "en" | "ar"
+export type Translations = typeof translations.en
 
-export function getTranslations(language: Language) {
-  return translations[language] || translations.en
+export function getTranslations(language: Language): Translations {
+  return (translations[language] || translations.en) as Translations
 }

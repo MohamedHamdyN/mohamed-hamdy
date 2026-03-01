@@ -1,43 +1,43 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { getSkills } from '@/app/actions/cms'
-import { useTranslations } from '@/hooks/useTranslations'
-import InfiniteSlider from '@/components/shared/InfiniteSlider'
-import { Skill } from '@/lib/db'
+import InfiniteSlider from "@/components/shared/InfiniteSlider"
+import { useTranslations } from "@/hooks/useTranslations"
+import { useSkillsData } from "@/hooks/useSkillsData"
+import type { Skill } from "@/lib/db"
+
+// لو InfiniteSlider عنده type SliderItem مُصدّر استورده بدل اللي تحت
+type SliderItem = {
+  id?: string | number
+  title: string
+  description?: string
+  icon?: string
+  color?: string
+}
+
+function toSliderItem(skill: Skill): SliderItem {
+  return {
+    id: (skill as any).id,
+    title: (skill as any).title ?? (skill as any).name ?? "Skill",
+    description: (skill as any).description ?? "",
+    icon: (skill as any).icon ?? "",
+    color: (skill as any).color ?? "",
+  }
+}
 
 export default function Skills() {
   const t = useTranslations()
-  const [skills, setSkills] = useState<Skill[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { skills, isLoading } = useSkillsData()
 
-  useEffect(() => {
-    async function loadSkills() {
-      try {
-        const data = await getSkills()
-        // Filter enabled skills
-        const enabledSkills = data.filter((skill) => skill.enabled !== false)
-        setSkills(enabledSkills)
-      } catch (error) {
-        console.error('Error loading skills:', error)
-        setSkills([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  if (isLoading) return <div className="py-20 text-center text-slate-400">Loading skills...</div>
+  if (!skills.length) return null
 
-    loadSkills()
-  }, [])
-
-  if (isLoading) {
-    return <div className="py-20 text-center text-slate-400">Loading skills...</div>
-  }
+  const sliderItems: SliderItem[] = skills.map(toSliderItem)
 
   return (
     <InfiniteSlider
-      items={skills}
-      title={t?.skills?.title || 'My Skills'}
-      description={t?.skills?.description || 'Specialized expertise in data analysis'}
+      items={sliderItems}
+      title={t?.skills?.title || "My Skills"}
+      description={t?.skills?.description || "Specialized expertise in data analysis and financial accounting"}
       autoplaySpeed={3000}
       pauseOnHover={true}
       reverseDirection={false}

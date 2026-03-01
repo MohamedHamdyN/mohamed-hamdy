@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { useProfile } from "@/context/profile-context"
-const profile = useProfile()
 
 interface LazyImageProps {
   src: string
@@ -26,28 +25,28 @@ export default function LazyImage({
   objectFit = "cover",
   priority = false,
 }: LazyImageProps) {
+  const profile = useProfile()
+
+  const fallback =
+    (profile as any)?.defaultProjectImage ??
+    (profile as any)?.default_project_image ??
+    "/placeholder.svg?height=600&width=800"
+
   const [imgSrc, setImgSrc] = useState<string>(src)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
 
   useEffect(() => {
-    // Reset states when src changes
     setImgSrc(src)
     setLoading(true)
-    setError(false)
   }, [src])
 
   const handleError = () => {
-    setError(true)
     setLoading(false)
-    setImgSrc(profile.defaultProjectImage || "/placeholder.svg?height=600&width=800")
+    setImgSrc(fallback)
   }
 
-  const handleLoad = () => {
-    setLoading(false)
-  }
+  const handleLoad = () => setLoading(false)
 
-  // Common props for both Image components
   const imageProps = {
     src: imgSrc,
     alt,
@@ -56,16 +55,22 @@ export default function LazyImage({
     onError: handleError,
     onLoad: handleLoad,
     priority,
-  }
+    unoptimized: true,
+  } as const
 
   return (
-    <>
-      {fill ? <Image fill {...imageProps} /> : <Image width={width || 100} height={height || 100} {...imageProps} />}
+    <div className="relative">
+      {fill ? (
+        <Image fill {...imageProps} />
+      ) : (
+        <Image width={width || 100} height={height || 100} {...imageProps} />
+      )}
+
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/20 backdrop-blur-sm">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
-    </>
+    </div>
   )
 }
