@@ -3,12 +3,12 @@ const nextConfig = {
   // Configuraciones básicas
   reactStrictMode: true,
   swcMinify: true,
-  
+
   // Configuraciones experimentales mínimas
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  
+
   // Ignorar errores durante la compilación
   eslint: {
     ignoreDuringBuilds: true,
@@ -16,11 +16,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // Configuración de imágenes
   images: {
     domains: [
       'i.imgur.com',
+      "lh3.googleusercontent.com",
+      "drive.google.com",
       'res.cloudinary.com',
       'images.unsplash.com',
       'ibb.co',
@@ -37,10 +39,10 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  
+
   // Configuración de compresión
   compress: true,
-  
+
   // Headers optimizados para permitir Speed Insights
   async headers() {
     return [
@@ -72,7 +74,7 @@ const nextConfig = {
       }
     ]
   },
-  
+
   // Desactivar cabecera "Powered-By"
   poweredByHeader: false,
 }

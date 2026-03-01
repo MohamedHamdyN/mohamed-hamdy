@@ -40,15 +40,27 @@ export default function ProjectsGrid() {
     async function loadData() {
       try {
         const [projectsData, profileData] = await Promise.all([
-          getProjects(false), // Exclude drafts
+          getProjects(false),
           getProfile(),
         ])
-        // Filter non-draft projects
-        const visibleProjects = projectsData.filter((p) => !p.draft)
-        setProjects(visibleProjects)
+
+        // ✅ Map DB shape -> UI shape expected by ProjectCard/ProjectModal
+        const mapped = (projectsData ?? [])
+          .filter((p: any) => !p.draft)
+          .map((p: any) => ({
+            ...p,
+            // UI keys used by ProjectCard/Modal
+            image: p.image_url ?? "",
+            projectUrl: p.project_url ?? "",
+            linkedinUrl: p.linkedin_url ?? "",
+            categoryId: p.category_id,
+            shortDescription: p.short_description ?? "",
+          }))
+
+        setProjects(mapped as any)
         setProfile(profileData)
       } catch (error) {
-        console.error('Error loading projects:', error)
+        console.error("Error loading projects:", error)
         setProjects([])
       } finally {
         setIsLoading(false)
@@ -218,13 +230,12 @@ export default function ProjectsGrid() {
                     variant={selectedCategory === category.id ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`rounded-full ${
-                      selectedCategory === category.id
+                    className={`rounded-full ${selectedCategory === category.id
                         ? "bg-primary text-primary-foreground"
                         : theme === "dark"
                           ? "bg-muted hover:bg-muted/80 text-foreground"
                           : "bg-white hover:bg-gray-100 text-foreground shadow-sm"
-                    }`}
+                      }`}
                   >
                     {category.label} ({category.count})
                   </Button>
