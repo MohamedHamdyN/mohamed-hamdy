@@ -2,7 +2,6 @@
 
 import React from "react"
 import { ThemeProvider } from "next-themes"
-import { LanguageProvider } from "@/context/language-context"
 import { ProfileProvider } from "@/context/profile-context"
 import type { Profile } from "@/lib/db"
 
@@ -39,9 +38,9 @@ export default function Providers({
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <LanguageProvider>
-        <ProfileProvider profile={normalized}>{children}</ProfileProvider>
-      </LanguageProvider>
+      <ProfileProvider profile={normalized}>
+        {children}
+      </ProfileProvider>
     </ThemeProvider>
   )
 }

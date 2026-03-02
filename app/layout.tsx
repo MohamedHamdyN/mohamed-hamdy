@@ -4,7 +4,6 @@ import "./globals.css"
 import { Inter, Cairo } from "next/font/google"
 import { Analytics } from "@vercel/analytics/react"
 import { ThemeProvider } from "@/context/theme-context"
-import { LanguageProvider } from "@/context/language-context"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import FloatingActionButton from "@/components/shared/FloatingActionButton"
@@ -27,13 +26,6 @@ const inter = Inter({
   preload: true,
 })
 
-const cairo = Cairo({
-  subsets: ["arabic"],
-  variable: "--font-cairo",
-  display: "swap",
-  preload: true,
-})
-
 // Dynamic metadata from database
 export async function generateMetadata(): Promise<Metadata> {
   const [dynamicMetadata, profile] = await Promise.all([getDynamicMetadata(), getProfile()])
@@ -52,10 +44,6 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(dynamicMetadata.siteUrl),
     alternates: {
       canonical: "/",
-      languages: {
-        "en-US": "/en",
-        "ar-EG": "/ar",
-      },
     },
     openGraph: {
       type: "website",
@@ -110,8 +98,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const dbProfile = await getProfile()
 
   return (
-    <html lang="en" suppressHydrationWarning className="scroll-smooth">
-      <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.variable}  min-h-screen bg-background text-foreground font-sans`}>
         <Providers profile={dbProfile}>
           <ErrorBoundary>
             <SkipToContent />

@@ -1,12 +1,8 @@
 "use client"
 
-import { useLanguage } from "@/context/language-context"
-import { translations } from "@/lib/translations"
+import { getTranslations, type Translations } from "@/lib/translations"
 
-export function useTranslations() {
-  const { language } = useLanguage()
-
-  // Return translations based on the selected language
-  // Fallback to English if the selected language is not available
-  return translations[language] || translations.en
+export function useTranslations(): Translations {
+  // Always return English-only translations (no context, no localStorage, no RTL)
+  return getTranslations()
 }
