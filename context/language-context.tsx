@@ -3,14 +3,14 @@ import React, { createContext, useContext } from "react"
 
 type Language = "en"
 
-type LanguageContextType = {
+type Ctx = {
   language: Language
-  setLanguage: (lang: Language) => void
+  setLanguage: (l: Language) => void
   isRTL: boolean
   mounted: boolean
 }
 
-const LanguageContext = createContext<LanguageContextType>({
+const LanguageContext = createContext<Ctx>({
   language: "en",
   setLanguage: () => { },
   isRTL: false,
@@ -19,9 +19,7 @@ const LanguageContext = createContext<LanguageContextType>({
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   return (
-    <LanguageContext.Provider
-      value={{ language: "en", setLanguage: () => { }, isRTL: false, mounted: true }}
-    >
+    <LanguageContext.Provider value={{ language: "en", setLanguage: () => { }, isRTL: false, mounted: true }}>
       {children}
     </LanguageContext.Provider>
   )
