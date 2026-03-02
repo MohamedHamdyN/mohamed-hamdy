@@ -17,6 +17,7 @@ import { toggleSettings } from "@/admin/toggle"
 import { getDynamicMetadata } from "@/lib/seo"
 import { ProfileProvider } from "@/context/profile-context"
 import { getProfile } from "@/app/actions/cms"
+import Providers from "./providers"
 
 // Optimize font loading
 const inter = Inter({
@@ -106,30 +107,24 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const websiteEnabled = toggleSettings.website
-
-  const dbProfile = await getProfile() // ✅ من الداتا بيز
+  const dbProfile = await getProfile()
 
   return (
-    <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
-      <head>...</head>
+    <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <LanguageProvider>
-            <ProfileProvider profile={dbProfile}>
-              <ErrorBoundary>
-                <SkipToContent />
-                {websiteEnabled && <Header />}
-                <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
-                  {children}
-                </main>
-                {websiteEnabled && <Footer />}
-                <FloatingActionButton />
-                <SpeedInsightsWrapper />
-                <Analytics />
-              </ErrorBoundary>
-            </ProfileProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <Providers profile={dbProfile}>
+          <ErrorBoundary>
+            <SkipToContent />
+            {websiteEnabled && <Header />}
+            <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
+              {children}
+            </main>
+            {websiteEnabled && <Footer />}
+            <FloatingActionButton />
+            <SpeedInsightsWrapper />
+            <Analytics />
+          </ErrorBoundary>
+        </Providers>
       </body>
     </html>
   )
