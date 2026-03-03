@@ -7,10 +7,8 @@ import type { Profile } from "@/lib/db"
 
 function normalizeProfile(p: any): Profile {
   if (!p) return p
-
   return {
     ...p,
-    // توحيد أسماء الحقول
     name: p.name ?? p.full_name ?? "Mohamed Hamdy",
     title: p.title ?? p.job_title ?? "",
     title2: p.title2 ?? p.job_title_2 ?? "",
@@ -21,8 +19,6 @@ function normalizeProfile(p: any): Profile {
     phone: p.phone ?? "",
     location: p.location ?? "",
     favicon: p.favicon ?? "/favicon.ico",
-
-    // Social
     socialLinks: p.socialLinks ?? p.social_links ?? {},
   }
 }
@@ -36,11 +32,44 @@ export default function Providers({
 }) {
   const normalized = profile ? normalizeProfile(profile) : null
 
+  React.useEffect(() => {
+    const shouldReload = (msg: string) =>
+      msg.includes("ChunkLoadError") ||
+      msg.includes("Loading chunk") ||
+      msg.includes("dynamically imported") ||
+      msg.includes("Failed to fetch dynamically imported module")
+
+    const onError = (event: ErrorEvent) => {
+      const msg = String(event?.message || "")
+      if (shouldReload(msg)) {
+        if (!sessionStorage.getItem("chunk_reload_once")) {
+          sessionStorage.setItem("chunk_reload_once", "1")
+          window.location.reload()
+        }
+      }
+    }
+
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const msg = String((event?.reason as any)?.message || event?.reason || "")
+      if (shouldReload(msg)) {
+        if (!sessionStorage.getItem("chunk_reload_once")) {
+          sessionStorage.setItem("chunk_reload_once", "1")
+          window.location.reload()
+        }
+      }
+    }
+
+    window.addEventListener("error", onError)
+    window.addEventListener("unhandledrejection", onUnhandledRejection)
+    return () => {
+      window.removeEventListener("error", onError)
+      window.removeEventListener("unhandledrejection", onUnhandledRejection)
+    }
+  }, [])
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <ProfileProvider profile={normalized}>
-        {children}
-      </ProfileProvider>
+      <ProfileProvider profile={normalized}>{children}</ProfileProvider>
     </ThemeProvider>
   )
 }
