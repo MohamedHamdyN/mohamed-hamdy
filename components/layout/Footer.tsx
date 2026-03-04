@@ -46,11 +46,6 @@ export default function Footer() {
               {t.nav.contact}
             </Link>
           </div>
-          <div className="pb-6">
-            <Link href="/resume" className="text-sm leading-6 text-muted-foreground hover:text-foreground">
-              {t.nav.resume}
-            </Link>
-          </div>
         </nav>
 
         <div className="mt-10 flex flex-col items-center">

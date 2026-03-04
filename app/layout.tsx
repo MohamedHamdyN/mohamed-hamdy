@@ -69,12 +69,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [dynamicMetadata.ogImage],
     },
     icons: {
-      icon: [
-        { url: "/favicon.ico", sizes: "any" },
-        { url: "/icon.png", type: "image/png" },
-      ],
-      apple: [{ url: "/apple-icon.png" }],
-      shortcut: ["/shortcut-icon.png"],
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     },
     verification: {
       google: "google-site-verification-code",

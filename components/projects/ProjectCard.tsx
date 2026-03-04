@@ -22,7 +22,8 @@ export default function ProjectCard({ project, onClick = () => { } }: any) {
       title: project.title ?? "Project Title",
       date: project.date ?? project.created_at ?? project.createdAt ?? "",
       image: project.image ?? project.image_url ?? project.imageUrl ?? "",
-      description: project.shortDescription ?? project.short_description ?? project.description ?? "",
+      shortDescription: project.shortDescription ?? project.short_description ?? "",
+      description: project.description ?? "", // ✅ full description
       technologies: project.technologies ?? project.tech_stack ?? project.techStack ?? [],
       projectUrl: project.projectUrl ?? project.project_url ?? project.url ?? "",
       categoryId,
@@ -32,7 +33,7 @@ export default function ProjectCard({ project, onClick = () => { } }: any) {
   const defaultProjectImage =
     (profile as any)?.defaultProjectImage ??
     (profile as any)?.default_project_image ??
-    "/placeholder.svg?height=600&width=800"
+    "/placeholder.jpg"
 
   const categoryName =
     projectCategoriesName[normalized.categoryId as keyof typeof projectCategoriesName] ||
@@ -52,11 +53,20 @@ export default function ProjectCard({ project, onClick = () => { } }: any) {
     <motion.div
       className="group relative bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col cursor-pointer"
       whileHover={{ y: -5 }}
-      onClick={() => onClick(normalized)}
+      onClick={(e) => {
+        // لو الضغط كان على لينك/انكور جوّه الكارد، امنع الـ navigation
+        const target = e.target as HTMLElement
+        if (target.closest("a")) {
+          e.preventDefault()
+          e.stopPropagation()
+          return
+        }
+        onClick(normalized)
+      }}
     >
       <div className="relative h-48 overflow-hidden">
         <Image
-          src={imageError ? defaultProjectImage : (normalized.image || defaultProjectImage)}
+          src={imageError ? defaultProjectImage : (normalized.image?.trim() || defaultProjectImage)}
           alt={normalized.title}
           className="object-cover transition-transform duration-500 group-hover:scale-110"
           onError={() => setImageError(true)}
@@ -82,7 +92,7 @@ export default function ProjectCard({ project, onClick = () => { } }: any) {
         )}
 
         <p className="text-muted-foreground text-sm mb-4 line-clamp-2 flex-grow">
-          {normalized.description || "Project description"}
+          {normalized.shortDescription || "Project description"}
         </p>
 
         <div className="flex flex-wrap gap-1 mb-4">
@@ -103,6 +113,7 @@ export default function ProjectCard({ project, onClick = () => { } }: any) {
             size="sm"
             className="flex-1 flex items-center justify-center gap-1"
             onClick={(e) => {
+              e.preventDefault()
               e.stopPropagation()
               onClick(normalized)
             }}

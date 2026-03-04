@@ -208,14 +208,21 @@ export async function upsertProfile(data: Partial<Profile>) {
   return { success: true, data: result[0] }
 }
 
-export async function updateProfile(input: Record<string, any>) {
-  // await db.profile.update({ where: { id: 1 }, data: input })
+export async function updateProfile(input: Partial<Profile>) {
+  try {
+    await requireAdmin()
 
-  // revalidate pages that depend on profile
-  revalidatePath("/")
-  revalidatePath("/about")
-  revalidatePath("/contact")
-  return { ok: true }
+    // reuse the real DB upsert
+    const res = await upsertProfile(input)
+
+    // upsertProfile already revalidates paths and returns { success, data }
+    if ((res as any)?.error) return { error: (res as any).error }
+
+    return { success: true, data: (res as any).data }
+  } catch (error) {
+    console.error("Error updating profile:", error)
+    return { error: error instanceof Error ? error.message : "Failed to update profile" }
+  }
 }
 // ============= SKILLS CRUD =============
 
