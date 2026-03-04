@@ -54,6 +54,7 @@ export default function ProjectsGrid() {
             projectUrl: p.project_url ?? "",
             linkedinUrl: p.linkedin_url ?? "",
             categoryId: p.category_id,
+            description: p.description ?? "",
             shortDescription: p.short_description ?? "",
           }))
 
@@ -116,12 +117,15 @@ export default function ProjectsGrid() {
   })
 
   const handleProjectClick = (project: any) => {
+    console.log("DESC:", project?.description)
+    console.log("SHORT:", project?.shortDescription ?? project?.short_description)
     setSelectedProject(project)
     setIsModalOpen(true)
   }
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
+    setSelectedProject(null)
   }
 
   // Close modal when escape key is pressed
@@ -231,10 +235,10 @@ export default function ProjectsGrid() {
                     size="sm"
                     onClick={() => setSelectedCategory(category.id)}
                     className={`rounded-full ${selectedCategory === category.id
-                        ? "bg-primary text-primary-foreground"
-                        : theme === "dark"
-                          ? "bg-muted hover:bg-muted/80 text-foreground"
-                          : "bg-white hover:bg-gray-100 text-foreground shadow-sm"
+                      ? "bg-primary text-primary-foreground"
+                      : theme === "dark"
+                        ? "bg-muted hover:bg-muted/80 text-foreground"
+                        : "bg-white hover:bg-gray-100 text-foreground shadow-sm"
                       }`}
                   >
                     {category.label} ({category.count})
@@ -255,7 +259,7 @@ export default function ProjectsGrid() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <ProjectCard project={project} onClick={() => handleProjectClick(project)} />
+                <ProjectCard project={project} onClick={handleProjectClick} />
               </motion.div>
             ))}
           </div>

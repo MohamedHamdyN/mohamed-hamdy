@@ -40,11 +40,13 @@ export default function Header() {
   }, [t, language])
 
   const toggleMenu = () => setIsMenuOpen((v) => !v)
-  const toggleLanguage = () => setLanguage(language === "en" ? "ar" : "en")
 
   // ✅ normalize profile fields (DB snake_case vs UI camelCase)
   const name = profile?.name ?? (profile as any)?.full_name ?? "Mohamed Hamdy"
-  const logo = (profile as any)?.logo ?? profile?.avatar_url ?? (profile as any)?.logo_url ?? ""
+  const logo =
+    profile?.avatar_url?.trim() ||
+    profile?.hero_image_url?.trim() ||
+    "/placeholder-logo.svg"
   const resumeUrl =
     (profile as any)?.resumeUrl ??
     (profile as any)?.resume_url ??
@@ -150,16 +152,6 @@ export default function Header() {
                 aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-            )}
-
-            {languageSettings.enableLanguageToggle && (
-              <button
-                onClick={toggleLanguage}
-                className="p-2 rounded-full bg-black/10 dark:bg-white/5 backdrop-blur-sm hover:bg-black/20 dark:hover:bg-white/10 transition-colors"
-                aria-label={language === "en" ? "Switch to Arabic" : "Switch to English"}
-              >
-                <span className="font-bold text-sm">{language === "en" ? "ع" : "EN"}</span>
               </button>
             )}
 

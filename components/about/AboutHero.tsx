@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import { Quote } from "lucide-react"
 import * as LucideIcons from "lucide-react"
-import { useTranslations } from "@/hooks/useTranslations"
+import { useTranslations } from "@hooks/useTranslations"
 import type { Profile } from "@/lib/db"
 
 type AboutHeroStats = {

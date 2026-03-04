@@ -4,7 +4,6 @@ import "./globals.css"
 import { Inter, Cairo } from "next/font/google"
 import { Analytics } from "@vercel/analytics/react"
 import { ThemeProvider } from "@/context/theme-context"
-import { LanguageProvider } from "@/context/language-context"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import FloatingActionButton from "@/components/shared/FloatingActionButton"
@@ -17,18 +16,12 @@ import { toggleSettings } from "@/admin/toggle"
 import { getDynamicMetadata } from "@/lib/seo"
 import { ProfileProvider } from "@/context/profile-context"
 import { getProfile } from "@/app/actions/cms"
+import Providers from "./providers"
 
 // Optimize font loading
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
-  preload: true,
-})
-
-const cairo = Cairo({
-  subsets: ["arabic"],
-  variable: "--font-cairo",
   display: "swap",
   preload: true,
 })
@@ -51,10 +44,6 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(dynamicMetadata.siteUrl),
     alternates: {
       canonical: "/",
-      languages: {
-        "en-US": "/en",
-        "ar-EG": "/ar",
-      },
     },
     openGraph: {
       type: "website",
@@ -80,12 +69,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [dynamicMetadata.ogImage],
     },
     icons: {
-      icon: [
-        { url: "/favicon.ico", sizes: "any" },
-        { url: "/icon.png", type: "image/png" },
-      ],
-      apple: [{ url: "/apple-icon.png" }],
-      shortcut: ["/shortcut-icon.png"],
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     },
     verification: {
       google: "google-site-verification-code",
@@ -106,30 +90,24 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const websiteEnabled = toggleSettings.website
-
-  const dbProfile = await getProfile() // ✅ من الداتا بيز
+  const dbProfile = await getProfile()
 
   return (
-    <html lang="en" suppressHydrationWarning className="dark scroll-smooth">
-      <head>...</head>
-      <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <LanguageProvider>
-            <ProfileProvider profile={dbProfile}>
-              <ErrorBoundary>
-                <SkipToContent />
-                {websiteEnabled && <Header />}
-                <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
-                  {children}
-                </main>
-                {websiteEnabled && <Footer />}
-                <FloatingActionButton />
-                <SpeedInsightsWrapper />
-                <Analytics />
-              </ErrorBoundary>
-            </ProfileProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.variable}  min-h-screen bg-background text-foreground font-sans`}>
+        <Providers profile={dbProfile}>
+          <ErrorBoundary>
+            <SkipToContent />
+            {websiteEnabled && <Header />}
+            <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
+              {children}
+            </main>
+            {websiteEnabled && <Footer />}
+            <FloatingActionButton />
+            <SpeedInsightsWrapper />
+            <Analytics />
+          </ErrorBoundary>
+        </Providers>
       </body>
     </html>
   )
