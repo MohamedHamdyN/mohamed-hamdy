@@ -14,6 +14,15 @@ type AboutHeroStats = {
   completedCourses: number
 }
 
+function safeText(v: unknown): string {
+  if (v === null || v === undefined) return ""
+  const s = String(v).trim()
+  if (!s) return ""
+  const bad = ["null", "undefined", "0"]
+  if (bad.includes(s.toLowerCase())) return ""
+  return s
+}
+
 export default function AboutHero({
   profile,
   longBio,
@@ -25,26 +34,35 @@ export default function AboutHero({
 }) {
   const t = useTranslations()
 
-  // ✅ مصادر النصوص من DB أولًا
+  // ✅ Short Bio (DB first)
   const shortBio =
-    (profile?.short_bio && String(profile.short_bio).trim()) ||
+    safeText((profile as any)?.short_bio) ||
+    safeText((profile as any)?.shortBio) ||
     ""
 
+  // ✅ Long Bio: prop first, then DB (long_bio), then bio, then short_bio (آخر fallback)
   const longBioSafe =
-    (longBio && String(longBio).trim()) ||
-    (profile?.long_bio && String(profile.long_bio).trim()) ||
-    (profile?.bio && String(profile.bio).trim()) ||
+    safeText(longBio) ||
+    safeText((profile as any)?.long_bio) ||
+    safeText((profile as any)?.longBio) ||
+    safeText((profile as any)?.bio) ||
+    safeText((profile as any)?.short_bio) ||
     ""
 
+  // ✅ Quote لازم يكون Hero Description (زي ما طلبت)
   const heroQuote =
-    (profile?.hero_description && String(profile.hero_description).trim()) ||
-    t?.hero?.description ||
+    safeText((profile as any)?.about_intro) ||
+    safeText((profile as any)?.about_intro) ||
+    safeText(t?.hero?.description) ||
     "Transforming complex data into actionable insights that drive business decisions."
 
-  const bioParagraphs = longBioSafe ? String(longBioSafe).split("\n\n") : []
+  // ✅ تقسيم صحيح للـ Long Bio إلى فقرات (باراجرافات)
+  const bioParagraphs = longBioSafe
+    ? longBioSafe.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
+    : []
 
-  const name = profile?.name ?? "Portfolio"
-  const avatarUrl = profile?.avatar_url ?? null
+  const name = safeText((profile as any)?.name) || "Portfolio"
+  const avatarUrl = safeText((profile as any)?.avatar_url) || null
 
   const getIcon = (iconName: string) => {
     const Icon = (LucideIcons as any)[iconName] || LucideIcons.Info
@@ -52,34 +70,10 @@ export default function AboutHero({
   }
 
   const enabledStats = [
-    {
-      id: "years",
-      name: "Years of Experience",
-      value: String(stats.years),
-      icon: "Clock",
-      color: "from-primary/10 to-primary/5",
-    },
-    {
-      id: "projects",
-      name: "Completed Projects",
-      value: String(stats.completedProjects),
-      icon: "FolderKanban",
-      color: "from-secondary/10 to-secondary/5",
-    },
-    {
-      id: "followers",
-      name: "LinkedIn Followers",
-      value: String(stats.linkedinFollowers),
-      icon: "Users",
-      color: "from-primary/10 to-secondary/5",
-    },
-    {
-      id: "courses",
-      name: "Completed Courses",
-      value: String(stats.completedCourses),
-      icon: "GraduationCap",
-      color: "from-secondary/10 to-primary/5",
-    },
+    { id: "years", name: "Years of Experience", value: String(stats.years), icon: "Clock", color: "from-primary/10 to-primary/5" },
+    { id: "projects", name: "Completed Projects", value: String(stats.completedProjects), icon: "FolderKanban", color: "from-secondary/10 to-secondary/5" },
+    { id: "followers", name: "LinkedIn Followers", value: String(stats.linkedinFollowers), icon: "Users", color: "from-primary/10 to-secondary/5" },
+    { id: "courses", name: "Completed Courses", value: String(stats.completedCourses), icon: "GraduationCap", color: "from-secondary/10 to-primary/5" },
   ]
 
   return (
@@ -101,9 +95,7 @@ export default function AboutHero({
               {/* ✅ 1) Short Bio (مميز) */}
               {shortBio ? (
                 <div className="mb-5 rounded-xl border border-border/50 bg-gradient-to-br from-primary/10 to-secondary/5 p-4">
-                  <p className="text-sm font-medium text-foreground/90 m-0">
-                    {shortBio}
-                  </p>
+                  <p className="text-sm font-medium text-foreground/90 m-0">{shortBio}</p>
                 </div>
               ) : null}
 
@@ -121,25 +113,24 @@ export default function AboutHero({
                   </motion.p>
                 ))
               ) : (
-                <p className="text-muted-foreground">
-                  {/* fallback */}
-                  {profile?.long_bio ?? profile?.bio ?? ""}
-                </p>
+                <p className="text-muted-foreground">{longBioSafe}</p>
               )}
             </div>
 
             {/* ✅ 3) Hero Description داخل Quote */}
-            <motion.div
-              className="mt-8 bg-card border border-border/50 rounded-xl p-6 relative"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.35 }}
-            >
-              <Quote className="absolute text-primary/20 h-12 w-12 -top-6 -left-6" />
-              <p className="text-lg italic text-muted-foreground">
-                &quot;{heroQuote}&quot;
-              </p>
-            </motion.div>
+            {heroQuote ? (
+              <motion.div
+                className="mt-8 bg-card border border-border/50 rounded-xl p-6 relative"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.35 }}
+              >
+                <Quote className="absolute text-primary/20 h-12 w-12 -top-6 -left-6" />
+                <p className="text-lg italic text-muted-foreground">
+                  &quot;{heroQuote}&quot;
+                </p>
+              </motion.div>
+            ) : null}
           </motion.div>
 
           {/* Image */}
@@ -191,9 +182,7 @@ export default function AboutHero({
               className={`relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br ${stat.color} p-6 backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1`}
             >
               <div className="flex items-center gap-3">
-                <div className="rounded-full bg-background/50 p-3 backdrop-blur-sm">
-                  {getIcon(stat.icon)}
-                </div>
+                <div className="rounded-full bg-background/50 p-3 backdrop-blur-sm">{getIcon(stat.icon)}</div>
                 <div>
                   <h3 className="text-2xl font-bold">{stat.value}</h3>
                   <p className="text-muted-foreground text-sm">{stat.name}</p>
