@@ -557,7 +557,12 @@ export async function deleteClient(id: number) {
 
 export async function getSocialLinks(): Promise<SocialLink[]> {
   try {
-    const result = await db.query`SELECT * FROM social_links ORDER BY "order" ASC`
+    const result = await db.query`
+      SELECT * 
+      FROM social_links
+      WHERE enabled = true
+      ORDER BY "order" ASC
+    `
     return result as SocialLink[]
   } catch (error) {
     console.error('Error getting social links:', error)
@@ -1034,15 +1039,23 @@ export async function getSiteSettings(): Promise<Record<string, any>> {
 
     const settings: Record<string, any> = {}
     result.forEach((row: any) => {
-      const value = row.value
-      if (row.type === 'json') settings[row.key] = JSON.parse(value)
-      else if (row.type === 'boolean') settings[row.key] = value === 'true'
-      else settings[row.key] = value
+      const v = row.value
+
+      if (row.type === "json") {
+        settings[row.key] = typeof v === "string" ? JSON.parse(v) : v
+      } else if (row.type === "boolean") {
+        if (typeof v === "boolean") settings[row.key] = v
+        else settings[row.key] = String(v).trim().toLowerCase() === "true"
+      } else if (row.type === "number") {
+        settings[row.key] = Number(v)
+      } else {
+        settings[row.key] = v
+      }
     })
 
     return settings
   } catch (error) {
-    console.error('Error getting site settings:', error)
+    console.error("Error getting site settings:", error)
     return {}
   }
 }

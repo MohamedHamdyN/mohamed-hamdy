@@ -20,38 +20,56 @@ export function ProfileProvider({
   const normalized = useMemo(() => {
     if (!profile) return null
 
-    // ✅ normalize snake_case -> camelCase here (ONLY here)
     const p: any = profile
+
+    const heroImageUrl = p.hero_image_url ?? ""
+    const avatarUrl = p.avatar_url ?? ""
 
     return {
       ...p,
-      name: p.name ?? p.full_name ?? "Mohamed Hamdy",
-      logo: p.logo ?? p.logo_url ?? p.avatar_url ?? "",
-      resumeUrl: p.resumeUrl ?? p.resume_url ?? "",
-      shortBio: p.shortBio ?? p.short_bio ?? "",
+
+      // basics
+      name: p.name ?? "Mohamed Hamdy",
+
+      // titles
+      title1: (p.title ?? "").trim(),
+      title2: (p.short_title ?? "").trim(),
+
+      // hero
+      heroDescription: p.hero_description ?? "",
+      heroImageType: p.hero_image_type ?? "logo",
+      heroImageUrl,
+
+      // ✅ IMPORTANT: this is what Header often uses
+      // include hero_image_url FIRST then avatar_url
+      logo: heroImageUrl || avatarUrl || p.logo || p.logo_url || "",
+
+      // urls
+      resumeUrl: p.resume_url ?? p.resumeUrl ?? "",
+      calendlyUrl: p.calendly_url ?? p.calendlyUrl ?? "",
+
+      // bios
+      shortBio: p.short_bio ?? p.shortBio ?? "",
+      longBio: p.long_bio ?? "",
+      aboutIntro: p.about_intro ?? "",
+
+      // expose avatar explicitly too
+      avatarUrl,
+
+      // favicon (لو عندك مصدره في settings خليه هناك، بس هنا fallback)
       favicon: p.favicon ?? "/favicon.ico",
 
-      // ✅ social links normalized (use ONE key everywhere)
-      socialLinks: p.socialLinks ?? p.social_links ?? {
-        linkedin: p.linkedin ?? "",
-        github: p.github ?? "",
-        twitter: p.twitter ?? "",
-        facebook: p.facebook ?? "",
-        instagram: p.instagram ?? "",
-      },
+      // social (ده مش هيشتغل من profile أصلاً عندك لأنه table منفصل — سيبه فاضي هنا)
+      socialLinks: p.socialLinks ?? p.social_links ?? {},
 
-      // ✅ fallbacks
-      defaultProjectImage: p.defaultProjectImage ?? p.default_project_image ?? "/placeholder.svg?height=600&width=800",
-      defaultPlatformLogo: p.defaultPlatformLogo ?? p.default_platform_logo ?? "/placeholder.svg",
-      calendlyUrl: p.calendlyUrl ?? p.calendly_url ?? "",
+      defaultProjectImage:
+        p.defaultProjectImage ?? p.default_project_image ?? "/placeholder.svg?height=600&width=800",
+      defaultPlatformLogo:
+        p.defaultPlatformLogo ?? p.default_platform_logo ?? "/placeholder.svg",
     }
   }, [profile])
 
-  return (
-    <ProfileContext.Provider value={{ profile, normalized }}>
-      {children}
-    </ProfileContext.Provider>
-  )
+  return <ProfileContext.Provider value={{ profile, normalized }}>{children}</ProfileContext.Provider>
 }
 
 export function useProfile() {
