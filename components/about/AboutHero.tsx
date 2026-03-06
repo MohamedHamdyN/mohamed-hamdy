@@ -44,10 +44,8 @@ export default function AboutHero({
   const longBioSafe =
     safeText(longBio) ||
     safeText((profile as any)?.long_bio) ||
-    safeText((profile as any)?.longBio) ||
-    safeText((profile as any)?.bio) ||
-    safeText((profile as any)?.short_bio) ||
-    ""
+    safeText(profile?.bio)
+  ""
 
   // ✅ Quote لازم يكون Hero Description (زي ما طلبت)
   const heroQuote =
@@ -113,7 +111,7 @@ export default function AboutHero({
                   </motion.p>
                 ))
               ) : (
-                <p className="text-muted-foreground">{longBioSafe}</p>
+                <p className="text-muted-foreground">{bioParagraphs}</p>
               )}
             </div>
 
