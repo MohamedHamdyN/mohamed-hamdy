@@ -7,8 +7,17 @@ import { useTranslations } from "@/hooks/useTranslations"
 import { useLanguage } from "@/context/language-context"
 import { BarChartIcon as ChartBar, Database, LineChart, FolderOpen, User } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { universalSettings } from "@/admin/toggle"
+
+function safeText(v: unknown): string {
+  if (v === null || v === undefined) return ""
+  const s = String(v).trim()
+  if (!s) return ""
+  const bad = ["null", "undefined", "0"]
+  if (bad.includes(s.toLowerCase())) return ""
+  return s
+}
 
 export default function Hero() {
   const t = useTranslations()
@@ -25,17 +34,34 @@ export default function Hero() {
   const period = 2000
   const nameRef = useRef<HTMLSpanElement>(null)
 
-  // ✅ Fallbacks لتوحيد أسماء الحقول بين القديم والجديد
-  const name = profile?.name ?? (profile as any)?.full_name ?? "Mohamed Hamdy"
-  const resumeUrl = profile?.resumeUrl ?? (profile as any)?.resumeUrl ?? (profile as any)?.resume_url ?? ""
+  // ✅ من الداتا بيز
+  const name = safeText(profile?.name) || "Mohamed Hamdy"
+
+  // title = profile.title
+  const title1 =
+    safeText((profile as any)?.title) ||
+    "Data Analyst"
+
+  // title2 = profile.short_title
+  const title2 =
+    safeText((profile as any)?.shortTitle) ||
+    safeText((profile as any)?.short_title) ||
+    "Financial Accountant"
+
+  const heroDescription =
+    safeText((profile as any)?.heroDescription) ||
+    safeText((profile as any)?.hero_description) ||
+    "Transforming complex data into actionable insights that drive business decisions."
+
+  const resumeUrl =
+    safeText((profile as any)?.resumeUrl) ||
+    safeText((profile as any)?.resume_url)
+
   const logoOrAvatar =
-    (profile as any)?.logo ??
-    profile?.logo ??
-    (profile as any)?.avatar_url ??
-    ""
+    safeText((profile as any)?.logo) ||
+    safeText((profile as any)?.avatar_url)
 
   useEffect(() => {
-    // preload لو عندك لوجو/أفاتار
     if (logoOrAvatar) {
       const img = new window.Image()
       img.src = logoOrAvatar
@@ -45,16 +71,17 @@ export default function Hero() {
     setWebsiteEnabled(universalSettings.website)
   }, [logoOrAvatar])
 
-  const textArray = [
-    t?.hero?.title || "Data Analyst",
-    t?.hero?.title2 || "Financial Accountant",
-    `${t?.hero?.title || "Data Analyst"} & ${t?.hero?.title2 || "Financial Accountant"}`,
-  ]
+  const textArray = useMemo(() => {
+    const arr = [title1, title2, `${title1} & ${title2}`].filter(Boolean)
+    return arr.length ? arr : ["Data Analyst", "Financial Accountant", "Data Analyst & Financial Accountant"]
+  }, [title1, title2])
 
   const tick = useCallback(() => {
     const i = loopNum % textArray.length
     const fullText = textArray[i]
-    const updatedText = isDeleting ? fullText.substring(0, text.length - 1) : fullText.substring(0, text.length + 1)
+    const updatedText = isDeleting
+      ? fullText.substring(0, text.length - 1)
+      : fullText.substring(0, text.length + 1)
 
     setText(updatedText)
 
@@ -66,7 +93,7 @@ export default function Hero() {
       setDelta(period)
     } else if (isDeleting && updatedText === "") {
       setIsDeleting(false)
-      setLoopNum(loopNum + 1)
+      setLoopNum((prev) => prev + 1)
       setDelta(150)
     }
   }, [text, isDeleting, loopNum, period, textArray])
@@ -77,9 +104,7 @@ export default function Hero() {
     return () => clearInterval(ticker)
   }, [tick, delta, isVisible])
 
-  // ✅ Transition ثابتة (بدون Variants) لتجنب خطأ TS
   const easeOut = [0.16, 1, 0.3, 1] as const
-  const easeInOut = [0.4, 0, 0.2, 1] as const
 
   if (!isVisible) {
     return (
@@ -142,8 +167,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3, ease: easeOut }}
             >
-              {t?.hero?.description ||
-                "Transforming complex data into actionable insights that drive business decisions."}
+              {heroDescription}
             </motion.p>
 
             <div className="mt-10 flex items-center gap-x-6">
@@ -151,7 +175,7 @@ export default function Hero() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.02 }}
-                transition={{ delay: 0 * 0.2, duration: 0.6, ease: easeOut }}
+                transition={{ delay: 0, duration: 0.6, ease: easeOut }}
               >
                 <a href={`mailto:${profile?.email ?? "muhamedhamdynour@gmail.com"}`}>
                   <Button size="lg" className="bg-primary hover:bg-primary/90">
@@ -165,7 +189,7 @@ export default function Hero() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.02 }}
-                transition={{ delay: 1 * 0.2, duration: 0.6, ease: easeOut }}
+                transition={{ delay: 0.2, duration: 0.6, ease: easeOut }}
               >
                 <a href={resumeUrl || "#"} target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="lg" disabled={!resumeUrl}>

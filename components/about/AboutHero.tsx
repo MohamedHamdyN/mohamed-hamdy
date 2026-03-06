@@ -25,11 +25,9 @@ function safeText(v: unknown): string {
 
 export default function AboutHero({
   profile,
-  longBio,
   stats,
 }: {
   profile: Profile | null
-  longBio: string
   stats: AboutHeroStats
 }) {
   const t = useTranslations()
@@ -42,10 +40,10 @@ export default function AboutHero({
 
   // ✅ Long Bio: prop first, then DB (long_bio), then bio, then short_bio (آخر fallback)
   const longBioSafe =
-    safeText(longBio) ||
     safeText((profile as any)?.long_bio) ||
-    safeText(profile?.bio)
-  ""
+    safeText((profile as any)?.longBio) ||
+    safeText(profile?.bio) ||
+    ""
 
   // ✅ Quote لازم يكون Hero Description (زي ما طلبت)
   const heroQuote =
