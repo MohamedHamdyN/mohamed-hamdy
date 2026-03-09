@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import Image from "next/image"
-import { ExternalLink } from "lucide-react"
+import SocialLinksBar from "./SocialLinksBar"
 
 type SocialItem = {
   id: number
@@ -39,7 +39,9 @@ export default function MaintenanceGate({
   if (!enabled || isAdmin) return <>{children}</>
 
   const links = useMemo(() => {
-    const sorted = [...(data.socialLinks ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    const sorted = [...(data.socialLinks ?? [])].sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0)
+    )
     return sorted.filter((x) => x?.enabled !== false && x?.url)
   }, [data.socialLinks])
 
@@ -94,34 +96,22 @@ export default function MaintenanceGate({
               : "This website is temporarily in maintenance mode. Please check back soon."}
           </motion.p>
 
-          {/* Social Icons بدل الأزرار */}
           <motion.div
-            className="mt-10 flex flex-wrap items-center gap-3"
+            className="mt-10"
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.25 }}
           >
             {links.length === 0 ? (
-              <div className="text-muted-foreground text-sm">No social links configured.</div>
+              <div className="text-muted-foreground text-sm">
+                No social links configured.
+              </div>
             ) : (
-              links.map((x) => (
-                <a
-                  key={x.id}
-                  href={x.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-2 rounded-full bg-card border border-border hover:border-primary/40 transition flex items-center gap-2 text-sm"
-                  aria-label={x.platform}
-                >
-                  <span className="capitalize">{x.platform}</span>
-                  <ExternalLink className="h-4 w-4 opacity-70" />
-                </a>
-              ))
+              <SocialLinksBar items={links} />
             )}
           </motion.div>
         </div>
 
-        {/* Right image circle (logo/avatar) */}
         <motion.div
           className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mr-0 lg:mt-0 lg:max-w-none lg:flex-none xl:ml-32"
           initial={{ opacity: 0, scale: 0.92 }}
