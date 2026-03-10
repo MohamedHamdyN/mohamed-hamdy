@@ -1,10 +1,21 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { getSocialLinks } from "@/app/actions/cms"
+import { useMemo } from "react"
+import {
+  Linkedin,
+  Github,
+  Twitter,
+  Facebook,
+  Instagram,
+  ExternalLink,
+  Youtube,
+  MessageCircle,
+  Send,
+  Globe,
+} from "lucide-react"
 
-type SocialRow = {
+export type SocialRow = {
   id: number
   platform: string
   url: string
@@ -13,6 +24,7 @@ type SocialRow = {
 }
 
 interface SocialLinksProps {
+  items: SocialRow[]
   size?: "sm" | "md" | "lg"
   centered?: boolean
 }
@@ -36,119 +48,178 @@ function getDisplayName(platform: string, url: string): string {
   return host.split(".")[0]
 }
 
-function getFaviconUrl(url: string): string {
-  const host = getHostname(url)
-  if (!host) return ""
-  return `https://www.google.com/s2/favicons?domain=${host}&sz=64`
+function DatacampIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M12.946 18.151v-5.239L21.209 8.033v4.962l-8.263 5.156zm-1.825.468L2.791 13.25V8.033l8.33 5.418v5.168zM12 0L0 7.165v8.496l12 7.339 12-7.339V7.165L12 0z" />
+    </svg>
+  )
 }
 
-function stringToColor(input: string): string {
-  let hash = 0
-  for (let i = 0; i < input.length; i++) {
-    hash = input.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const hue = Math.abs(hash % 360)
-  return `hsl(${hue} 70% 55%)`
-}
+function resolveSocial(host: string, iconSize: string) {
+  const key = host.toLowerCase()
 
-export default function SocialLinks({ size = "md", centered = false }: SocialLinksProps) {
-  const [items, setItems] = useState<SocialRow[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
-
-  useEffect(() => {
-    let mounted = true
-
-      ; (async () => {
-        try {
-          const rows = (await getSocialLinks()) as SocialRow[]
-          if (!mounted) return
-          setItems(Array.isArray(rows) ? rows : [])
-        } catch (error) {
-          console.error("Failed to load social links:", error)
-          if (mounted) setItems([])
-        } finally {
-          if (mounted) setLoaded(true)
-        }
-      })()
-
-    return () => {
-      mounted = false
+  if (key.includes("linkedin.com")) {
+    return {
+      icon: <Linkedin className={iconSize} />,
+      color: "bg-[#0077B5]/10 text-[#0077B5] hover:bg-[#0077B5] hover:text-white",
+      name: "LinkedIn",
     }
-  }, [])
+  }
 
-  useEffect(() => {
-    console.log("SOCIAL LINKS FROM DB:", items)
-  }, [items])
+  if (key.includes("github.com")) {
+    return {
+      icon: <Github className={iconSize} />,
+      color:
+        "bg-[#333]/10 text-[#333] dark:text-[#f5f5f5] dark:bg-[#f5f5f5]/10 hover:bg-[#333] dark:hover:bg-[#f5f5f5] hover:text-white dark:hover:text-[#333]",
+      name: "GitHub",
+    }
+  }
 
-  const iconBox =
-    size === "sm" ? "h-9 w-9" : size === "lg" ? "h-14 w-14" : "h-11 w-11"
+  if (key.includes("twitter.com") || key.includes("x.com")) {
+    return {
+      icon: <Twitter className={iconSize} />,
+      color: "bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white",
+      name: "Twitter / X",
+    }
+  }
 
-  const iconInner =
-    size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5"
+  if (key.includes("facebook.com") || key.includes("fb.com")) {
+    return {
+      icon: <Facebook className={iconSize} />,
+      color: "bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2] hover:text-white",
+      name: "Facebook",
+    }
+  }
 
-  const networks = useMemo(() => {
+  if (key.includes("instagram.com")) {
+    return {
+      icon: <Instagram className={iconSize} />,
+      color:
+        "bg-gradient-to-br from-[#833AB4]/10 via-[#FD1D1D]/10 to-[#FCAF45]/10 text-[#FD1D1D] hover:bg-gradient-to-br hover:from-[#833AB4] hover:via-[#FD1D1D] hover:to-[#FCAF45] hover:text-white",
+      name: "Instagram",
+    }
+  }
+
+  if (key.includes("youtube.com") || key.includes("youtu.be")) {
+    return {
+      icon: <Youtube className={iconSize} />,
+      color: "bg-[#FF0000]/10 text-[#FF0000] hover:bg-[#FF0000] hover:text-white",
+      name: "YouTube",
+    }
+  }
+
+  if (key.includes("datacamp.com")) {
+    return {
+      icon: <DatacampIcon className={iconSize} />,
+      color: "bg-[#03EF62]/10 text-[#03EF62] hover:bg-[#03EF62] hover:text-black",
+      name: "DataCamp",
+    }
+  }
+
+  if (key.includes("whatsapp.com") || key.includes("wa.me")) {
+    return {
+      icon: <MessageCircle className={iconSize} />,
+      color: "bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white",
+      name: "WhatsApp",
+    }
+  }
+
+  if (key.includes("t.me") || key.includes("telegram.me") || key.includes("telegram.org")) {
+    return {
+      icon: <Send className={iconSize} />,
+      color: "bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9] hover:text-white",
+      name: "Telegram",
+    }
+  }
+
+  if (key.includes("vercel.app") || key.includes("netlify.app")) {
+    return {
+      icon: <Globe className={iconSize} />,
+      color: "bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white",
+      name: "Website",
+    }
+  }
+
+  return {
+    icon: <ExternalLink className={iconSize} />,
+    color: "bg-gray-500/10 text-gray-500 hover:bg-gray-500 hover:text-white",
+    name: "External Link",
+  }
+}
+
+export default function SocialLinks({
+  items,
+  size = "md",
+  centered = false,
+}: SocialLinksProps) {
+  const getSizeClass = () => {
+    switch (size) {
+      case "sm":
+        return "h-4 w-4"
+      case "md":
+        return "h-5 w-5"
+      case "lg":
+        return "h-6 w-6"
+      default:
+        return "h-5 w-5"
+    }
+  }
+
+  const getContainerClass = () => {
+    switch (size) {
+      case "sm":
+        return "p-2"
+      case "md":
+        return "p-2.5"
+      case "lg":
+        return "p-3"
+      default:
+        return "p-2.5"
+    }
+  }
+
+  const iconSize = getSizeClass()
+  const containerSize = getContainerClass()
+
+  const socialNetworks = useMemo(() => {
     return (items || [])
       .filter((x) => x && x.enabled !== false && x.url && String(x.url).trim())
       .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0))
       .map((x) => {
         const host = getHostname(x.url)
+        const detected = resolveSocial(host, iconSize)
         const label = getDisplayName(x.platform, x.url)
-        const favicon = getFaviconUrl(x.url)
-        const color = stringToColor(host || label)
 
         return {
-          key: `${x.id}-${host || label}`,
-          label,
+          key: `${x.id}-${host || x.url}`,
           url: x.url,
-          host,
-          favicon,
-          color,
-          letter: (label[0] || "L").toUpperCase(),
+          label: label || detected.name,
+          icon: detected.icon,
+          color: detected.color,
         }
       })
-  }, [items])
+  }, [items, iconSize])
 
-  if (!loaded) return null
-  if (networks.length === 0) return null
+  if (socialNetworks.length === 0) return null
 
   return (
     <div className={`flex gap-3 flex-wrap ${centered ? "justify-center" : ""}`}>
-      {networks.map((n) => {
-        const showFallback = imageErrors[n.key] || !n.favicon
-
-        return (
-          <motion.a
-            key={n.key}
-            href={n.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${iconBox} rounded-full border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center shadow-sm transition-all duration-300 hover:border-white/20 hover:bg-white/10 overflow-hidden`}
-            whileHover={{ y: -5, scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            aria-label={`Visit ${n.label}`}
-            title={n.label}
-          >
-            {showFallback ? (
-              <div
-                className="w-full h-full flex items-center justify-center font-bold text-white"
-                style={{ backgroundColor: n.color }}
-              >
-                {n.letter}
-              </div>
-            ) : (
-              <img
-                src={n.favicon}
-                alt={n.label}
-                className={iconInner}
-                onError={() =>
-                  setImageErrors((prev) => ({ ...prev, [n.key]: true }))
-                }
-              />
-            )}
-          </motion.a>
-        )
-      })}
+      {socialNetworks.map((network) => (
+        <motion.a
+          key={network.key}
+          href={network.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${containerSize} ${network.color} rounded-full transition-all duration-300 shadow-sm hover:shadow-lg`}
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          aria-label={`Visit ${network.label}`}
+          title={network.label}
+        >
+          {network.icon}
+        </motion.a>
+      ))}
     </div>
   )
 }
