@@ -1,7 +1,7 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { useMemo } from "react"
 import {
   Linkedin,
   Github,
@@ -15,7 +15,7 @@ import {
   Globe,
 } from "lucide-react"
 
-export type SocialRow = {
+type SocialRow = {
   id: number
   platform: string
   url: string
@@ -24,7 +24,6 @@ export type SocialRow = {
 }
 
 interface SocialLinksProps {
-  items: SocialRow[]
   size?: "sm" | "md" | "lg"
   centered?: boolean
 }
@@ -125,7 +124,11 @@ function resolveSocial(host: string, iconSize: string) {
     }
   }
 
-  if (key.includes("t.me") || key.includes("telegram.me") || key.includes("telegram.org")) {
+  if (
+    key.includes("t.me") ||
+    key.includes("telegram.me") ||
+    key.includes("telegram.org")
+  ) {
     return {
       icon: <Send className={iconSize} />,
       color: "bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9] hover:text-white",
@@ -149,10 +152,35 @@ function resolveSocial(host: string, iconSize: string) {
 }
 
 export default function SocialLinks({
-  items,
   size = "md",
   centered = false,
 }: SocialLinksProps) {
+  const [items, setItems] = useState<SocialRow[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+
+      ; (async () => {
+        try {
+          const mod = await import("@/app/actions/cms")
+          const rows = (await mod.getSocialLinks()) as SocialRow[]
+
+          if (!mounted) return
+          setItems(Array.isArray(rows) ? rows : [])
+        } catch (error) {
+          console.error("Failed to load social links:", error)
+          if (mounted) setItems([])
+        } finally {
+          if (mounted) setLoaded(true)
+        }
+      })()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const getSizeClass = () => {
     switch (size) {
       case "sm":
@@ -201,6 +229,7 @@ export default function SocialLinks({
       })
   }, [items, iconSize])
 
+  if (!loaded) return null
   if (socialNetworks.length === 0) return null
 
   return (
