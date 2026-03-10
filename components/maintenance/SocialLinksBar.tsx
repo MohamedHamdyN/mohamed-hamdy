@@ -2,36 +2,22 @@
 
 import { useMemo } from "react"
 import { motion } from "framer-motion"
-import type { IconType } from "react-icons"
 import {
-  FaLinkedinIn,
-  FaGithub,
-  FaFacebookF,
-  FaInstagram,
-  FaYoutube,
-  FaWhatsapp,
-  FaTelegramPlane,
-  FaDiscord,
-  FaBehance,
-  FaDribbble,
-  FaMediumM,
-  FaRedditAlien,
-  FaPinterestP,
-  FaSnapchatGhost,
-  FaGlobe,
-} from "react-icons/fa"
-import { FaXTwitter, FaTiktok } from "react-icons/fa6"
+  Linkedin,
+  Github,
+  Twitter,
+  Facebook,
+  Instagram,
+  ExternalLink,
+  Youtube,
+  MessageCircle,
+  Send,
+  Globe,
+} from "lucide-react"
 
 type Item = {
   platform: string
   url: string
-}
-
-type ResolvedNetwork = {
-  name: string
-  icon: IconType
-  bg: string
-  iconColor: string
 }
 
 function getHostname(url: string): string {
@@ -53,160 +39,128 @@ function getDisplayName(platform: string, url: string): string {
   return host.split(".")[0]
 }
 
-function stringToColor(input: string): string {
-  let hash = 0
-  for (let i = 0; i < input.length; i++) {
-    hash = input.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const hue = Math.abs(hash % 360)
-  return `hsl(${hue} 70% 45%)`
+function DatacampIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M12.946 18.151v-5.239L21.209 8.033v4.962l-8.263 5.156zm-1.825.468L2.791 13.25V8.033l8.33 5.418v5.168zM12 0L0 7.165v8.496l12 7.339 12-7.339V7.165L12 0z" />
+    </svg>
+  )
 }
 
-function resolveNetwork(url: string): ResolvedNetwork {
-  const host = getHostname(url)
+function resolveSocial(host: string, iconSize: string) {
+  const key = host.toLowerCase()
 
-  const rules: Array<{
-    match: string[]
-    name: string
-    icon: IconType
-    bg: string
-    iconColor?: string
-  }> = [
-      {
-        match: ["linkedin.com"],
-        name: "LinkedIn",
-        icon: FaLinkedinIn,
-        bg: "#0077B5",
-      },
-      {
-        match: ["github.com"],
-        name: "GitHub",
-        icon: FaGithub,
-        bg: "#1f2937",
-      },
-      {
-        match: ["twitter.com", "x.com"],
-        name: "X",
-        icon: FaXTwitter,
-        bg: "#111827",
-      },
-      {
-        match: ["facebook.com", "fb.com"],
-        name: "Facebook",
-        icon: FaFacebookF,
-        bg: "#1877F2",
-      },
-      {
-        match: ["instagram.com"],
-        name: "Instagram",
-        icon: FaInstagram,
-        bg: "#E1306C",
-      },
-      {
-        match: ["youtube.com", "youtu.be"],
-        name: "YouTube",
-        icon: FaYoutube,
-        bg: "#FF0000",
-      },
-      {
-        match: ["tiktok.com"],
-        name: "TikTok",
-        icon: FaTiktok,
-        bg: "#111827",
-      },
-      {
-        match: ["whatsapp.com", "wa.me"],
-        name: "WhatsApp",
-        icon: FaWhatsapp,
-        bg: "#25D366",
-      },
-      {
-        match: ["telegram.org", "telegram.me", "t.me"],
-        name: "Telegram",
-        icon: FaTelegramPlane,
-        bg: "#229ED9",
-      },
-      {
-        match: ["discord.com", "discord.gg"],
-        name: "Discord",
-        icon: FaDiscord,
-        bg: "#5865F2",
-      },
-      {
-        match: ["behance.net"],
-        name: "Behance",
-        icon: FaBehance,
-        bg: "#1769FF",
-      },
-      {
-        match: ["dribbble.com"],
-        name: "Dribbble",
-        icon: FaDribbble,
-        bg: "#EA4C89",
-      },
-      {
-        match: ["medium.com"],
-        name: "Medium",
-        icon: FaMediumM,
-        bg: "#121212",
-      },
-      {
-        match: ["reddit.com"],
-        name: "Reddit",
-        icon: FaRedditAlien,
-        bg: "#FF4500",
-      },
-      {
-        match: ["pinterest.com"],
-        name: "Pinterest",
-        icon: FaPinterestP,
-        bg: "#E60023",
-      },
-      {
-        match: ["snapchat.com"],
-        name: "Snapchat",
-        icon: FaSnapchatGhost,
-        bg: "#FFFC00",
-        iconColor: "#111111",
-      },
-    ]
-
-  const found = rules.find((rule) =>
-    rule.match.some((domain) => host === domain || host.endsWith(`.${domain}`))
-  )
-
-  if (found) {
+  if (key.includes("linkedin.com")) {
     return {
-      name: found.name,
-      icon: found.icon,
-      bg: found.bg,
-      iconColor: found.iconColor ?? "#ffffff",
+      icon: <Linkedin className={iconSize} />,
+      color: "bg-[#0077B5]/10 text-[#0077B5] hover:bg-[#0077B5] hover:text-white",
+      name: "LinkedIn",
+    }
+  }
+
+  if (key.includes("github.com")) {
+    return {
+      icon: <Github className={iconSize} />,
+      color:
+        "bg-[#333]/10 text-[#333] dark:text-[#f5f5f5] dark:bg-[#f5f5f5]/10 hover:bg-[#333] dark:hover:bg-[#f5f5f5] hover:text-white dark:hover:text-[#333]",
+      name: "GitHub",
+    }
+  }
+
+  if (key.includes("twitter.com") || key.includes("x.com")) {
+    return {
+      icon: <Twitter className={iconSize} />,
+      color: "bg-[#1DA1F2]/10 text-[#1DA1F2] hover:bg-[#1DA1F2] hover:text-white",
+      name: "Twitter / X",
+    }
+  }
+
+  if (key.includes("facebook.com") || key.includes("fb.com")) {
+    return {
+      icon: <Facebook className={iconSize} />,
+      color: "bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2] hover:text-white",
+      name: "Facebook",
+    }
+  }
+
+  if (key.includes("instagram.com")) {
+    return {
+      icon: <Instagram className={iconSize} />,
+      color:
+        "bg-gradient-to-br from-[#833AB4]/10 via-[#FD1D1D]/10 to-[#FCAF45]/10 text-[#FD1D1D] hover:bg-gradient-to-br hover:from-[#833AB4] hover:via-[#FD1D1D] hover:to-[#FCAF45] hover:text-white",
+      name: "Instagram",
+    }
+  }
+
+  if (key.includes("youtube.com") || key.includes("youtu.be")) {
+    return {
+      icon: <Youtube className={iconSize} />,
+      color: "bg-[#FF0000]/10 text-[#FF0000] hover:bg-[#FF0000] hover:text-white",
+      name: "YouTube",
+    }
+  }
+
+  if (key.includes("datacamp.com")) {
+    return {
+      icon: <DatacampIcon className={iconSize} />,
+      color: "bg-[#03EF62]/10 text-[#03EF62] hover:bg-[#03EF62] hover:text-black",
+      name: "DataCamp",
+    }
+  }
+
+  if (key.includes("whatsapp.com") || key.includes("wa.me")) {
+    return {
+      icon: <MessageCircle className={iconSize} />,
+      color: "bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white",
+      name: "WhatsApp",
+    }
+  }
+
+  if (
+    key.includes("t.me") ||
+    key.includes("telegram.me") ||
+    key.includes("telegram.org")
+  ) {
+    return {
+      icon: <Send className={iconSize} />,
+      color: "bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9] hover:text-white",
+      name: "Telegram",
+    }
+  }
+
+  if (key.includes("vercel.app") || key.includes("netlify.app")) {
+    return {
+      icon: <Globe className={iconSize} />,
+      color: "bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white",
+      name: "Website",
     }
   }
 
   return {
-    name: host || "Website",
-    icon: FaGlobe,
-    bg: stringToColor(host || "website"),
-    iconColor: "#ffffff",
+    icon: <ExternalLink className={iconSize} />,
+    color: "bg-gray-500/10 text-gray-500 hover:bg-gray-500 hover:text-white",
+    name: "External Link",
   }
 }
 
 export default function SocialLinksBar({ items }: { items: Item[] }) {
+  const iconSize = "h-5 w-5"
+  const containerSize = "p-2.5"
+
   const networks = useMemo(() => {
     return (items || [])
       .filter((x) => x && x.url && String(x.url).trim())
       .map((x) => {
-        const resolved = resolveNetwork(x.url)
+        const host = getHostname(x.url)
+        const detected = resolveSocial(host, iconSize)
         const label = getDisplayName(x.platform, x.url)
 
         return {
           key: `${label}-${x.url}`,
-          label: label || resolved.name,
+          label: label || detected.name,
           url: x.url,
-          icon: resolved.icon,
-          bg: resolved.bg,
-          iconColor: resolved.iconColor,
+          icon: detected.icon,
+          color: detected.color,
         }
       })
   }, [items])
@@ -215,35 +169,21 @@ export default function SocialLinksBar({ items }: { items: Item[] }) {
 
   return (
     <div className="flex gap-3 flex-wrap">
-      {networks.map((n) => {
-        const Icon = n.icon
-
-        return (
-          <motion.a
-            key={n.key}
-            href={n.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={n.label}
-            title={n.label}
-            className="h-12 w-12 rounded-full border border-white/10 flex items-center justify-center overflow-hidden shadow-md transition-all duration-300"
-            style={{
-              backgroundColor: n.bg,
-              boxShadow: `0 8px 22px ${n.bg}40`,
-            }}
-            whileHover={{ y: -4, scale: 1.06 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="absolute inset-0 bg-white/0 hover:bg-white/10 transition-all duration-300 rounded-full" />
-            <span className="relative z-10 flex items-center justify-center">
-              <Icon
-                className="text-[18px]"
-                style={{ color: n.iconColor }}
-              />
-            </span>
-          </motion.a>
-        )
-      })}
+      {networks.map((network) => (
+        <motion.a
+          key={network.key}
+          href={network.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${containerSize} ${network.color} rounded-full transition-all duration-300 shadow-sm hover:shadow-lg`}
+          whileHover={{ y: -5 }}
+          whileTap={{ scale: 0.95 }}
+          aria-label={`Visit ${network.label}`}
+          title={network.label}
+        >
+          {network.icon}
+        </motion.a>
+      ))}
     </div>
   )
 }
