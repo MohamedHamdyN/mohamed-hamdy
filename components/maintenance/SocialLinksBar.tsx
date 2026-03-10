@@ -1,21 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
-import { getSocialLinks } from "@/app/actions/cms"
 
-type SocialRow = {
-  id: number
-  platform: string
-  url: string
-  enabled: boolean
-  order: number
-}
-
-interface SocialLinksProps {
-  size?: "sm" | "md" | "lg"
-  centered?: boolean
-}
+type Item = { platform: string; url: string }
 
 function getHostname(url: string): string {
   try {
@@ -51,46 +39,12 @@ function stringToColor(input: string): string {
   return `hsl(${hue} 70% 55%)`
 }
 
-export default function SocialLinks({ size = "md", centered = false }: SocialLinksProps) {
-  const [items, setItems] = useState<SocialRow[]>([])
-  const [loaded, setLoaded] = useState(false)
+export default function SocialLinksBar({ items }: { items: Item[] }) {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
-
-  useEffect(() => {
-    let mounted = true
-
-      ; (async () => {
-        try {
-          const rows = (await getSocialLinks()) as SocialRow[]
-          if (!mounted) return
-          setItems(Array.isArray(rows) ? rows : [])
-        } catch (error) {
-          console.error("Failed to load social links:", error)
-          if (mounted) setItems([])
-        } finally {
-          if (mounted) setLoaded(true)
-        }
-      })()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  useEffect(() => {
-    console.log("SOCIAL LINKS FROM DB:", items)
-  }, [items])
-
-  const iconBox =
-    size === "sm" ? "h-9 w-9" : size === "lg" ? "h-14 w-14" : "h-11 w-11"
-
-  const iconInner =
-    size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5"
 
   const networks = useMemo(() => {
     return (items || [])
-      .filter((x) => x && x.enabled !== false && x.url && String(x.url).trim())
-      .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0))
+      .filter((x) => x && x.url && String(x.url).trim())
       .map((x) => {
         const host = getHostname(x.url)
         const label = getDisplayName(x.platform, x.url)
@@ -98,10 +52,9 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
         const color = stringToColor(host || label)
 
         return {
-          key: `${x.id}-${host || label}`,
+          key: `${label}-${x.url}`,
           label,
           url: x.url,
-          host,
           favicon,
           color,
           letter: (label[0] || "L").toUpperCase(),
@@ -109,11 +62,10 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
       })
   }, [items])
 
-  if (!loaded) return null
-  if (networks.length === 0) return null
+  if (!networks.length) return null
 
   return (
-    <div className={`flex gap-3 flex-wrap ${centered ? "justify-center" : ""}`}>
+    <div className="flex gap-3 flex-wrap">
       {networks.map((n) => {
         const showFallback = imageErrors[n.key] || !n.favicon
 
@@ -123,15 +75,15 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
             href={n.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${iconBox} rounded-full border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center shadow-sm transition-all duration-300 hover:border-white/20 hover:bg-white/10 overflow-hidden`}
-            whileHover={{ y: -5, scale: 1.04 }}
+            className="h-12 w-12 rounded-full border border-border bg-card hover:border-primary/30 transition flex items-center justify-center overflow-hidden"
+            whileHover={{ y: -4 }}
             whileTap={{ scale: 0.96 }}
-            aria-label={`Visit ${n.label}`}
+            aria-label={n.label}
             title={n.label}
           >
             {showFallback ? (
               <div
-                className="w-full h-full flex items-center justify-center font-bold text-white"
+                className="w-full h-full flex items-center justify-center text-white font-bold"
                 style={{ backgroundColor: n.color }}
               >
                 {n.letter}
@@ -140,7 +92,7 @@ export default function SocialLinks({ size = "md", centered = false }: SocialLin
               <img
                 src={n.favicon}
                 alt={n.label}
-                className={iconInner}
+                className="h-5 w-5"
                 onError={() =>
                   setImageErrors((prev) => ({ ...prev, [n.key]: true }))
                 }
