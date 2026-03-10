@@ -11,7 +11,7 @@
 3. **Database connection testing**: Created an API endpoint at `/api/test-db` to verify database connectivity
 
 4. **Improved UI feedback**: Added database connection status display on the setup page
-
+                
 ### How to debug:
 
 #### Step 1: Check Database Connection
