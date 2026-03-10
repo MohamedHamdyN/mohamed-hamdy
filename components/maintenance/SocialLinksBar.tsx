@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import { motion } from "framer-motion"
 import {
   Linkedin,
@@ -15,17 +15,9 @@ import {
   Globe,
 } from "lucide-react"
 
-type SocialRow = {
-  id: number
+type Item = {
   platform: string
   url: string
-  enabled: boolean
-  order: number
-}
-
-interface SocialLinksProps {
-  size?: "sm" | "md" | "lg"
-  centered?: boolean
 }
 
 function getHostname(url: string): string {
@@ -151,90 +143,33 @@ function resolveSocial(host: string, iconSize: string) {
   }
 }
 
-export default function SocialLinks({
-  size = "md",
-  centered = false,
-}: SocialLinksProps) {
-  const [items, setItems] = useState<SocialRow[]>([])
-  const [loaded, setLoaded] = useState(false)
+export default function SocialLinksBar({ items }: { items: Item[] }) {
+  const iconSize = "h-5 w-5"
+  const containerSize = "p-2.5"
 
-  useEffect(() => {
-    let mounted = true
-
-      ; (async () => {
-        try {
-          const mod = await import("@/app/actions/cms")
-          const rows = (await mod.getSocialLinks()) as SocialRow[]
-
-          if (!mounted) return
-          setItems(Array.isArray(rows) ? rows : [])
-        } catch (error) {
-          console.error("Failed to load social links:", error)
-          if (mounted) setItems([])
-        } finally {
-          if (mounted) setLoaded(true)
-        }
-      })()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  const getSizeClass = () => {
-    switch (size) {
-      case "sm":
-        return "h-4 w-4"
-      case "md":
-        return "h-5 w-5"
-      case "lg":
-        return "h-6 w-6"
-      default:
-        return "h-5 w-5"
-    }
-  }
-
-  const getContainerClass = () => {
-    switch (size) {
-      case "sm":
-        return "p-2"
-      case "md":
-        return "p-2.5"
-      case "lg":
-        return "p-3"
-      default:
-        return "p-2.5"
-    }
-  }
-
-  const iconSize = getSizeClass()
-  const containerSize = getContainerClass()
-
-  const socialNetworks = useMemo(() => {
+  const networks = useMemo(() => {
     return (items || [])
-      .filter((x) => x && x.enabled !== false && x.url && String(x.url).trim())
-      .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0))
+      .filter((x) => x && x.url && String(x.url).trim())
       .map((x) => {
         const host = getHostname(x.url)
         const detected = resolveSocial(host, iconSize)
         const label = getDisplayName(x.platform, x.url)
 
         return {
-          key: `${x.id}-${host || x.url}`,
-          url: x.url,
+          key: `${label}-${x.url}`,
           label: label || detected.name,
+          url: x.url,
           icon: detected.icon,
           color: detected.color,
         }
       })
-  }, [items, iconSize])
+  }, [items])
 
-  if (!loaded) return null
-  if (socialNetworks.length === 0) return null
+  if (!networks.length) return null
 
   return (
-    <div className={`flex gap-3 flex-wrap ${centered ? "justify-center" : ""}`}>
-      {socialNetworks.map((network) => (
+    <div className="flex gap-3 flex-wrap">
+      {networks.map((network) => (
         <motion.a
           key={network.key}
           href={network.url}

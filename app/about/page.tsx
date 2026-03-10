@@ -57,7 +57,7 @@ export default async function AboutPage() {
 
       <AboutHero
         profile={profile}
-        longBio={longBio ?? ""}
+        longBio={longBio}
         stats={{
           years: aboutStats?.years_of_experience ?? 0,
           completedProjects: projects.length,

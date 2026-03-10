@@ -43,10 +43,7 @@ export default function Header() {
 
   // ✅ normalize profile fields (DB snake_case vs UI camelCase)
   const name = profile?.name ?? (profile as any)?.full_name ?? "Mohamed Hamdy"
-  const logo =
-    profile?.avatar_url?.trim() ||
-    profile?.hero_image_url?.trim() ||
-    "/placeholder-logo.svg"
+  const logo = profile?.logo
   const resumeUrl =
     (profile as any)?.resumeUrl ??
     (profile as any)?.resume_url ??
