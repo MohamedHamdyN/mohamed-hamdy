@@ -67,30 +67,73 @@ export default function Clients() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {clients.map((client) => (
-            <motion.a
-              key={client.id}
-              href={client.website || '#'}
-              target={client.website ? '_blank' : undefined}
-              rel={client.website ? 'noopener noreferrer' : undefined}
-              className="group flex flex-col items-center justify-center p-6 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-card/80 transition-all duration-300 cursor-pointer"
-              whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)" }}
-            >
-              <div className="relative w-20 h-20 mb-4 overflow-hidden rounded-lg">
-                <Image
-                  src={client.logo_url || '/placeholder.svg'}
-                  alt={client.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  unoptimized
-                />
-              </div>
-              <h3 className="text-center font-semibold text-sm sm:text-base group-hover:text-primary transition-colors">
-                {client.name}
-              </h3>
-            </motion.a>
-          ))}
+        <style>{`
+          @keyframes scroll-infinite {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+          
+          .clients-track {
+            display: flex;
+            gap: 1rem;
+            animation: scroll-infinite 40s linear infinite;
+          }
+          
+          .clients-track:hover {
+            animation-play-state: paused;
+          }
+          
+          .client-item {
+            flex: 0 0 calc(25% - 0.75rem);
+            min-width: 200px;
+          }
+          
+          @media (max-width: 1024px) {
+            .client-item {
+              flex: 0 0 calc(33.333% - 0.67rem);
+            }
+          }
+          
+          @media (max-width: 640px) {
+            .client-item {
+              flex: 0 0 calc(50% - 0.5rem);
+            }
+          }
+        `}</style>
+        
+        <div className="overflow-hidden rounded-lg">
+          <motion.div 
+            className="clients-track"
+            style={{ opacity, y }}
+          >
+            {[...clients, ...clients, ...clients].map((client, index) => (
+              <motion.a
+                key={`${client.id}-${index}`}
+                href={client.website || '#'}
+                target={client.website ? '_blank' : undefined}
+                rel={client.website ? 'noopener noreferrer' : undefined}
+                className="client-item group flex flex-col items-center justify-center p-6 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-card/80 transition-all duration-300 cursor-pointer"
+                whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)" }}
+              >
+                <div className="relative w-20 h-20 mb-4 overflow-hidden rounded-lg">
+                  <Image
+                    src={client.logo_url || '/placeholder.svg'}
+                    alt={client.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    unoptimized
+                  />
+                </div>
+                <h3 className="text-center font-semibold text-sm sm:text-base group-hover:text-primary transition-colors">
+                  {client.name}
+                </h3>
+              </motion.a>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>

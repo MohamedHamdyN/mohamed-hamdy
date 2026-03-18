@@ -1,18 +1,37 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { paymentMethods, freelancePlatforms } from "@/admin/services"
+import { paymentMethods } from "@/admin/services"
 import { toggleSettings } from "@/admin/toggle"
 import { useTranslations } from "@/hooks/useTranslations"
 import { useProfileSafe } from "@/context/useProfileSafe"
+import { getFreelancePlatforms } from "@/app/actions/cms"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import * as LucideIcons from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function PaymentMethods() {
   const t = useTranslations()
   const profile = useProfileSafe() // ✅ داخل component
+  const [freelancePlatforms, setFreelancePlatforms] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadPlatforms() {
+      try {
+        const platforms = await getFreelancePlatforms()
+        setFreelancePlatforms(platforms)
+      } catch (error) {
+        console.error('Error loading freelance platforms:', error)
+        setFreelancePlatforms([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadPlatforms()
+  }, [])
 
   const defaultPlatformLogo =
     (profile as any)?.defaultPlatformLogo ??
@@ -150,7 +169,12 @@ function PlatformCard({ platform, index, defaultLogo }: any) {
       </div>
 
       <span className="text-sm font-medium mb-2">{platform.name}</span>
-      <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(platform.profileUrl, "_blank")}>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="mt-2" 
+        onClick={() => window.open(platform.profile_url || platform.profileUrl, "_blank")}
+      >
         View Profile
       </Button>
     </motion.div>

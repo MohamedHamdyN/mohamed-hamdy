@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getProjects, getProfile } from '@/app/actions/cms'
+import { getProjects, getProfile, getProjectCategories } from '@/app/actions/cms'
 import ProjectCard from './ProjectCard'
 import ProjectModal from './ProjectModal'
 import { useTranslations } from '@/hooks/useTranslations'
@@ -14,18 +14,11 @@ import Image from 'next/image'
 import { useTheme } from 'next-themes'
 import { Project, Profile } from '@/lib/db'
 
-const CATEGORIES: Record<number, string> = {
-  1: 'Data Visualization',
-  2: 'Machine Learning',
-  3: 'Business Intelligence',
-  4: 'Statistical Analysis',
-  5: 'Data Engineering',
-}
-
 export default function ProjectsGrid() {
   const t = useTranslations()
   const [projects, setProjects] = useState<Project[]>([])
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [categories, setCategories] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedProject, setSelectedProject] = useState<any>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | number>('all')
@@ -39,9 +32,10 @@ export default function ProjectsGrid() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [projectsData, profileData] = await Promise.all([
+        const [projectsData, profileData, categoriesData] = await Promise.all([
           getProjects(false),
           getProfile(),
+          getProjectCategories(),
         ])
 
         // ✅ Map DB shape -> UI shape expected by ProjectCard/ProjectModal
@@ -60,6 +54,7 @@ export default function ProjectsGrid() {
 
         setProjects(mapped as any)
         setProfile(profileData)
+        setCategories(categoriesData)
       } catch (error) {
         console.error("Error loading projects:", error)
         setProjects([])
@@ -71,7 +66,7 @@ export default function ProjectsGrid() {
     loadData()
   }, [])
 
-  // Contar proyectos por categoría
+  // Count projects by category
   const projectCounts = {
     all: projects.length,
   } as Record<string | number, number>
@@ -80,14 +75,14 @@ export default function ProjectsGrid() {
     projectCounts[project.category_id] = (projectCounts[project.category_id] || 0) + 1
   })
 
-  // Get unique categories with counts
-  const categories = [
+  // Build categories list from database
+  const categoryFilters = [
     { id: 'all', label: t?.projects?.filters?.all || 'All', count: projectCounts.all },
-    ...Object.entries(CATEGORIES).map(([id, name]) => {
+    ...categories.map((cat) => {
       return {
-        id: Number(id),
-        label: name,
-        count: projectCounts[Number(id)] || 0,
+        id: cat.id,
+        label: cat.name,
+        count: projectCounts[cat.id] || 0,
       }
     }),
   ]
@@ -228,7 +223,7 @@ export default function ProjectsGrid() {
               <div
                 className={`flex flex-wrap gap-2 py-4 rounded-xl p-4 ${theme === "dark" ? "bg-card" : "bg-gray-50"}`}
               >
-                {categories.map((category) => (
+                {categoryFilters.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "ghost"}
@@ -288,7 +283,7 @@ export default function ProjectsGrid() {
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-xl font-bold">{project.title}</h3>
                       <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full capitalize">
-                        {CATEGORIES[project.category_id]}
+                        {categories.find(c => c.id === project.category_id)?.name || 'Other'}
                       </span>
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground mb-3">

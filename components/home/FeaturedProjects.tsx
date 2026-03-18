@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getProjects } from '@/app/actions/cms'
+import { getProjects, getProjectCategories } from '@/app/actions/cms'
 import { useTranslations } from '@/hooks/useTranslations'
 import { useLanguage } from '@/context/language-context'
 import Link from 'next/link'
@@ -13,18 +13,11 @@ import { ArrowRight } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Project } from '@/lib/db'
 
-const CATEGORIES: Record<number, string> = {
-  1: 'Data Visualization',
-  2: 'Machine Learning',
-  3: 'Business Intelligence',
-  4: 'Statistical Analysis',
-  5: 'Data Engineering',
-}
-
 export default function FeaturedProjects() {
   const t = useTranslations()
   const { isRTL } = useLanguage()
   const [projects, setProjects] = useState<Project[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<number | 'all'>('all')
   const [hoveredFilter, setHoveredFilter] = useState<string | null>(null)
@@ -35,10 +28,14 @@ export default function FeaturedProjects() {
   useEffect(() => {
     async function loadProjects() {
       try {
-        const data = await getProjects(false) // Exclude drafts
+        const [data, categoriesData] = await Promise.all([
+          getProjects(false),
+          getProjectCategories(),
+        ])
         // Filter featured projects
         const featured = data.filter((p) => p.featured && !p.draft)
         setProjects(featured)
+        setCategories(categoriesData)
       } catch (error) {
         console.error('Error loading projects:', error)
         setProjects([])
@@ -50,7 +47,7 @@ export default function FeaturedProjects() {
     loadProjects()
   }, [])
 
-  // Contar proyectos por categoría
+  // Count projects by category
   const projectCounts = {
     all: projects.filter((p) => p.featured).length,
   } as Record<string | number, number>
@@ -61,14 +58,14 @@ export default function FeaturedProjects() {
       projectCounts[project.category_id] = (projectCounts[project.category_id] || 0) + 1
     })
 
-  // Create categories for the filter with counts
-  const categories = [
+  // Create categories for the filter with counts from database
+  const categoryFilters = [
     { id: 'all', label: t?.projects?.filters?.all || 'All', count: projectCounts.all },
-    ...Object.entries(CATEGORIES).map(([id, name]) => {
+    ...categories.map((cat) => {
       return {
-        id,
-        label: name,
-        count: projectCounts[Number(id)] || 0,
+        id: cat.id,
+        label: cat.name,
+        count: projectCounts[cat.id] || 0,
       }
     }),
   ]
@@ -133,15 +130,15 @@ export default function FeaturedProjects() {
             <div
               className={`p-2 rounded-full flex flex-wrap justify-center ${theme === "dark" ? "bg-[#0a0d16]" : "bg-gray-100"}`}
             >
-              {categories
+              {categoryFilters
                 .filter((cat) => cat.count > 0)
                 .map((category) => {
-                  const isActive = filter === (category.id === 'all' ? 'all' : Number.parseInt(category.id as string))
+                  const isActive = filter === (category.id === 'all' ? 'all' : Number.parseInt(String(category.id)))
 
                   return (
                     <motion.button
                       key={category.id}
-                      onClick={() => setFilter(category.id === 'all' ? 'all' : Number.parseInt(category.id as string))}
+                      onClick={() => setFilter(category.id === 'all' ? 'all' : Number.parseInt(String(category.id)))}
                       className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                         isActive
                           ? "bg-primary text-white"

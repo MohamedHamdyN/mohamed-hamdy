@@ -24,9 +24,18 @@ export default function ContactInfo() {
   const phone = (profile as any)?.phone ?? (profile as any)?.phone_number ?? ""
   const calendlyUrl = (profile as any)?.calendlyUrl ?? (profile as any)?.calendly_url ?? ""
 
-  const showEmail = !!email && email !== "0"
-  const showPhone = !!phone && phone !== "0"
-  const showCalendly = !!calendlyUrl && toggleSettings.calendly_feature
+  // Helper function to check if value is valid (not "0", "00", or empty)
+  const isValidField = (value: any): boolean => {
+    if (!value) return false
+    const str = String(value).trim()
+    if (!str) return false
+    if (str === "0" || str === "00") return false
+    return true
+  }
+
+  const showEmail = isValidField(email)
+  const showPhone = isValidField(phone)
+  const showCalendly = isValidField(calendlyUrl) && toggleSettings.calendly_feature
 
   // لو مفيش أي بيانات خالص
   if (!showEmail && !showPhone && !showCalendly) {

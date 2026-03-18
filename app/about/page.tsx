@@ -4,7 +4,6 @@ import PageHero from "@/components/shared/PageHero"
 import AboutHero from "@/components/about/AboutHero"
 import AboutResume from "@/components/about/AboutResume"
 import Certifications from "@/components/about/Certifications"
-import AboutFeatures from "@/components/about/AboutFeatures"
 import SocialLinks from "@/components/shared/SocialLinks"
 import ContactCTA from "@/components/shared/ContactCTA"
 import { User } from "lucide-react"
@@ -74,8 +73,6 @@ export default async function AboutPage() {
       />
 
       <Certifications items={certifications as any} />
-
-      <AboutFeatures />
 
       <div className="container mx-auto px-4 py-12 text-center">
         <h2 className="text-2xl font-bold mb-6">Connect With Me</h2>
