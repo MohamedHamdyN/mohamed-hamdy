@@ -5,7 +5,6 @@ import { useTranslations } from "@/hooks/useTranslations"
 import { FileText, Calendar, Briefcase, GraduationCap, FileDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import type { Skill } from "@/lib/db"
 
 type Experience = {
   id: number
@@ -34,18 +33,15 @@ export default function AboutResume({
   resumeUrl,
   experiences,
   educations,
-  skills,
 }: {
   resumeUrl: string
   experiences: Experience[]
   educations: Education[]
-  skills: Skill[]
 }) {
   const t = useTranslations()
 
   const exp = sortByOrder((experiences ?? []).filter((x) => x.enabled !== false))
   const edu = sortByOrder((educations ?? []).filter((x) => x.enabled !== false))
-  const sk = sortByOrder((skills ?? []).filter((s) => (s as any).enabled !== false))
 
   return (
     <section className="py-16 bg-gradient-to-b from-background/50 to-background relative overflow-hidden">
@@ -139,61 +135,41 @@ export default function AboutResume({
             ))}
           </motion.div>
 
-          {/* Education + Skills */}
-          <div className="space-y-12">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="space-y-8"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <GraduationCap className="h-5 w-5 text-secondary" />
+          {/* Education */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="space-y-8"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <GraduationCap className="h-5 w-5 text-blue-500" />
+              </div>
+              <h3 className="text-2xl font-bold">{t.resume.education}</h3>
+            </div>
+
+            {edu.map((x, i) => (
+              <motion.div
+                key={x.id}
+                className="border-l-2 border-blue-500/30 pl-4 ml-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
+              >
+                <div className="relative">
+                  <div className="absolute w-3 h-3 bg-blue-500 rounded-full -left-[1.4rem] top-1.5"></div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="h-4 w-4 text-blue-500" />
+                    <span className="text-blue-500 font-medium">{x.year}</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white">{x.degree}</h4>
+                  <p className="text-blue-300 font-semibold mt-1">{x.institution}</p>
+                  <p className="text-muted-foreground mt-2">{x.details}</p>
                 </div>
-                <h3 className="text-2xl font-bold">{t.resume.education}</h3>
-              </div>
-
-              {edu.map((x, i) => (
-                <motion.div
-                  key={x.id}
-                  className="border-l-2 border-secondary/30 pl-4 ml-2"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 + i * 0.1 }}
-                >
-                  <div className="relative">
-                    <div className="absolute w-3 h-3 bg-secondary rounded-full -left-[1.4rem] top-1.5"></div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="h-4 w-4 text-secondary" />
-                      <span className="text-secondary font-medium">{x.year}</span>
-                    </div>
-                    <h4 className="text-xl font-bold">{x.degree}</h4>
-                    <p className="text-muted-foreground mt-1">{x.institution}</p>
-                    <p className="text-muted-foreground mt-2">{x.details}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <h3 className="text-2xl font-bold mb-6 text-primary">{t.skills.title}</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {sk.map((skill) => (
-                  <div key={skill.id} className="flex items-center gap-2">
-                    <div className={`${skill.color ?? "text-primary"} rounded-full p-1`}>
-                      <div className="w-2 h-2 bg-current rounded-full"></div>
-                    </div>
-                    <span>{skill.name}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>

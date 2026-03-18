@@ -154,6 +154,27 @@ export default function AdminDashboard() {
         icon: Settings,
         accent: 'group-hover:text-teal-400',
       },
+      {
+        href: '/admin/settings-toggles',
+        title: 'Feature Toggles',
+        desc: 'Enable/disable sections and pages',
+        icon: Shield,
+        accent: 'group-hover:text-red-400',
+      },
+      {
+        href: '/admin/categories',
+        title: 'Project Categories',
+        desc: 'Manage project categories and order',
+        icon: FolderKanban,
+        accent: 'group-hover:text-blue-400',
+      },
+      {
+        href: '/admin/freelance-platforms',
+        title: 'Freelance Platforms',
+        desc: 'Edit freelance platform profiles',
+        icon: Users,
+        accent: 'group-hover:text-yellow-400',
+      },
     ],
     []
   )

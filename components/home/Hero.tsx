@@ -288,14 +288,22 @@ export default function Hero() {
 
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:flex lg:items-center lg:gap-x-10 lg:px-8 lg:py-40">
         <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0">
-          <motion.p
-            className="text-base font-semibold leading-7 text-primary"
+          <motion.div
+            className="flex items-center gap-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: easeOut }}
           >
-            {t?.hero?.greeting || "Hello, I'm"}
-          </motion.p>
+            <p className="text-base font-semibold leading-7 text-primary">
+              {t?.hero?.greeting || "Hello, I'm"}
+            </p>
+            {profile?.open_to_work && (
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${profile.open_to_work ? "bg-green-400 animate-pulse" : "bg-red-400 animate-pulse"} shadow-lg ${profile.open_to_work ? "shadow-green-400/50" : "shadow-red-400/50"}`} aria-label="Open to work status"></div>
+                <span className="text-sm text-green-400 font-medium">Open to Work</span>
+              </div>
+            )}
+          </motion.div>
 
           <div className="overflow-hidden">
             <motion.h1
