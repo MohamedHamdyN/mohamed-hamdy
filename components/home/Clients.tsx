@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { getClients } from '@/app/actions/cms'
 import { useTranslations } from '@/hooks/useTranslations'
 import { useLanguage } from '@/context/language-context'
@@ -11,17 +11,8 @@ import { Client } from '@/lib/db'
 export default function Clients() {
   const t = useTranslations()
   const { isRTL } = useLanguage()
-  const containerRef = useRef<HTMLDivElement>(null)
   const [clients, setClients] = useState<Client[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'end start'],
-  })
-
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
-  const y = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, 100])
 
   useEffect(() => {
     async function loadClients() {
@@ -43,7 +34,7 @@ export default function Clients() {
 
   if (isLoading) {
     return (
-      <section ref={containerRef} className="py-20 bg-background overflow-hidden">
+      <section className="py-20 bg-background overflow-hidden">
         <div className="container mx-auto px-4 text-center text-slate-400">Loading clients...</div>
       </section>
     )
@@ -51,18 +42,25 @@ export default function Clients() {
 
   if (clients.length === 0) {
     return (
-      <section ref={containerRef} className="py-20 bg-background overflow-hidden">
+      <section className="py-20 bg-background overflow-hidden">
         <div className="container mx-auto px-4 text-center text-slate-400">No clients to display</div>
       </section>
     )
   }
 
   return (
-    <section ref={containerRef} className="py-20 bg-background overflow-hidden">
+    <section className="py-20 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
-        <motion.div className="text-center mb-16" style={{ opacity, y }}>
-          <h2 className="text-3xl font-bold mb-4">{t?.clients?.title || "Trusted By"}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+            {t?.clients?.title || "Trusted By"}
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             {t?.clients?.description || "Companies and organizations I've worked with"}
           </p>
         </motion.div>
@@ -106,34 +104,32 @@ export default function Clients() {
         `}</style>
         
         <div className="overflow-hidden rounded-lg">
-          <motion.div 
+          <div 
             className="clients-track"
-            style={{ opacity, y }}
           >
             {[...clients, ...clients, ...clients].map((client, index) => (
-              <motion.a
+              <a
                 key={`${client.id}-${index}`}
                 href={client.website || '#'}
                 target={client.website ? '_blank' : undefined}
                 rel={client.website ? 'noopener noreferrer' : undefined}
-                className="client-item group flex flex-col items-center justify-center p-6 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-card/80 transition-all duration-300 cursor-pointer"
-                whileHover={{ y: -3, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)" }}
+                className="client-item group flex flex-col items-center justify-center p-6 rounded-xl border border-border/40 bg-gradient-to-br from-card/80 to-card hover:border-primary/50 hover:from-card hover:to-card/70 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
               >
-                <div className="relative w-20 h-20 mb-4 overflow-hidden rounded-lg">
+                <div className="relative w-20 h-20 mb-4 overflow-hidden rounded-lg bg-muted/30 flex items-center justify-center">
                   <Image
                     src={client.logo_url || '/placeholder.svg'}
                     alt={client.name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-contain group-hover:scale-110 transition-transform duration-300 p-2"
                     unoptimized
                   />
                 </div>
                 <h3 className="text-center font-semibold text-sm sm:text-base group-hover:text-primary transition-colors">
                   {client.name}
                 </h3>
-              </motion.a>
+              </a>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

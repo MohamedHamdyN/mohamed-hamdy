@@ -48,25 +48,37 @@ export default function Education() {
         </motion.div>
 
         <div className="max-w-4xl mx-auto grid gap-6">
-          {education.map((item, idx) => (
-            <motion.div
-              key={idx}
-              className="bg-card border border-border rounded-xl p-6"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: idx * 0.05 }}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold">{item.title || "Education Item"}</h3>
-                  <p className="text-muted-foreground">{item.institution || ""}</p>
+          {education.map((item, idx) => {
+            const colors = [
+              { border: 'border-blue-500/30', bg: 'bg-gradient-to-br from-blue-500/10 to-blue-600/5', icon: 'bg-blue-500/20', text: 'text-blue-400' },
+              { border: 'border-purple-500/30', bg: 'bg-gradient-to-br from-purple-500/10 to-purple-600/5', icon: 'bg-purple-500/20', text: 'text-purple-400' },
+              { border: 'border-green-500/30', bg: 'bg-gradient-to-br from-green-500/10 to-green-600/5', icon: 'bg-green-500/20', text: 'text-green-400' },
+              { border: 'border-orange-500/30', bg: 'bg-gradient-to-br from-orange-500/10 to-orange-600/5', icon: 'bg-orange-500/20', text: 'text-orange-400' },
+            ]
+            const color = colors[idx % colors.length]
+            
+            return (
+              <motion.div
+                key={idx}
+                className={`border rounded-xl p-6 overflow-hidden relative ${color.border} ${color.bg} hover:border-opacity-60 transition-all duration-300 group`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.05 }}
+              >
+                <div className="relative z-10 flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-foreground">{item.title || "Education Item"}</h3>
+                    <p className={color.text}>{item.institution || ""}</p>
+                  </div>
+                  {item.year && <span className={`text-sm font-medium whitespace-nowrap ${color.text}`}>{item.year}</span>}
                 </div>
-                {item.year && <span className="text-sm font-medium text-primary">{item.year}</span>}
-              </div>
-              {item.description && <p className="mt-4 text-muted-foreground">{item.description}</p>}
-            </motion.div>
-          ))}
+                {item.description && <p className="mt-4 text-muted-foreground">{item.description}</p>}
+                
+                <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full ${color.icon} blur-2xl group-hover:blur-3xl transition-all duration-300`} />
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </section>

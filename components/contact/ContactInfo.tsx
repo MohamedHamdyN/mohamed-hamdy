@@ -34,8 +34,9 @@ export default function ContactInfo() {
   }
 
   const showEmail = isValidField(email)
-  const showPhone = isValidField(phone)
-  const showCalendly = isValidField(calendlyUrl) && toggleSettings.calendly_feature
+  const showPhone = isValidField(phone) && ((profile as any)?.show_phone ?? true)
+  const showCalendly = isValidField(calendlyUrl) && ((profile as any)?.show_calendly ?? true) && toggleSettings.calendly_feature
+  const showLocation = isValidField((profile as any)?.location ?? '') && ((profile as any)?.show_location ?? true)
 
   // لو مفيش أي بيانات خالص
   if (!showEmail && !showPhone && !showCalendly) {

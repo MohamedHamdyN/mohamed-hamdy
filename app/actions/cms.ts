@@ -162,6 +162,11 @@ export async function upsertProfile(data: Partial<Profile>) {
         avatar_url = COALESCE(${data.avatar_url ?? null}, avatar_url),
         og_image_url = COALESCE(${data.og_image_url ?? null}, og_image_url),
 
+        show_location = COALESCE(${(data as any).show_location ?? null}, show_location),
+        show_phone = COALESCE(${(data as any).show_phone ?? null}, show_phone),
+        show_resume = COALESCE(${(data as any).show_resume ?? null}, show_resume),
+        show_calendly = COALESCE(${(data as any).show_calendly ?? null}, show_calendly),
+
         updated_at = NOW()
       WHERE id = ${existing[0].id}
       RETURNING *
@@ -173,6 +178,7 @@ export async function upsertProfile(data: Partial<Profile>) {
         location, open_to_work, email, phone,
         bio, short_bio, long_bio, about_intro,
         resume_url, calendly_url, avatar_url, og_image_url,
+        show_location, show_phone, show_resume, show_calendly,
         updated_at
       )
       VALUES (
@@ -194,6 +200,10 @@ export async function upsertProfile(data: Partial<Profile>) {
         ${data.calendly_url ?? null},
         ${data.avatar_url ?? null},
         ${data.og_image_url ?? null},
+        ${(data as any).show_location ?? true},
+        ${(data as any).show_phone ?? true},
+        ${(data as any).show_resume ?? true},
+        ${(data as any).show_calendly ?? true},
         NOW()
       )
       RETURNING *

@@ -38,6 +38,12 @@ type FormState = {
 
   // seo
   og_image_url: string
+
+  // visibility toggles
+  show_location: boolean
+  show_phone: boolean
+  show_resume: boolean
+  show_calendly: boolean
 }
 
 const emptyForm: FormState = {
@@ -64,6 +70,11 @@ const emptyForm: FormState = {
   bio: '',
 
   og_image_url: '',
+
+  show_location: true,
+  show_phone: true,
+  show_resume: true,
+  show_calendly: true,
 }
 
 export default function AdminProfilePage() {
@@ -123,6 +134,11 @@ export default function AdminProfilePage() {
           bio: (data as any).bio ?? '',
 
           og_image_url: (data as any).og_image_url ?? '',
+
+          show_location: (data as any).show_location ?? true,
+          show_phone: (data as any).show_phone ?? true,
+          show_resume: (data as any).show_resume ?? true,
+          show_calendly: (data as any).show_calendly ?? true,
         })
       } else {
         setFormData(emptyForm)
@@ -175,6 +191,11 @@ export default function AdminProfilePage() {
         bio: formData.bio.trim() || null,
 
         og_image_url: formData.og_image_url.trim() || null,
+
+        show_location: formData.show_location,
+        show_phone: formData.show_phone,
+        show_resume: formData.show_resume,
+        show_calendly: formData.show_calendly,
       } as Partial<Profile>)
 
       if ((result as any)?.error) {
@@ -497,6 +518,65 @@ export default function AdminProfilePage() {
                       className="bg-slate-900 border-slate-600 text-white"
                       placeholder="https://..."
                     />
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-700 my-6" />
+
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-200 mb-4">Field Visibility</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="show_location"
+                        checked={formData.show_location}
+                        onChange={(e) => setField('show_location', e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-600"
+                      />
+                      <Label htmlFor="show_location" className="text-slate-300 cursor-pointer">
+                        Show Location
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="show_phone"
+                        checked={formData.show_phone}
+                        onChange={(e) => setField('show_phone', e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-600"
+                      />
+                      <Label htmlFor="show_phone" className="text-slate-300 cursor-pointer">
+                        Show Phone
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="show_resume"
+                        checked={formData.show_resume}
+                        onChange={(e) => setField('show_resume', e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-600"
+                      />
+                      <Label htmlFor="show_resume" className="text-slate-300 cursor-pointer">
+                        Show Resume URL
+                      </Label>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="show_calendly"
+                        checked={formData.show_calendly}
+                        onChange={(e) => setField('show_calendly', e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-600"
+                      />
+                      <Label htmlFor="show_calendly" className="text-slate-300 cursor-pointer">
+                        Show Calendly URL
+                      </Label>
+                    </div>
                   </div>
                 </div>
               </section>
