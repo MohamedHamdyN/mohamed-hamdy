@@ -25,6 +25,14 @@ type Education = {
   order?: number
 }
 
+type Skill = {
+  id: number
+  name: string
+  color?: string
+  enabled?: boolean
+  order?: number
+}
+
 function sortByOrder<T extends { order?: number; id: number }>(items: T[]) {
   return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
 }
@@ -33,10 +41,12 @@ export default function AboutResume({
   resumeUrl,
   experiences,
   educations,
+  skills,
 }: {
   resumeUrl: string
   experiences: Experience[]
   educations: Education[]
+  skills: Skill[]
 }) {
   const t = useTranslations()
 
@@ -171,6 +181,49 @@ export default function AboutResume({
             ))}
           </motion.div>
         </div>
+
+        {/* My Skills Section */}
+        {skills && skills.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-20 pt-12 border-t border-border/40"
+          >
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-3">{t?.skills?.title || "My Skills"}</h2>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+              {sortByOrder(skills.filter((s) => s.enabled !== false)).map((skill, idx) => (
+                <motion.div
+                  key={skill.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.6 + idx * 0.05 }}
+                  className="group"
+                >
+                  <div
+                    className={`p-4 rounded-lg text-center transition-all duration-300 hover:scale-105 cursor-default`}
+                    style={{
+                      backgroundColor: skill.color ? `${skill.color}15` : undefined,
+                      borderLeft: `3px solid ${skill.color || '#3b82f6'}`,
+                    }}
+                  >
+                    <span
+                      className="font-semibold text-sm md:text-base"
+                      style={{
+                        color: skill.color || '#3b82f6',
+                      }}
+                    >
+                      {skill.name}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
     </section>
   )

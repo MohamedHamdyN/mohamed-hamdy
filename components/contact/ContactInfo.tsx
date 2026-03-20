@@ -35,11 +35,12 @@ export default function ContactInfo() {
 
   const showEmail = isValidField(email)
   const showPhone = isValidField(phone) && ((profile as any)?.show_phone ?? true)
+  const showResume = isValidField((profile as any)?.resume_url ?? '') && ((profile as any)?.show_resume ?? true)
   const showCalendly = isValidField(calendlyUrl) && ((profile as any)?.show_calendly ?? true) && toggleSettings.calendly_feature
   const showLocation = isValidField((profile as any)?.location ?? '') && ((profile as any)?.show_location ?? true)
 
   // لو مفيش أي بيانات خالص
-  if (!showEmail && !showPhone && !showCalendly) {
+  if (!showEmail && !showPhone && !showCalendly && !showResume) {
     return (
       <div className="bg-card p-8 rounded-xl border border-border shadow-lg">
         <p className="text-muted-foreground">No contact information available.</p>
@@ -120,6 +121,30 @@ export default function ContactInfo() {
           </motion.a>
         )}
 
+        {showResume && (
+          <motion.a
+            href={(profile as any)?.resume_url || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative overflow-hidden rounded-2xl border border-border bg-card p-8 hover:border-primary/50 transition-all duration-300"
+            whileHover={{ y: -4, boxShadow: "0 20px 40px -10px rgba(59, 130, 246, 0.15)" }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative">
+              <div className="p-4 rounded-xl bg-primary/10 group-hover:bg-primary/20 w-fit mb-4 transition-colors">
+                <ExternalLink className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Resume</h3>
+              <p className="text-muted-foreground text-sm">
+                {t?.contact?.viewResume || "Download my resume"}
+              </p>
+            </div>
+          </motion.a>
+        )}
+
         {showCalendly && (
           <motion.button
             onClick={() => window.open(calendlyUrl, "_blank", "noopener noreferrer")}
@@ -127,7 +152,7 @@ export default function ContactInfo() {
             whileHover={{ y: -4, boxShadow: "0 20px 40px -10px rgba(59, 130, 246, 0.15)" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative">

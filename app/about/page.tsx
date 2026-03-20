@@ -69,7 +69,7 @@ export default async function AboutPage() {
         resumeUrl={profile?.resume_url ?? ""}
         experiences={experiences as any}
         educations={educations as any}
-        skills={skills}
+        skills={skills as any}
       />
 
       <Certifications items={certifications as any} />
