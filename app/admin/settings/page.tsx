@@ -7,7 +7,6 @@ import { updateCurrentAdminCredentials } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import SiteToggles from './toggles'
 
 export default function AdminSettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -250,12 +249,6 @@ export default function AdminSettingsPage() {
                   {isSavingSettings ? 'Saving...' : 'Save Site Settings'}
                 </Button>
               </form>
-            </div>
-
-            {/* ============= Site Toggles ============= */}
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-8">
-              <h2 className="text-xl font-bold text-white mb-6">Site Features</h2>
-              <SiteToggles />
             </div>
 
             {/* ============= Admin Credentials ============= */}
