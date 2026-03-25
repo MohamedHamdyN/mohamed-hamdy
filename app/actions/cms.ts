@@ -130,92 +130,157 @@ export async function getProfile(): Promise<Profile | null> {
 }
 
 export async function upsertProfile(data: Partial<Profile>) {
-  await requireAdmin()
+  try {
+    await requireAdmin()
 
-  const existing = await db.query`SELECT id FROM profile ORDER BY id ASC LIMIT 1`
+    const existing = await db.query`SELECT id FROM profile ORDER BY id ASC LIMIT 1`
 
-  let result: any[]
-  if (existing.length > 0) {
-    result = await db.query`
-      UPDATE profile
-      SET
-        name = COALESCE(${data.name ?? null}, name),
-        title = COALESCE(${data.title ?? null}, title),
-        short_title = COALESCE(${data.short_title ?? null}, short_title),
+    let result: any[]
+    if (existing.length > 0) {
+      // Build dynamic UPDATE query - only update fields that are explicitly provided
+      const updates: string[] = []
+      const values: any[] = []
 
-        hero_description = COALESCE(${data.hero_description ?? null}, hero_description),
-        hero_image_type = COALESCE(${data.hero_image_type ?? null}, hero_image_type),
-        hero_image_url = COALESCE(${data.hero_image_url ?? null}, hero_image_url),
+      if (data.name !== undefined) {
+        updates.push(`name = $${updates.length + 1}`)
+        values.push(data.name)
+      }
+      if (data.title !== undefined) {
+        updates.push(`title = $${updates.length + 1}`)
+        values.push(data.title)
+      }
+      if (data.short_title !== undefined) {
+        updates.push(`short_title = $${updates.length + 1}`)
+        values.push(data.short_title)
+      }
+      if (data.hero_description !== undefined) {
+        updates.push(`hero_description = $${updates.length + 1}`)
+        values.push(data.hero_description)
+      }
+      if (data.hero_image_type !== undefined) {
+        updates.push(`hero_image_type = $${updates.length + 1}`)
+        values.push(data.hero_image_type)
+      }
+      if (data.hero_image_url !== undefined) {
+        updates.push(`hero_image_url = $${updates.length + 1}`)
+        values.push(data.hero_image_url)
+      }
+      if (data.location !== undefined) {
+        updates.push(`location = $${updates.length + 1}`)
+        values.push(data.location)
+      }
+      if (data.open_to_work !== undefined) {
+        updates.push(`open_to_work = $${updates.length + 1}`)
+        values.push(data.open_to_work)
+      }
+      if (data.email !== undefined) {
+        updates.push(`email = $${updates.length + 1}`)
+        values.push(data.email)
+      }
+      if (data.phone !== undefined) {
+        updates.push(`phone = $${updates.length + 1}`)
+        values.push(data.phone)
+      }
+      if (data.bio !== undefined) {
+        updates.push(`bio = $${updates.length + 1}`)
+        values.push(data.bio)
+      }
+      if (data.short_bio !== undefined) {
+        updates.push(`short_bio = $${updates.length + 1}`)
+        values.push(data.short_bio)
+      }
+      if (data.long_bio !== undefined) {
+        updates.push(`long_bio = $${updates.length + 1}`)
+        values.push(data.long_bio)
+      }
+      if (data.about_intro !== undefined) {
+        updates.push(`about_intro = $${updates.length + 1}`)
+        values.push(data.about_intro)
+      }
+      if (data.resume_url !== undefined) {
+        updates.push(`resume_url = $${updates.length + 1}`)
+        values.push(data.resume_url)
+      }
+      if (data.calendly_url !== undefined) {
+        updates.push(`calendly_url = $${updates.length + 1}`)
+        values.push(data.calendly_url)
+      }
+      if (data.avatar_url !== undefined) {
+        updates.push(`avatar_url = $${updates.length + 1}`)
+        values.push(data.avatar_url)
+      }
+      if (data.og_image_url !== undefined) {
+        updates.push(`og_image_url = $${updates.length + 1}`)
+        values.push(data.og_image_url)
+      }
+      if ((data as any).show_location !== undefined) {
+        updates.push(`show_location = $${updates.length + 1}`)
+        values.push((data as any).show_location)
+      }
+      if ((data as any).show_phone !== undefined) {
+        updates.push(`show_phone = $${updates.length + 1}`)
+        values.push((data as any).show_phone)
+      }
+      if ((data as any).show_resume !== undefined) {
+        updates.push(`show_resume = $${updates.length + 1}`)
+        values.push((data as any).show_resume)
+      }
+      if ((data as any).show_calendly !== undefined) {
+        updates.push(`show_calendly = $${updates.length + 1}`)
+        values.push((data as any).show_calendly)
+      }
 
-        location = COALESCE(${data.location ?? null}, location),
-        open_to_work = COALESCE(${data.open_to_work ?? null}, open_to_work),
-        email = COALESCE(${data.email ?? null}, email),
-        phone = COALESCE(${data.phone ?? null}, phone),
+      updates.push(`updated_at = NOW()`)
 
-        bio = COALESCE(${data.bio ?? null}, bio),
-        short_bio = COALESCE(${data.short_bio ?? null}, short_bio),
-        long_bio = COALESCE(${data.long_bio ?? null}, long_bio),
-        about_intro = COALESCE(${data.about_intro ?? null}, about_intro),
+      const updateQuery = `UPDATE profile SET ${updates.join(', ')} WHERE id = ${existing[0].id} RETURNING *`
+      result = await db.query(updateQuery, values)
+    } else {
+      result = await db.query`
+        INSERT INTO profile (
+          name, title, short_title, hero_description, hero_image_type, hero_image_url,
+          location, open_to_work, email, phone,
+          bio, short_bio, long_bio, about_intro,
+          resume_url, calendly_url, avatar_url, og_image_url,
+          show_location, show_phone, show_resume, show_calendly
+        )
+        VALUES (
+          ${data.name ?? "Portfolio"},
+          ${data.title ?? null},
+          ${data.short_title ?? null},
+          ${data.hero_description ?? null},
+          ${data.hero_image_type ?? "logo"},
+          ${data.hero_image_url ?? null},
+          ${data.location ?? null},
+          ${data.open_to_work ?? false},
+          ${data.email ?? null},
+          ${data.phone ?? null},
+          ${data.bio ?? null},
+          ${data.short_bio ?? null},
+          ${data.long_bio ?? null},
+          ${data.about_intro ?? null},
+          ${data.resume_url ?? null},
+          ${data.calendly_url ?? null},
+          ${data.avatar_url ?? null},
+          ${data.og_image_url ?? null},
+          ${(data as any).show_location ?? true},
+          ${(data as any).show_phone ?? true},
+          ${(data as any).show_resume ?? true},
+          ${(data as any).show_calendly ?? true}
+        )
+        RETURNING *
+      `
+    }
 
-        resume_url = COALESCE(${data.resume_url ?? null}, resume_url),
-        calendly_url = COALESCE(${data.calendly_url ?? null}, calendly_url),
-        avatar_url = COALESCE(${data.avatar_url ?? null}, avatar_url),
-        og_image_url = COALESCE(${data.og_image_url ?? null}, og_image_url),
+    revalidatePath("/")
+    revalidatePath("/about")
+    revalidatePath("/contact")
+    revalidatePath("/admin/profile")
 
-        show_location = COALESCE(${(data as any).show_location ?? null}, show_location),
-        show_phone = COALESCE(${(data as any).show_phone ?? null}, show_phone),
-        show_resume = COALESCE(${(data as any).show_resume ?? null}, show_resume),
-        show_calendly = COALESCE(${(data as any).show_calendly ?? null}, show_calendly),
-
-        updated_at = NOW()
-      WHERE id = ${existing[0].id}
-      RETURNING *
-    `
-  } else {
-    result = await db.query`
-      INSERT INTO profile (
-        name, title, short_title, hero_description, hero_image_type, hero_image_url,
-        location, open_to_work, email, phone,
-        bio, short_bio, long_bio, about_intro,
-        resume_url, calendly_url, avatar_url, og_image_url,
-        show_location, show_phone, show_resume, show_calendly,
-        updated_at
-      )
-      VALUES (
-        ${data.name ?? "Portfolio"},
-        ${data.title ?? null},
-        ${data.short_title ?? null},
-        ${data.hero_description ?? null},
-        ${data.hero_image_type ?? "logo"},
-        ${data.hero_image_url ?? null},
-        ${data.location ?? null},
-        ${data.open_to_work ?? false},
-        ${data.email ?? null},
-        ${data.phone ?? null},
-        ${data.bio ?? null},
-        ${data.short_bio ?? null},
-        ${data.long_bio ?? null},
-        ${data.about_intro ?? null},
-        ${data.resume_url ?? null},
-        ${data.calendly_url ?? null},
-        ${data.avatar_url ?? null},
-        ${data.og_image_url ?? null},
-        ${(data as any).show_location ?? true},
-        ${(data as any).show_phone ?? true},
-        ${(data as any).show_resume ?? true},
-        ${(data as any).show_calendly ?? true},
-        NOW()
-      )
-      RETURNING *
-    `
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('Error in upsertProfile:', error)
+    return { error: error instanceof Error ? error.message : 'Failed to update profile' }
   }
-
-  revalidatePath("/")
-  revalidatePath("/about")
-  revalidatePath("/contact")
-  revalidatePath("/admin/profile")
-
-  return { success: true, data: result[0] }
 }
 
 export async function updateProfile(input: Partial<Profile>) {

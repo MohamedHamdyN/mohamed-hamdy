@@ -39,8 +39,12 @@ export default function ContactInfo() {
   const showCalendly = isValidField(calendlyUrl) && ((profile as any)?.show_calendly ?? true) && toggleSettings.calendly_feature
   const showLocation = isValidField((profile as any)?.location ?? '') && ((profile as any)?.show_location ?? true)
 
+  // If Calendly exists, show it instead of Resume
+  const displayCalendlyCard = showCalendly
+  const displayResumeCard = showResume && !showCalendly
+
   // لو مفيش أي بيانات خالص
-  if (!showEmail && !showPhone && !showCalendly && !showResume) {
+  if (!showEmail && !showPhone && !displayCalendlyCard && !displayResumeCard) {
     return (
       <div className="bg-card p-8 rounded-xl border border-border shadow-lg">
         <p className="text-muted-foreground">No contact information available.</p>
@@ -121,7 +125,7 @@ export default function ContactInfo() {
           </motion.a>
         )}
 
-        {showResume && (
+        {displayResumeCard && (
           <motion.a
             href={(profile as any)?.resume_url || '#'}
             target="_blank"
@@ -145,14 +149,14 @@ export default function ContactInfo() {
           </motion.a>
         )}
 
-        {showCalendly && (
+        {displayCalendlyCard && (
           <motion.button
             onClick={() => window.open(calendlyUrl, "_blank", "noopener noreferrer")}
             className="group relative overflow-hidden rounded-2xl border border-border bg-card p-8 hover:border-primary/50 transition-all duration-300 text-left"
             whileHover={{ y: -4, boxShadow: "0 20px 40px -10px rgba(59, 130, 246, 0.15)" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative">
