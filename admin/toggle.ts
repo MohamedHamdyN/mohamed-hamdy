@@ -73,11 +73,6 @@ export const homeSectionsOrder = {
 
 // Helper function to safely get toggle value
 export async function getSiteToggleValue(key: string): Promise<boolean> {
-  try {
-    const { getSiteToggle } = await import('@/app/actions/cms')
-    return await getSiteToggle(key)
-  } catch (error) {
-    console.warn(`Failed to get toggle for ${key}:`, error)
-    return toggleSettings[key as keyof typeof toggleSettings] ?? true
-  }
+  // Fallback to toggleSettings since database toggles were removed
+  return toggleSettings[key as keyof typeof toggleSettings] ?? true
 }

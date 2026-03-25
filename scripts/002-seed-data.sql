@@ -1,15 +1,34 @@
 -- Seed profile data
-INSERT INTO profiles (name, title, email, bio, avatar_url, resume_url, calendly_url, location, phone)
+INSERT INTO profiles (
+  name, title, short_title, email, phone, location, 
+  bio, short_bio, long_bio, about_intro,
+  avatar_url, resume_url, calendly_url, og_image_url,
+  hero_description, hero_image_type, hero_image_url,
+  open_to_work, show_location, show_phone, show_resume, show_calendly
+)
 VALUES (
   'Mohamed Hamdy',
   'Data Analyst & Financial Accountant',
+  'Financial Data Analyst',
   'muhamedhamdynour@gmail.com',
+  '',
+  'Cairo, Egypt',
   'I''m a dedicated Data Analyst and Financial Accountant with a passion for transforming complex financial data into actionable insights that drive business decisions.',
+  'Data professional with expertise in financial analytics',
+  'I''m a dedicated Data Analyst and Financial Accountant with a passion for transforming complex financial data into actionable insights that drive business decisions. With over 5 years of experience in financial accounting and data analysis.',
+  'Discover how data-driven insights can transform your business decisions',
   'https://i.imgur.com/zziw256.png',
   'https://drive.google.com/file/d/18GP_gCewc2svPC0-F62o_Nm0VwtlcK0k/view?usp=drive_link',
   'https://calendly.com/mohamedhamdynour/30min',
-  '',
-  ''
+  'https://i.imgur.com/zziw256.png',
+  'Data Analyst & Financial Accountant - Transform Your Financial Data Into Actionable Insights',
+  'logo',
+  'https://i.imgur.com/zziw256.png',
+  true,
+  true,
+  true,
+  true,
+  true
 ) ON CONFLICT DO NOTHING;
 
 -- Seed social links
