@@ -2,7 +2,7 @@
 
 import React from "react"
 import { ThemeProvider } from "next-themes"
-import { LanguageProvider } from "@/context/language-context"
+import { useLanguage } from "@/context/language-context"
 import { ProfileProvider } from "@/context/profile-context"
 import type { Profile } from "@/lib/db"
 
@@ -28,20 +28,7 @@ function normalizeProfile(p: any): Profile {
   }
 }
 
-export default function Providers({
-  children,
-  profile,
-}: {
-  children: React.ReactNode
-  profile: Profile | null
-}) {
-  const normalized = profile ? normalizeProfile(profile) : null
-
-  return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <LanguageProvider>
-        <ProfileProvider profile={normalized}>{children}</ProfileProvider>
-      </LanguageProvider>
-    </ThemeProvider>
-  )
+export default function ProvidersWrapper({ children }: { children: React.ReactNode }) {
+  const { isRTL } = useLanguage()
+  return <div className={isRTL ? "font-cairo" : "font-inter"}>{children}</div>
 }

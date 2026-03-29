@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+
 export default function GlobalError({
   error,
   reset,
@@ -7,19 +9,20 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    // ده أهم سطر: هيظهر الخطأ الحقيقي في Console
+    console.error("GLOBAL ERROR:", error)
+    console.error("DIGEST:", error.digest)
+  }, [error])
+
   return (
-    <html lang="en">
-      <body className="flex items-center justify-center min-h-screen bg-black text-white p-4 text-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-4">Something went wrong!</h1>
-          <p className="mb-6">We're sorry, but there was a critical error loading the application.</p>
-          <button
-            onClick={() => reset()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            Try again
-          </button>
-        </div>
+    <html>
+      <body style={{ padding: 24, fontFamily: "system-ui" }}>
+        <h2>Something went wrong!</h2>
+        <p style={{ opacity: 0.8 }}>
+          Digest: <code>{error.digest || "N/A"}</code>
+        </p>
+        <button onClick={() => reset()}>Try again</button>
       </body>
     </html>
   )

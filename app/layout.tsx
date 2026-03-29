@@ -17,6 +17,7 @@ import { toggleSettings } from "@/admin/toggle"
 import { getDynamicMetadata } from "@/lib/seo"
 import { ProfileProvider } from "@/context/profile-context"
 import { getProfile } from "@/app/actions/cms"
+import ClientOnly from "@/components/ClientOnly"
 
 // Optimize font loading
 const inter = Inter({
@@ -114,21 +115,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>...</head>
       <body className={`${inter.variable} ${cairo.variable} min-h-screen bg-background text-foreground font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <LanguageProvider>
-            <ProfileProvider profile={dbProfile}>
-              <ErrorBoundary>
-                <SkipToContent />
-                {websiteEnabled && <Header />}
-                <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
-                  {children}
-                </main>
-                {websiteEnabled && <Footer />}
-                <FloatingActionButton />
-                <SpeedInsightsWrapper />
-                <Analytics />
-              </ErrorBoundary>
-            </ProfileProvider>
-          </LanguageProvider>
+          <ClientOnly>
+            <LanguageProvider>
+              <ProfileProvider profile={dbProfile}>
+                <ErrorBoundary>
+                  <SkipToContent />
+                  {websiteEnabled && <Header />}
+                  <main className={websiteEnabled ? "pt-16" : ""} id="main-content">
+                    {children}
+                  </main>
+                  {websiteEnabled && <Footer />}
+                  <FloatingActionButton />
+                  <SpeedInsightsWrapper />
+                  <Analytics />
+                </ErrorBoundary>
+              </ProfileProvider>
+            </LanguageProvider>
+          </ClientOnly>
         </ThemeProvider>
       </body>
     </html>
