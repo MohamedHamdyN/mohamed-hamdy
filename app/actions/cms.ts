@@ -121,7 +121,7 @@ export type Certification = {
 
 export async function getProfile(): Promise<Profile | null> {
   try {
-    const result = await db.query`SELECT * FROM profiles ORDER BY id ASC LIMIT 1`
+    const result = await db.query`SELECT * FROM profile ORDER BY id ASC LIMIT 1`
     return (result[0] as Profile | undefined) ?? null
   } catch (e) {
     console.error("Error getting profile:", e)
@@ -133,7 +133,7 @@ export async function upsertProfile(data: Partial<Profile>) {
   try {
     await requireAdmin()
 
-    const existing = await db.query`SELECT id FROM profiles ORDER BY id ASC LIMIT 1`
+    const existing = await db.query`SELECT id FROM profile ORDER BY id ASC LIMIT 1`
 
     let result: any[]
     if (existing.length > 0) {
@@ -232,11 +232,11 @@ export async function upsertProfile(data: Partial<Profile>) {
 
       updates.push(`updated_at = NOW()`)
 
-      const updateQuery = `UPDATE profiles SET ${updates.join(', ')} WHERE id = ${existing[0].id} RETURNING *`
+      const updateQuery = `UPDATE profile SET ${updates.join(', ')} WHERE id = ${existing[0].id} RETURNING *`
       result = await db.query(updateQuery, values)
     } else {
       result = await db.query`
-        INSERT INTO profiles (
+        INSERT INTO profile (
           name, title, short_title, hero_description, hero_image_type, hero_image_url,
           location, open_to_work, email, phone,
           bio, short_bio, long_bio, about_intro,
