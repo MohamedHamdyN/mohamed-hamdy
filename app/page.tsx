@@ -1,4 +1,6 @@
-export const dynamic = "force-dynamic"
+import { CACHE_REVALIDATE } from "@/lib/constants/cache"
+
+export const revalidate = CACHE_REVALIDATE.HOME
 
 import dynamicImport from "next/dynamic"
 import Hero from "@/components/home/Hero"

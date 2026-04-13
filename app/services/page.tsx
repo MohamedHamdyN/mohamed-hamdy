@@ -1,3 +1,7 @@
+import { CACHE_REVALIDATE } from "@/lib/constants/cache"
+
+export const revalidate = CACHE_REVALIDATE.SERVICES
+
 import { toggleSettings } from "@/admin/toggle"
 import { notFound } from "next/navigation"
 import ServicesGrid from "@/components/services/ServicesGrid"

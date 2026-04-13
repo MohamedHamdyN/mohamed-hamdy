@@ -1,3 +1,7 @@
+import { CACHE_REVALIDATE } from "@/lib/constants/cache"
+
+export const revalidate = CACHE_REVALIDATE.ABOUT
+
 import { toggleSettings } from "@/admin/toggle"
 import { notFound } from "next/navigation"
 import PageHero from "@/components/shared/PageHero"
