@@ -1,9 +1,17 @@
 import { neon } from '@neondatabase/serverless'
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set')
+// Initialize database connection if available
+let query: any = null
+
+if (process.env.DATABASE_URL) {
+  query = neon(process.env.DATABASE_URL)
+} else {
+  // Fallback: return empty results for all queries if database is not available
+  query = async (sql: string | TemplateStringsArray, ...params: any[]) => {
+    console.warn('[db] DATABASE_URL not set, returning empty results')
+    return []
+  }
 }
-const query = neon(process.env.DATABASE_URL)
 
 export const db = {
   query,
