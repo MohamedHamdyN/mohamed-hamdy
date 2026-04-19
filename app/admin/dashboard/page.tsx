@@ -2,12 +2,18 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { logoutAdmin } from '@/app/actions/auth'
-import { getProfile, getProjects, getSkills, getServices, getClients } from '@/app/actions/cms'
+import { 
+  getProjects,
+  getSkills,
+  getServices,
+  getClients,
+  getProfile,
+} from '@/app/actions/cms'
 import {
   LayoutDashboard,
   LogOut,
@@ -16,346 +22,176 @@ import {
   Sparkles,
   BriefcaseBusiness,
   Users,
-  Share2,
-  Settings,
-  Info,
   ArrowRight,
-  Shield,
 } from 'lucide-react'
-
-type DashboardStats = {
-  projects: number
-  skills: number
-  services: number
-  clients: number
-}
-
-function cn(...x: Array<string | false | null | undefined>) {
-  return x.filter(Boolean).join(' ')
-}
 
 export default function AdminDashboard() {
   const router = useRouter()
-
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats, setStats] = useState({
     projects: 0,
     skills: 0,
     services: 0,
     clients: 0,
   })
-
   const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string>('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    let mounted = true
-
-    async function loadData() {
-      try {
-        setError('')
-        setIsLoading(true)
-
-        const [profileData, projects, skills, services, clients] = await Promise.all([
-          getProfile(),
-          getProjects(true),
-          getSkills(),
-          getServices(),
-          getClients(),
-        ])
-
-        if (!mounted) return
-
-        setProfile(profileData)
-        setStats({
-          projects: Array.isArray(projects) ? projects.length : 0,
-          skills: Array.isArray(skills) ? skills.length : 0,
-          services: Array.isArray(services) ? services.length : 0,
-          clients: Array.isArray(clients) ? clients.length : 0,
-        })
-      } catch (e) {
-        console.error('Error loading dashboard data:', e)
-        if (!mounted) return
-        setError('Failed to load dashboard data. Please refresh.')
-      } finally {
-        if (mounted) setIsLoading(false)
-      }
-    }
-
-    loadData()
-    return () => {
-      mounted = false
-    }
+    loadDashboard()
   }, [])
 
-  async function handleLogout() {
+  async function loadDashboard() {
     try {
-      await logoutAdmin()
-      router.push('/admin/login')
+      const [profileData, projects, skills, services, clients] = await Promise.all([
+        getProfile(),
+        getProjects(),
+        getSkills(),
+        getServices(),
+        getClients(),
+      ])
+
+      setProfile(profileData)
+      setStats({
+        projects: Array.isArray(projects) ? projects.length : 0,
+        skills: Array.isArray(skills) ? skills.length : 0,
+        services: Array.isArray(services) ? services.length : 0,
+        clients: Array.isArray(clients) ? clients.length : 0,
+      })
     } catch (e) {
-      console.error('Logout error:', e)
-      setError('Logout failed. Try again.')
+      console.error('Dashboard load error:', e)
+      setError('Failed to load dashboard')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const quickLinks = useMemo(
-    () => [
-      {
-        href: '/admin/profile',
-        title: 'Profile',
-        desc: 'Name, titles, bios, hero fields, contact links',
-        icon: User,
-        accent: 'group-hover:text-blue-400',
-      },
-      {
-        href: '/admin/projects',
-        title: 'Projects',
-        desc: 'Create/edit projects, drafts, featured',
-        icon: FolderKanban,
-        accent: 'group-hover:text-cyan-400',
-      },
-      {
-        href: '/admin/skills',
-        title: 'Skills',
-        desc: 'Manage skills list & ordering',
-        icon: Sparkles,
-        accent: 'group-hover:text-purple-400',
-      },
-      {
-        href: '/admin/services',
-        title: 'Services',
-        desc: 'Edit your service offerings',
-        icon: BriefcaseBusiness,
-        accent: 'group-hover:text-green-400',
-      },
-      {
-        href: '/admin/clients',
-        title: 'Clients',
-        desc: 'Testimonials and client logos',
-        icon: Users,
-        accent: 'group-hover:text-orange-400',
-      },
-      {
-        href: '/admin/social',
-        title: 'Social Links',
-        desc: 'Update socials shown across site',
-        icon: Share2,
-        accent: 'group-hover:text-pink-400',
-      },
-      {
-        href: '/admin/about',
-        title: 'About Page',
-        desc: 'Stats, experience, education, certifications',
-        icon: Info,
-        accent: 'group-hover:text-indigo-400',
-      },
-      {
-        href: '/admin/settings',
-        title: 'Site Settings',
-        desc: 'SEO, OG image, maintenance mode + admin creds',
-        icon: Settings,
-        accent: 'group-hover:text-teal-400',
-      },
-      {
-        href: '/admin/categories',
-        title: 'Project Categories',
-        desc: 'Manage project categories and order',
-        icon: FolderKanban,
-        accent: 'group-hover:text-blue-400',
-      },
-    ],
-    []
-  )
+  async function handleLogout() {
+    await logoutAdmin()
+    router.push('/admin/login')
+  }
 
-  const statCards = useMemo(
-    () => [
-      { label: 'Projects', value: stats.projects, icon: FolderKanban, tone: 'text-cyan-300' },
-      { label: 'Skills', value: stats.skills, icon: Sparkles, tone: 'text-purple-300' },
-      { label: 'Services', value: stats.services, icon: BriefcaseBusiness, tone: 'text-green-300' },
-      { label: 'Clients', value: stats.clients, icon: Users, tone: 'text-orange-300' },
-    ],
-    [stats]
-  )
-
-  const displayName = profile?.name || 'Portfolio Management'
-  const displayTitle = profile?.title || ''
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      {/* Header */}
-      <header className="border-b border-slate-700 bg-slate-800/50">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-1 rounded-lg border border-slate-700 bg-slate-900/60 p-2">
-                <LayoutDashboard className="h-5 w-5 text-slate-200" />
-              </div>
-
-              <div>
-                <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-                <p className="text-slate-400 mt-1">
-                  {displayName}
-                  {displayTitle ? <span className="text-slate-500"> • {displayTitle}</span> : null}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Link
-                href="/"
-                className="hidden sm:inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/40 px-3 py-2 text-slate-200 hover:bg-slate-800"
-              >
-                View Site <ArrowRight className="h-4 w-4" />
-              </Link>
-
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="border-slate-600 text-slate-200 hover:bg-slate-700"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <LayoutDashboard className="h-8 w-8" />
+              Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-1">Welcome, {profile?.name || 'Admin'}</p>
           </div>
-
-          {/* Status line */}
-          <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full border border-slate-700 bg-slate-900/40 px-3 py-1 text-slate-300">
-              Session: <span className="text-slate-200">Active</span>
-            </span>
-            <span className="rounded-full border border-slate-700 bg-slate-900/40 px-3 py-1 text-slate-300">
-              Mode:{' '}
-              <span className={profile?.open_to_work ? 'text-green-300' : 'text-slate-200'}>
-                {profile?.open_to_work ? 'Open to Work' : 'Normal'}
-              </span>
-            </span>
-            <span className="rounded-full border border-slate-700 bg-slate-900/40 px-3 py-1 text-slate-300">
-              Security: <span className="text-slate-200">Admins + Sessions</span>
-              <Shield className="inline-block h-3.5 w-3.5 ml-1 text-slate-300" />
-            </span>
-          </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
-        {error ? (
-          <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-4">
-            <p className="text-red-300 text-sm">{error}</p>
+        {error && (
+          <div className="bg-destructive/10 border border-destructive rounded-lg p-4 mb-6">
+            <p className="text-destructive text-sm">{error}</p>
           </div>
-        ) : null}
-
-        {/* Loading */}
-        {isLoading ? (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-                  <div className="h-4 w-24 bg-slate-700/60 rounded mb-3 animate-pulse" />
-                  <div className="h-8 w-16 bg-slate-700/60 rounded animate-pulse" />
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
-              <div className="h-5 w-40 bg-slate-700/60 rounded mb-4 animate-pulse" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="rounded-lg bg-slate-700/40 p-4">
-                    <div className="h-4 w-28 bg-slate-700/60 rounded mb-2 animate-pulse" />
-                    <div className="h-3 w-48 bg-slate-700/60 rounded animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              {statCards.map((s) => {
-                const Icon = s.icon
-                return (
-                  <div
-                    key={s.label}
-                    className="rounded-lg border border-slate-700 bg-slate-800 p-6 hover:bg-slate-800/80 transition"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-slate-400 text-sm">{s.label}</p>
-                      <Icon className={cn('h-5 w-5', s.tone)} />
-                    </div>
-                    <p className={cn('mt-3 text-3xl font-bold', s.tone)}>{s.value}</p>
-                    <p className="mt-2 text-xs text-slate-500">Total items in database</p>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Management */}
-            <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Management</h2>
-                  <p className="text-slate-400 mt-1">Everything you need to keep the site synced with the database.</p>
-                </div>
-
-                <Link
-                  href="/admin/settings"
-                  className="hidden md:inline-flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/40 px-3 py-2 text-slate-200 hover:bg-slate-800"
-                >
-                  Security & Settings <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {quickLinks.map((x) => {
-                  const Icon = x.icon
-                  return (
-                    <Link
-                      key={x.href}
-                      href={x.href}
-                      className="group block rounded-lg bg-slate-700/40 hover:bg-slate-700/60 border border-slate-700/60 p-5 transition"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className={cn('font-semibold text-white transition', x.accent)}>{x.title}</h3>
-                          <p className="text-sm text-slate-400 mt-1">{x.desc}</p>
-                        </div>
-                        <div className="rounded-md border border-slate-700 bg-slate-900/40 p-2">
-                          <Icon className="h-5 w-5 text-slate-200" />
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-end text-sm text-slate-300">
-                        Open <ArrowRight className="ml-2 h-4 w-4 text-slate-400 group-hover:text-slate-200 transition" />
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
-
-              {/* Footer actions */}
-              <div className="mt-8 border-t border-slate-700 pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <p className="text-sm text-slate-400">
-                  Tip: Keep <span className="text-slate-200">Profile</span> as the single source of truth for hero/about
-                  texts (short bio / long bio / hero description).
-                </p>
-
-                <div className="flex gap-2">
-                  <Link href="/admin/profile">
-                    <Button className="bg-blue-600 hover:bg-blue-700">Edit Profile</Button>
-                  </Link>
-                  <Link href="/admin/projects">
-                    <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-700">
-                      Manage Projects
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </>
         )}
-      </main>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <StatsCard
+            icon={<FolderKanban className="h-6 w-6" />}
+            label="Projects"
+            value={stats.projects}
+            href="/admin/projects"
+          />
+          <StatsCard
+            icon={<Sparkles className="h-6 w-6" />}
+            label="Skills"
+            value={stats.skills}
+            href="/admin/skills"
+          />
+          <StatsCard
+            icon={<BriefcaseBusiness className="h-6 w-6" />}
+            label="Services"
+            value={stats.services}
+            href="/admin/services"
+          />
+          <StatsCard
+            icon={<Users className="h-6 w-6" />}
+            label="Clients"
+            value={stats.clients}
+            href="/admin/clients"
+          />
+        </div>
+
+        {/* Quick Navigation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <NavCard href="/admin/projects" title="Manage Projects" icon={FolderKanban} />
+          <NavCard href="/admin/skills" title="Manage Skills" icon={Sparkles} />
+          <NavCard href="/admin/services" title="Manage Services" icon={BriefcaseBusiness} />
+          <NavCard href="/admin/profile" title="Edit Profile" icon={User} />
+        </div>
+      </div>
     </div>
+  )
+}
+
+function StatsCard({
+  icon,
+  label,
+  value,
+  href,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: number
+  href: string
+}) {
+  return (
+    <Link href={href}>
+      <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-muted-foreground text-sm">{label}</p>
+            <p className="text-3xl font-bold mt-2">{value}</p>
+          </div>
+          <div className="text-primary opacity-50">{icon}</div>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+function NavCard({
+  href,
+  title,
+  icon: Icon,
+}: {
+  href: string
+  title: string
+  icon: any
+}) {
+  return (
+    <Link href={href}>
+      <div className="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer group">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Icon className="h-6 w-6 text-primary group-hover:translate-x-1 transition-transform" />
+            <h3 className="font-semibold">{title}</h3>
+          </div>
+          <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+    </Link>
   )
 }
