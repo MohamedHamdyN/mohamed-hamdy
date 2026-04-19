@@ -3,29 +3,15 @@
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { getAdminFromSession } from '@/lib/auth'
-import { Profile, Skill, Project, Service, Client, SocialLink } from '@/lib/db'
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set')
-}
+// ==================== HELPERS ====================
 
-// ---------- helpers ----------
 async function requireAdmin() {
   const admin = await getAdminFromSession()
   if (!admin) throw new Error('Unauthorized')
   return admin
 }
 
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-}
-
-// عدّل/قلّل المسارات حسب صفحاتك الفعلية
 function revalidatePublic() {
   revalidatePath('/')
   revalidatePath('/projects')
@@ -34,1213 +20,901 @@ function revalidatePublic() {
   revalidatePath('/contact')
 }
 
-// ✅ مهم: تحويل JS array إلى Postgres text[] literal
-function toPgTextArray(value: unknown): string | null {
-  if (value == null) return null
+// ==================== PROFILE ====================
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
-    if (!trimmed) return '{}'
-
-    if (trimmed.startsWith('[')) {
-      try {
-        const parsed = JSON.parse(trimmed)
-        if (Array.isArray(parsed)) return toPgTextArray(parsed)
-      } catch { }
-    }
-
-    if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed
-    return `{${escapePgArrayItem(trimmed)}}`
-  }
-
-  if (Array.isArray(value)) {
-    const items = value
-      .filter((x) => x !== undefined && x !== null)
-      .map((x) => String(x))
-    return `{${items.map(escapePgArrayItem).join(',')}}`
-  }
-
-  return `{${escapePgArrayItem(String(value))}}`
-}
-
-function escapePgArrayItem(item: string): string {
-  const escaped = item.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-  return `"${escaped}"`
-}
-
-// ===================== ABOUT TYPES =====================
-
-export type AboutLang = 'en' | 'ar'
-
-export type AboutStats = {
-  id: number
-  years_of_experience: number
-  linkedin_followers: number
-  completed_courses: number
-  created_at?: string
-  updated_at?: string
-}
-
-export interface Experience {
-  id: number
-  year: string
-  title: string
-  details: string
-  enabled: boolean
-  order: number
-  created_at: string
-  updated_at: string
-}
-
-export interface Education {
-  id: number
-  year: string
-  degree: string
-  institution: string
-  details: string
-  enabled: boolean
-  order: number
-  created_at: string
-  updated_at: string
-}
-
-export type Certification = {
-  id: number
-  title: string
-  issuer: string
-  issue_date?: string | null
-  description?: string | null
-  credential_url?: string | null
-  enabled?: boolean
-  order?: number
-  created_at?: string
-  updated_at?: string
-}
-
-// ============= PROFILE CRUD =============
-
-export async function getProfile(): Promise<Profile | null> {
+export async function getProfile() {
   try {
-    const result = await db.query`SELECT * FROM profile ORDER BY id ASC LIMIT 1`
-    return (result[0] as Profile | undefined) ?? null
-  } catch (e) {
-    console.error("Error getting profile:", e)
-    return null
+    const result = await db.query('SELECT * FROM profile LIMIT 1')
+    return result[0] || {}
+  } catch (error) {
+    console.error('[cms] getProfile error:', error)
+    return {}
   }
 }
 
-export async function upsertProfile(data: Partial<Profile>) {
+export async function updateProfile(data: any) {
   try {
     await requireAdmin()
+    const {
+      name,
+      job_title_1,
+      job_title_2,
+      email,
+      phone_number,
+      location,
+      hero_description,
+      description,
+      special_description,
+      quote,
+      resume_url,
+      calendly_url,
+    } = data
 
-    const existing = await db.query`SELECT id FROM profile ORDER BY id ASC LIMIT 1`
+    const result = await db.query(
+      `INSERT INTO profile (name, job_title_1, job_title_2, email, phone_number, location, 
+        hero_description, description, special_description, quote, resume_url, calendly_url) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       ON CONFLICT (id) DO UPDATE SET
+        name = $1, job_title_1 = $2, job_title_2 = $3, email = $4, phone_number = $5,
+        location = $6, hero_description = $7, description = $8, special_description = $9,
+        quote = $10, resume_url = $11, calendly_url = $12, updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [
+        name,
+        job_title_1,
+        job_title_2,
+        email,
+        phone_number,
+        location,
+        hero_description,
+        description,
+        special_description,
+        quote,
+        resume_url,
+        calendly_url,
+      ]
+    )
 
-    let result: any[]
-    if (existing.length > 0) {
-      // Build dynamic UPDATE query - only update fields that are explicitly provided
-      const updates: string[] = []
-      const values: any[] = []
-
-      if (data.name !== undefined) {
-        updates.push(`name = $${updates.length + 1}`)
-        values.push(data.name)
-      }
-      if (data.title !== undefined) {
-        updates.push(`title = $${updates.length + 1}`)
-        values.push(data.title)
-      }
-      if (data.short_title !== undefined) {
-        updates.push(`short_title = $${updates.length + 1}`)
-        values.push(data.short_title)
-      }
-      if (data.hero_description !== undefined) {
-        updates.push(`hero_description = $${updates.length + 1}`)
-        values.push(data.hero_description)
-      }
-      if (data.hero_image_type !== undefined) {
-        updates.push(`hero_image_type = $${updates.length + 1}`)
-        values.push(data.hero_image_type)
-      }
-      if (data.hero_image_url !== undefined) {
-        updates.push(`hero_image_url = $${updates.length + 1}`)
-        values.push(data.hero_image_url)
-      }
-      if (data.location !== undefined) {
-        updates.push(`location = $${updates.length + 1}`)
-        values.push(data.location)
-      }
-      if (data.open_to_work !== undefined) {
-        updates.push(`open_to_work = $${updates.length + 1}`)
-        values.push(data.open_to_work)
-      }
-      if (data.email !== undefined) {
-        updates.push(`email = $${updates.length + 1}`)
-        values.push(data.email)
-      }
-      if (data.phone !== undefined) {
-        updates.push(`phone = $${updates.length + 1}`)
-        values.push(data.phone)
-      }
-      if (data.bio !== undefined) {
-        updates.push(`bio = $${updates.length + 1}`)
-        values.push(data.bio)
-      }
-      if (data.short_bio !== undefined) {
-        updates.push(`short_bio = $${updates.length + 1}`)
-        values.push(data.short_bio)
-      }
-      if (data.long_bio !== undefined) {
-        updates.push(`long_bio = $${updates.length + 1}`)
-        values.push(data.long_bio)
-      }
-      if (data.about_intro !== undefined) {
-        updates.push(`about_intro = $${updates.length + 1}`)
-        values.push(data.about_intro)
-      }
-      if (data.resume_url !== undefined) {
-        updates.push(`resume_url = $${updates.length + 1}`)
-        values.push(data.resume_url)
-      }
-      if (data.calendly_url !== undefined) {
-        updates.push(`calendly_url = $${updates.length + 1}`)
-        values.push(data.calendly_url)
-      }
-      if (data.avatar_url !== undefined) {
-        updates.push(`avatar_url = $${updates.length + 1}`)
-        values.push(data.avatar_url)
-      }
-      if (data.og_image_url !== undefined) {
-        updates.push(`og_image_url = $${updates.length + 1}`)
-        values.push(data.og_image_url)
-      }
-      if ((data as any).show_location !== undefined) {
-        updates.push(`show_location = $${updates.length + 1}`)
-        values.push((data as any).show_location)
-      }
-      if ((data as any).show_phone !== undefined) {
-        updates.push(`show_phone = $${updates.length + 1}`)
-        values.push((data as any).show_phone)
-      }
-      if ((data as any).show_resume !== undefined) {
-        updates.push(`show_resume = $${updates.length + 1}`)
-        values.push((data as any).show_resume)
-      }
-      if ((data as any).show_calendly !== undefined) {
-        updates.push(`show_calendly = $${updates.length + 1}`)
-        values.push((data as any).show_calendly)
-      }
-
-      updates.push(`updated_at = NOW()`)
-
-      const updateQuery = `UPDATE profile SET ${updates.join(', ')} WHERE id = ${existing[0].id} RETURNING *`
-      result = await db.query(updateQuery, values)
-    } else {
-      result = await db.query`
-        INSERT INTO profile (
-          name, title, short_title, hero_description, hero_image_type, hero_image_url,
-          location, open_to_work, email, phone,
-          bio, short_bio, long_bio, about_intro,
-          resume_url, calendly_url, avatar_url, og_image_url,
-          show_location, show_phone, show_resume, show_calendly
-        )
-        VALUES (
-          ${data.name ?? "Portfolio"},
-          ${data.title ?? null},
-          ${data.short_title ?? null},
-          ${data.hero_description ?? null},
-          ${data.hero_image_type ?? "logo"},
-          ${data.hero_image_url ?? null},
-          ${data.location ?? null},
-          ${data.open_to_work ?? false},
-          ${data.email ?? null},
-          ${data.phone ?? null},
-          ${data.bio ?? null},
-          ${data.short_bio ?? null},
-          ${data.long_bio ?? null},
-          ${data.about_intro ?? null},
-          ${data.resume_url ?? null},
-          ${data.calendly_url ?? null},
-          ${data.avatar_url ?? null},
-          ${data.og_image_url ?? null},
-          ${(data as any).show_location ?? true},
-          ${(data as any).show_phone ?? true},
-          ${(data as any).show_resume ?? true},
-          ${(data as any).show_calendly ?? true}
-        )
-        RETURNING *
-      `
-    }
-
-    revalidatePath("/")
-    revalidatePath("/about")
-    revalidatePath("/contact")
-    revalidatePath("/admin/profile")
-
+    revalidatePublic()
+    revalidatePath('/admin/profile')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error in upsertProfile:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update profile' }
+    console.error('[cms] updateProfile error:', error)
+    return { error: 'Failed to update profile' }
   }
 }
 
-export async function updateProfile(input: Partial<Profile>) {
+// ==================== PROJECTS ====================
+
+export async function getProjects() {
   try {
-    await requireAdmin()
-
-    // reuse the real DB upsert
-    const res = await upsertProfile(input)
-
-    // upsertProfile already revalidates paths and returns { success, data }
-    if ((res as any)?.error) return { error: (res as any).error }
-
-    return { success: true, data: (res as any).data }
+    const result = await db.query(
+      `SELECT p.*, c.name as category_name,
+        COALESCE(ARRAY_AGG(json_build_object('id', t.id, 'name', t.name, 'icon', t.icon, 'color_id', t.color_id)) 
+          FILTER (WHERE t.id IS NOT NULL), ARRAY[]::json[]) as technologies
+       FROM projects p
+       LEFT JOIN categories c ON p.category_id = c.id
+       LEFT JOIN entity_technologies et ON et.entity_type = 'project' AND et.entity_id = p.id
+       LEFT JOIN technologies t ON et.technology_id = t.id
+       GROUP BY p.id, c.id
+       ORDER BY p.sort_order ASC, p.created_at DESC`
+    )
+    return result || []
   } catch (error) {
-    console.error("Error updating profile:", error)
-    return { error: error instanceof Error ? error.message : "Failed to update profile" }
-  }
-}
-// ============= SKILLS CRUD =============
-
-export async function getSkills(): Promise<Skill[]> {
-  try {
-    const result = await db.query`SELECT * FROM skills ORDER BY "order" ASC`
-    return result as Skill[]
-  } catch (error) {
-    console.error('Error getting skills:', error)
+    console.error('[cms] getProjects error:', error)
     return []
   }
 }
 
-export async function createSkill(data: Omit<Skill, 'id' | 'created_at' | 'updated_at'>) {
+export async function createProject(data: any) {
   try {
     await requireAdmin()
+    const {
+      title,
+      slug,
+      description,
+      hero_description,
+      category_id,
+      project_url,
+      linkedin_url,
+      project_date,
+      featured,
+      sort_order,
+      image_url,
+      presentation_url,
+      technologies,
+    } = data
 
-    const result = await db.query`
-      INSERT INTO skills (name, description, icon, color, enabled, "order")
-      VALUES (${data.name}, ${data.description}, ${data.icon}, ${data.color}, ${data.enabled}, ${data.order})
-      RETURNING *
-    `
+    const projectResult = await db.query(
+      `INSERT INTO projects 
+       (title, slug, description, hero_description, category_id, project_url, linkedin_url, 
+        project_date, featured, sort_order, image_url, presentation_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING *`,
+      [
+        title,
+        slug,
+        description,
+        hero_description,
+        category_id,
+        project_url,
+        linkedin_url,
+        project_date,
+        featured,
+        sort_order,
+        image_url,
+        presentation_url,
+      ]
+    )
+
+    const project = projectResult[0]
+
+    if (technologies && Array.isArray(technologies) && technologies.length > 0) {
+      for (const tech_id of technologies) {
+        await db.query(
+          `INSERT INTO entity_technologies (entity_type, entity_id, technology_id)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (entity_type, entity_id, technology_id) DO NOTHING`,
+          ['project', project.id, tech_id]
+        )
+      }
+    }
 
     revalidatePublic()
-    revalidatePath('/admin/skills')
-    return { success: true, data: result[0] }
+    revalidatePath('/admin/projects')
+    return { success: true, data: project }
   } catch (error) {
-    console.error('Error creating skill:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create skill' }
+    console.error('[cms] createProject error:', error)
+    return { error: 'Failed to create project' }
   }
 }
 
-export async function updateSkill(id: number, data: Partial<Skill>) {
+export async function updateProject(id: number, data: any) {
   try {
     await requireAdmin()
+    const {
+      title,
+      slug,
+      description,
+      hero_description,
+      category_id,
+      project_url,
+      linkedin_url,
+      project_date,
+      featured,
+      sort_order,
+      image_url,
+      presentation_url,
+      technologies,
+    } = data
 
-    const result = await db.query`
-      UPDATE skills
-      SET
-        name = COALESCE(${data.name ?? null}, name),
-        description = COALESCE(${data.description ?? null}, description),
-        icon = COALESCE(${data.icon ?? null}, icon),
-        color = COALESCE(${data.color ?? null}, color),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
+    const result = await db.query(
+      `UPDATE projects SET 
+        title = $1, slug = $2, description = $3, hero_description = $4, category_id = $5,
+        project_url = $6, linkedin_url = $7, project_date = $8, featured = $9, sort_order = $10,
+        image_url = $11, presentation_url = $12, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $13 RETURNING *`,
+      [
+        title,
+        slug,
+        description,
+        hero_description,
+        category_id,
+        project_url,
+        linkedin_url,
+        project_date,
+        featured,
+        sort_order,
+        image_url,
+        presentation_url,
+        id,
+      ]
+    )
 
-    revalidatePublic()
-    revalidatePath('/admin/skills')
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error updating skill:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update skill' }
-  }
-}
-
-export async function deleteSkill(id: number) {
-  try {
-    await requireAdmin()
-    await db.query`DELETE FROM skills WHERE id = ${id}`
-
-    revalidatePublic()
-    revalidatePath('/admin/skills')
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting skill:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete skill' }
-  }
-}
-
-// ============= PROJECTS CRUD =============
-
-export async function getProjects(includeDraft = false): Promise<Project[]> {
-  try {
-    const result = includeDraft
-      ? await db.query`SELECT * FROM projects ORDER BY "order" DESC, date DESC`
-      : await db.query`SELECT * FROM projects WHERE draft = false ORDER BY "order" DESC, date DESC`
-
-    return result as Project[]
-  } catch (error) {
-    console.error('Error getting projects:', error)
-    return []
-  }
-}
-
-export async function getProjectBySlug(slug: string): Promise<Project | null> {
-  try {
-    const result = await db.query`SELECT * FROM projects WHERE slug = ${slug} LIMIT 1`
-    return (result[0] as Project | undefined) ?? null
-  } catch (error) {
-    console.error('Error getting project:', error)
-    return null
-  }
-}
-
-export async function createProject(
-  data: Omit<Project, 'id' | 'slug' | 'created_at' | 'updated_at' | 'order'>
-) {
-  try {
-    await requireAdmin()
-
-    const slug = generateSlug(data.title)
-    const existing = await db.query`SELECT id FROM projects WHERE slug = ${slug} LIMIT 1`
-    if (existing.length > 0) return { error: 'A project with this title already exists' }
-
-    const technologiesPg = toPgTextArray(data.technologies)
-
-    const result = await db.query`
-      INSERT INTO projects (
-        title, slug, description, short_description, category_id, image_url,
-        project_url, linkedin_url, technologies, date, featured, draft, "order"
+    if (technologies && Array.isArray(technologies)) {
+      await db.query(
+        `DELETE FROM entity_technologies WHERE entity_type = $1 AND entity_id = $2`,
+        ['project', id]
       )
-      VALUES (
-        ${data.title}, ${slug}, ${data.description}, ${data.short_description}, ${data.category_id}, ${data.image_url},
-        ${data.project_url ?? null}, ${data.linkedin_url ?? null}, ${technologiesPg}::text[], ${data.date}, ${data.featured}, ${data.draft}, 0
-      )
-      RETURNING *
-    `
+      for (const tech_id of technologies) {
+        await db.query(
+          `INSERT INTO entity_technologies (entity_type, entity_id, technology_id)
+           VALUES ($1, $2, $3)`,
+          ['project', id, tech_id]
+        )
+      }
+    }
 
     revalidatePublic()
     revalidatePath('/admin/projects')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error creating project:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create project' }
-  }
-}
-
-export async function updateProject(id: number, data: Partial<Project>) {
-  try {
-    await requireAdmin()
-
-    const technologiesPg = data.technologies === undefined ? undefined : toPgTextArray(data.technologies)
-
-    const result = await db.query`
-      UPDATE projects
-      SET
-        title = COALESCE(${data.title ?? null}, title),
-        description = COALESCE(${data.description ?? null}, description),
-        short_description = COALESCE(${data.short_description ?? null}, short_description),
-        category_id = COALESCE(${data.category_id ?? null}, category_id),
-        image_url = COALESCE(${data.image_url ?? null}, image_url),
-        project_url = COALESCE(${data.project_url ?? null}, project_url),
-        linkedin_url = COALESCE(${data.linkedin_url ?? null}, linkedin_url),
-        technologies = COALESCE(${technologiesPg ?? null}::text[], technologies),
-        date = COALESCE(${data.date ?? null}, date),
-        featured = COALESCE(${data.featured ?? null}, featured),
-        draft = COALESCE(${data.draft ?? null}, draft),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
-    revalidatePublic()
-    revalidatePath('/admin/projects')
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error updating project:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update project' }
+    console.error('[cms] updateProject error:', error)
+    return { error: 'Failed to update project' }
   }
 }
 
 export async function deleteProject(id: number) {
   try {
     await requireAdmin()
-    await db.query`DELETE FROM projects WHERE id = ${id}`
-
+    await db.query('DELETE FROM entity_technologies WHERE entity_type = $1 AND entity_id = $2', [
+      'project',
+      id,
+    ])
+    await db.query('DELETE FROM projects WHERE id = $1', [id])
     revalidatePublic()
     revalidatePath('/admin/projects')
     return { success: true }
   } catch (error) {
-    console.error('Error deleting project:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create project' }
+    console.error('[cms] deleteProject error:', error)
+    return { error: 'Failed to delete project' }
   }
 }
 
-// ============= SERVICES CRUD =============
+// ==================== CATEGORIES ====================
 
-export async function getServices(): Promise<Service[]> {
+export async function getCategories() {
   try {
-    const result = await db.query`SELECT * FROM services ORDER BY "order" ASC`
-    return result as Service[]
+    const result = await db.query(
+      `SELECT c.*, col.code as color_code FROM categories c
+       LEFT JOIN colors col ON c.color_id = col.id
+       WHERE c.status = true
+       ORDER BY c.sort_order ASC`
+    )
+    return result || []
   } catch (error) {
-    console.error('Error getting services:', error)
+    console.error('[cms] getCategories error:', error)
     return []
   }
 }
 
-export async function createService(data: Omit<Service, 'id' | 'created_at' | 'updated_at'>) {
+export async function createCategory(data: any) {
   try {
     await requireAdmin()
+    const { name, slug, description, sort_order, status, color_id } = data
 
-    const featuresPg = toPgTextArray((data as any).features)
-
-    const result = await db.query`
-      INSERT INTO services (title, description, icon, color, features, enabled, "order")
-      VALUES (${data.title}, ${data.description}, ${data.icon}, ${data.color}, ${featuresPg}::text[], ${data.enabled}, ${data.order})
-      RETURNING *
-    `
-
-    revalidatePublic()
-    revalidatePath('/admin/services')
+    const result = await db.query(
+      `INSERT INTO categories (name, slug, description, sort_order, status, color_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [name, slug, description, sort_order, status ?? true, color_id ?? 1]
+    )
+    revalidatePath('/admin/categories')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error creating service:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create service' }
+    console.error('[cms] createCategory error:', error)
+    return { error: 'Failed to create category' }
   }
 }
 
-export async function updateService(id: number, data: Partial<Service>) {
+export async function updateCategory(id: number, data: any) {
   try {
     await requireAdmin()
+    const { name, slug, description, sort_order, status, color_id } = data
 
-    const featuresPg = (data as any).features === undefined ? undefined : toPgTextArray((data as any).features)
-
-    const result = await db.query`
-      UPDATE services
-      SET
-        title = COALESCE(${data.title ?? null}, title),
-        description = COALESCE(${data.description ?? null}, description),
-        icon = COALESCE(${data.icon ?? null}, icon),
-        color = COALESCE(${data.color ?? null}, color),
-        features = COALESCE(${featuresPg ?? null}::text[], features),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
+    const result = await db.query(
+      `UPDATE categories SET 
+        name = $1, slug = $2, description = $3, sort_order = $4, status = $5, color_id = $6,
+        updated_at = CURRENT_TIMESTAMP
+       WHERE id = $7 RETURNING *`,
+      [name, slug, description, sort_order, status, color_id, id]
+    )
+    revalidatePath('/admin/categories')
     revalidatePublic()
-    revalidatePath('/admin/services')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error updating service:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update service' }
+    console.error('[cms] updateCategory error:', error)
+    return { error: 'Failed to update category' }
+  }
+}
+
+// ==================== TECHNOLOGIES ====================
+
+export async function getTechnologies() {
+  try {
+    const result = await db.query(
+      `SELECT t.*, c.code as color_code FROM technologies t
+       LEFT JOIN colors c ON t.color_id = c.id
+       ORDER BY t.name ASC`
+    )
+    return result || []
+  } catch (error) {
+    console.error('[cms] getTechnologies error:', error)
+    return []
+  }
+}
+
+export async function createTechnology(data: any) {
+  try {
+    await requireAdmin()
+    const { name, slug, icon, color_id } = data
+
+    const result = await db.query(
+      `INSERT INTO technologies (name, slug, icon, color_id)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [name, slug || name.toLowerCase().replace(/\s+/g, '-'), icon, color_id]
+    )
+    revalidatePath('/admin/technologies')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] createTechnology error:', error)
+    return { error: 'Failed to create technology' }
+  }
+}
+
+export async function updateTechnology(id: number, data: any) {
+  try {
+    await requireAdmin()
+    const { name, slug, icon, color_id } = data
+
+    const result = await db.query(
+      `UPDATE technologies SET name = $1, slug = $2, icon = $3, color_id = $4
+       WHERE id = $5 RETURNING *`,
+      [name, slug, icon, color_id, id]
+    )
+    revalidatePath('/admin/technologies')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] updateTechnology error:', error)
+    return { error: 'Failed to update technology' }
+  }
+}
+
+// ==================== SERVICES ====================
+
+export async function getServices() {
+  try {
+    const result = await db.query(
+      `SELECT s.*, c.code as color_code FROM services s
+       LEFT JOIN colors c ON s.color_id = c.id
+       WHERE s.status = true
+       ORDER BY s.sort_order ASC`
+    )
+    return result || []
+  } catch (error) {
+    console.error('[cms] getServices error:', error)
+    return []
+  }
+}
+
+export async function createService(data: any) {
+  try {
+    await requireAdmin()
+    const { title, description, icon, color_id, features, sort_order, status } = data
+
+    const result = await db.query(
+      `INSERT INTO services (title, description, icon, color_id, features, sort_order, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [title, description, icon, color_id ?? 1, features || [], sort_order, status ?? true]
+    )
+    revalidatePath('/admin/services')
+    revalidatePublic()
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] createService error:', error)
+    return { error: 'Failed to create service' }
+  }
+}
+
+export async function updateService(id: number, data: any) {
+  try {
+    await requireAdmin()
+    const { title, description, icon, color_id, features, sort_order, status } = data
+
+    const result = await db.query(
+      `UPDATE services SET 
+        title = $1, description = $2, icon = $3, color_id = $4, features = $5, sort_order = $6,
+        status = $7, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8 RETURNING *`,
+      [title, description, icon, color_id, features, sort_order, status, id]
+    )
+    revalidatePath('/admin/services')
+    revalidatePublic()
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] updateService error:', error)
+    return { error: 'Failed to update service' }
   }
 }
 
 export async function deleteService(id: number) {
   try {
     await requireAdmin()
-    await db.query`DELETE FROM services WHERE id = ${id}`
-
-    revalidatePublic()
+    await db.query('DELETE FROM services WHERE id = $1', [id])
     revalidatePath('/admin/services')
+    revalidatePublic()
     return { success: true }
   } catch (error) {
-    console.error('Error deleting service:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete service' }
+    console.error('[cms] deleteService error:', error)
+    return { error: 'Failed to delete service' }
   }
 }
 
-// ============= CLIENTS CRUD =============
+// ==================== SKILLS ====================
 
-export async function getClients(): Promise<Client[]> {
+export async function getSkills() {
   try {
-    const result = await db.query`SELECT * FROM clients ORDER BY "order" ASC`
-    return result as Client[]
+    const result = await db.query(
+      `SELECT s.*, c.code as color_code FROM skills s
+       LEFT JOIN colors c ON s.color_id = c.id
+       WHERE s.status = true
+       ORDER BY s.sort_order ASC`
+    )
+    return result || []
   } catch (error) {
-    console.error('Error getting clients:', error)
+    console.error('[cms] getSkills error:', error)
     return []
   }
 }
 
-export async function createClient(data: Omit<Client, 'id' | 'created_at' | 'updated_at'>) {
+export async function createSkill(data: any) {
   try {
     await requireAdmin()
+    const { title, description, category_id, color_id, icon, sort_order, status } = data
 
-    const result = await db.query`
-      INSERT INTO clients (name, logo_url, testimonial, rating, website, enabled, "order")
-      VALUES (${data.name}, ${data.logo_url}, ${data.testimonial ?? null}, ${data.rating}, ${data.website ?? null}, ${data.enabled}, ${data.order})
-      RETURNING *
-    `
-
+    const result = await db.query(
+      `INSERT INTO skills (title, description, category_id, color_id, icon, sort_order, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [title, description, category_id, color_id ?? 1, icon, sort_order, status ?? true]
+    )
+    revalidatePath('/admin/skills')
     revalidatePublic()
-    revalidatePath('/admin/clients')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error creating client:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create client' }
+    console.error('[cms] createSkill error:', error)
+    return { error: 'Failed to create skill' }
   }
 }
 
-export async function updateClient(id: number, data: Partial<Client>) {
+export async function updateSkill(id: number, data: any) {
   try {
     await requireAdmin()
+    const { title, description, category_id, color_id, icon, sort_order, status } = data
 
-    const result = await db.query`
-      UPDATE clients
-      SET
-        name = COALESCE(${data.name ?? null}, name),
-        logo_url = COALESCE(${data.logo_url ?? null}, logo_url),
-        testimonial = COALESCE(${data.testimonial ?? null}, testimonial),
-        rating = COALESCE(${data.rating ?? null}, rating),
-        website = COALESCE(${data.website ?? null}, website),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
+    const result = await db.query(
+      `UPDATE skills SET 
+        title = $1, description = $2, category_id = $3, color_id = $4, icon = $5, sort_order = $6,
+        status = $7, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8 RETURNING *`,
+      [title, description, category_id, color_id, icon, sort_order, status, id]
+    )
+    revalidatePath('/admin/skills')
     revalidatePublic()
-    revalidatePath('/admin/clients')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error updating client:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update client' }
+    console.error('[cms] updateSkill error:', error)
+    return { error: 'Failed to update skill' }
   }
 }
 
-export async function deleteClient(id: number) {
+export async function deleteSkill(id: number) {
   try {
     await requireAdmin()
-    await db.query`DELETE FROM clients WHERE id = ${id}`
-
+    await db.query('DELETE FROM skills WHERE id = $1', [id])
+    revalidatePath('/admin/skills')
     revalidatePublic()
-    revalidatePath('/admin/clients')
     return { success: true }
   } catch (error) {
-    console.error('Error deleting client:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete client' }
+    console.error('[cms] deleteSkill error:', error)
+    return { error: 'Failed to delete skill' }
   }
 }
 
-// ============= SOCIAL LINKS CRUD =============
+// ==================== EXPERIENCE ====================
 
-export async function getSocialLinks(): Promise<SocialLink[]> {
+export async function getExperiences() {
   try {
-    const result = await db.query`
-      SELECT * 
-      FROM social_links
-      WHERE enabled = true
-      ORDER BY "order" ASC
-    `
-    return result as SocialLink[]
+    const result = await db.query(
+      `SELECT * FROM experience
+       WHERE status = true
+       ORDER BY start_date DESC`
+    )
+    return result || []
   } catch (error) {
-    console.error('Error getting social links:', error)
+    console.error('[cms] getExperiences error:', error)
     return []
   }
 }
 
-export async function createSocialLink(data: Omit<SocialLink, 'id' | 'created_at' | 'updated_at'>) {
+export async function createExperience(data: any) {
   try {
     await requireAdmin()
+    const { job_title, company, description, start_date, end_date, logo, status } = data
 
-    const result = await db.query`
-      INSERT INTO social_links (platform, url, enabled, "order")
-      VALUES (${data.platform}, ${data.url}, ${data.enabled}, ${data.order})
-      RETURNING *
-    `
-
+    const result = await db.query(
+      `INSERT INTO experience (job_title, company, description, start_date, end_date, logo, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [job_title, company, description, start_date, end_date, logo, status ?? true]
+    )
+    revalidatePath('/admin/experience')
     revalidatePublic()
-    revalidatePath('/admin/social')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error creating social link:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create social link' }
+    console.error('[cms] createExperience error:', error)
+    return { error: 'Failed to create experience' }
   }
 }
 
-export async function updateSocialLink(id: number, data: Partial<SocialLink>) {
+export async function updateExperience(id: number, data: any) {
   try {
     await requireAdmin()
+    const { job_title, company, description, start_date, end_date, logo, status } = data
 
-    const result = await db.query`
-      UPDATE social_links
-      SET
-        platform = COALESCE(${data.platform ?? null}, platform),
-        url = COALESCE(${data.url ?? null}, url),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
+    const result = await db.query(
+      `UPDATE experience SET 
+        job_title = $1, company = $2, description = $3, start_date = $4, end_date = $5,
+        logo = $6, status = $7, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8 RETURNING *`,
+      [job_title, company, description, start_date, end_date, logo, status, id]
+    )
+    revalidatePath('/admin/experience')
     revalidatePublic()
-    revalidatePath('/admin/social')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error updating social link:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update social link' }
-  }
-}
-
-export async function deleteSocialLink(id: number) {
-  try {
-    await requireAdmin()
-    await db.query`DELETE FROM social_links WHERE id = ${id}`
-
-    revalidatePublic()
-    revalidatePath('/admin/social')
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting social link:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete social link' }
-  }
-}
-
-// ===================== ABOUT (SECTIONS / STATS / LISTS) =====================
-
-// ---- about_sections ----
-// ✅ IMPORTANT: lang FIRST so pages can call getAboutSectionFull(LANG)
-export async function getAboutSectionFull(language: AboutLang = 'en'): Promise<string | null> {
-  try {
-    const result = await db.query`
-      SELECT content
-      FROM about_sections
-      WHERE type = 'full' AND language = ${language}
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `
-    return (result[0]?.content as string | undefined) ?? null
-  } catch (error) {
-    console.error('Error getting about full section:', error)
-    return null
-  }
-}
-
-export async function getAboutSectionShort(language: AboutLang = 'en'): Promise<string | null> {
-  try {
-    const result = await db.query`
-      SELECT content
-      FROM about_sections
-      WHERE type = 'short' AND language = ${language}
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `
-    return (result[0]?.content as string | undefined) ?? null
-  } catch (error) {
-    console.error('Error getting about short section:', error)
-    return null
-  }
-}
-
-// ✅ IMPORTANT: (language, content) order so pages can call upsertAboutSectionFull(LANG, text)
-export async function upsertAboutSectionFull(language: AboutLang, content: string) {
-  try {
-    await requireAdmin()
-
-    const safeContent = String(content ?? '')
-
-    const existing = await db.query`
-      SELECT id FROM about_sections
-      WHERE type = 'full' AND language = ${language}
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `
-
-    let result: any[] = []
-
-    if (existing.length > 0) {
-      result = await db.query`
-        UPDATE about_sections
-        SET content = ${safeContent}, updated_at = NOW()
-        WHERE id = ${existing[0].id}
-        RETURNING *
-      `
-    } else {
-      result = await db.query`
-        INSERT INTO about_sections (type, content, language, created_at, updated_at)
-        VALUES ('full', ${safeContent}, ${language}, NOW(), NOW())
-        RETURNING *
-      `
-    }
-
-    revalidatePublic()
-    revalidatePath('/admin/about')
-    revalidatePath('/admin/about/bio')
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error updating about full section:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update about section' }
-  }
-}
-
-export async function upsertAboutSectionShort(language: AboutLang, content: string) {
-  try {
-    await requireAdmin()
-
-    const safeContent = String(content ?? '')
-
-    const existing = await db.query`
-      SELECT id FROM about_sections
-      WHERE type = 'short' AND language = ${language}
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `
-
-    let result: any[] = []
-
-    if (existing.length > 0) {
-      result = await db.query`
-        UPDATE about_sections
-        SET content = ${safeContent}, updated_at = NOW()
-        WHERE id = ${existing[0].id}
-        RETURNING *
-      `
-    } else {
-      result = await db.query`
-        INSERT INTO about_sections (type, content, language, created_at, updated_at)
-        VALUES ('short', ${safeContent}, ${language}, NOW(), NOW())
-        RETURNING *
-      `
-    }
-
-    revalidatePublic()
-    revalidatePath('/admin/about')
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error updating about short section:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update about section' }
-  }
-}
-
-// ---- about_stats ----
-export async function getAboutStats(): Promise<AboutStats | null> {
-  try {
-    const result = await db.query`SELECT * FROM about_stats ORDER BY id ASC LIMIT 1`
-    return (result[0] as AboutStats | undefined) ?? null
-  } catch (error) {
-    console.error('Error getting about stats:', error)
-    return null
-  }
-}
-
-export async function upsertAboutStats(data: {
-  years_of_experience: number
-  linkedin_followers: number
-  completed_courses: number
-}) {
-  try {
-    await requireAdmin()
-
-    const years = Number.isFinite(Number(data.years_of_experience)) ? Number(data.years_of_experience) : 0
-    const followers = Number.isFinite(Number(data.linkedin_followers)) ? Number(data.linkedin_followers) : 0
-    const courses = Number.isFinite(Number(data.completed_courses)) ? Number(data.completed_courses) : 0
-
-    const existing = await db.query`SELECT id FROM about_stats LIMIT 1`
-
-    let result
-    if (existing.length > 0) {
-      result = await db.query`
-        UPDATE about_stats
-        SET
-          years_of_experience = ${years},
-          linkedin_followers = ${followers},
-          completed_courses = ${courses},
-          updated_at = NOW()
-        WHERE id = ${existing[0].id}
-        RETURNING *
-      `
-    } else {
-      result = await db.query`
-        INSERT INTO about_stats (years_of_experience, linkedin_followers, completed_courses, updated_at)
-        VALUES (${years}, ${followers}, ${courses}, NOW())
-        RETURNING *
-      `
-    }
-
-    revalidatePublic()
-    revalidatePath('/admin/about/stats')
-    return { success: true, data: (result as any)[0] }
-  } catch (error) {
-    console.error('Error upserting about stats:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to save about stats' }
-  }
-}
-
-// ===================== EXPERIENCES =====================
-
-export async function getExperiences(): Promise<Experience[]> {
-  try {
-    const result = await db.query`
-      SELECT * FROM experiences
-      ORDER BY "order" ASC, id ASC
-    `
-    return result as Experience[]
-  } catch (error) {
-    console.error('Error getting experiences:', error)
-    return []
-  }
-}
-
-export async function createExperience(data: Omit<Experience, 'id' | 'created_at' | 'updated_at'>) {
-  try {
-    await requireAdmin()
-
-    const result = await db.query`
-      INSERT INTO experiences (year, title, details, enabled, "order")
-      VALUES (${data.year}, ${data.title}, ${data.details}, ${data.enabled}, ${data.order})
-      RETURNING *
-    `
-
-    revalidatePublic()
-    revalidatePath('/admin/about/experience')
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error creating experience:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create experience' }
-  }
-}
-
-export async function updateExperience(id: number, data: Partial<Experience>) {
-  try {
-    await requireAdmin()
-
-    const result = await db.query`
-      UPDATE experiences
-      SET
-        year = COALESCE(${data.year ?? null}, year),
-        title = COALESCE(${data.title ?? null}, title),
-        details = COALESCE(${data.details ?? null}, details),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
-    revalidatePublic()
-    revalidatePath('/admin/about/experience')
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error updating experience:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update experience' }
+    console.error('[cms] updateExperience error:', error)
+    return { error: 'Failed to update experience' }
   }
 }
 
 export async function deleteExperience(id: number) {
   try {
     await requireAdmin()
-    await db.query`DELETE FROM experiences WHERE id = ${id}`
-
+    await db.query('DELETE FROM experience WHERE id = $1', [id])
+    revalidatePath('/admin/experience')
     revalidatePublic()
-    revalidatePath('/admin/about/experience')
     return { success: true }
   } catch (error) {
-    console.error('Error deleting experience:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete experience' }
+    console.error('[cms] deleteExperience error:', error)
+    return { error: 'Failed to delete experience' }
   }
 }
 
-// ===================== EDUCATIONS =====================
+// ==================== EDUCATION ====================
 
-export async function getEducations(): Promise<Education[]> {
+export async function getEducation() {
   try {
-    const result = await db.query`
-      SELECT * FROM educations
-      ORDER BY "order" ASC, id ASC
-    `
-    return result as Education[]
+    const result = await db.query(
+      `SELECT * FROM education
+       WHERE status = true
+       ORDER BY start_date DESC`
+    )
+    return result || []
   } catch (error) {
-    console.error('Error getting educations:', error)
+    console.error('[cms] getEducation error:', error)
     return []
   }
 }
 
-export async function createEducation(data: Omit<Education, 'id' | 'created_at' | 'updated_at'>) {
+export async function createEducationRecord(data: any) {
   try {
     await requireAdmin()
+    const { title, university, degree, start_date, end_date, status } = data
 
-    const result = await db.query`
-      INSERT INTO educations (year, degree, institution, details, enabled, "order")
-      VALUES (${data.year}, ${data.degree}, ${data.institution}, ${data.details}, ${data.enabled}, ${data.order})
-      RETURNING *
-    `
-
+    const result = await db.query(
+      `INSERT INTO education (title, university, degree, start_date, end_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [title, university, degree, start_date, end_date, status ?? true]
+    )
+    revalidatePath('/admin/education')
     revalidatePublic()
-    revalidatePath('/admin/about/education')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error creating education:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create education' }
+    console.error('[cms] createEducationRecord error:', error)
+    return { error: 'Failed to create education record' }
   }
 }
 
-export async function updateEducation(id: number, data: Partial<Education>) {
+export async function updateEducationRecord(id: number, data: any) {
   try {
     await requireAdmin()
+    const { title, university, degree, start_date, end_date, status } = data
 
-    const result = await db.query`
-      UPDATE educations
-      SET
-        year = COALESCE(${data.year ?? null}, year),
-        degree = COALESCE(${data.degree ?? null}, degree),
-        institution = COALESCE(${data.institution ?? null}, institution),
-        details = COALESCE(${data.details ?? null}, details),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
+    const result = await db.query(
+      `UPDATE education SET 
+        title = $1, university = $2, degree = $3, start_date = $4, end_date = $5,
+        status = $6, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $7 RETURNING *`,
+      [title, university, degree, start_date, end_date, status, id]
+    )
+    revalidatePath('/admin/education')
     revalidatePublic()
-    revalidatePath('/admin/about/education')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error updating education:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update education' }
+    console.error('[cms] updateEducationRecord error:', error)
+    return { error: 'Failed to update education record' }
   }
 }
 
-export async function deleteEducation(id: number) {
+export async function deleteEducationRecord(id: number) {
   try {
     await requireAdmin()
-    await db.query`DELETE FROM educations WHERE id = ${id}`
-
+    await db.query('DELETE FROM education WHERE id = $1', [id])
+    revalidatePath('/admin/education')
     revalidatePublic()
-    revalidatePath('/admin/about/education')
     return { success: true }
   } catch (error) {
-    console.error('Error deleting education:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete education' }
+    console.error('[cms] deleteEducationRecord error:', error)
+    return { error: 'Failed to delete education record' }
   }
 }
 
-// ===================== CERTIFICATIONS =====================
+// ==================== CERTIFICATIONS ====================
 
-export async function getCertifications(): Promise<Certification[]> {
+export async function getCertifications() {
   try {
-    const result = await db.query`
-      SELECT * FROM certifications
-      ORDER BY "order" ASC, id ASC
-    `
-    return result as Certification[]
+    const result = await db.query(
+      `SELECT * FROM certifications
+       WHERE status = true
+       ORDER BY sort_order ASC`
+    )
+    return result || []
   } catch (error) {
-    console.error('Error getting certifications:', error)
+    console.error('[cms] getCertifications error:', error)
     return []
   }
 }
 
-export async function createCertification(data: Omit<Certification, 'id'>) {
+export async function createCertification(data: any) {
   try {
     await requireAdmin()
+    const { title, issuer, issuer_date, url, description, sort_order, status } = data
 
-    const result = await db.query`
-      INSERT INTO certifications (title, issuer, issue_date, description, credential_url, enabled, "order")
-      VALUES (
-        ${data.title},
-        ${data.issuer},
-        ${data.issue_date ?? null},
-        ${data.description ?? null},
-        ${data.credential_url ?? null},
-        ${data.enabled ?? true},
-        ${data.order ?? 0}
-      )
-      RETURNING *
-    `
-
-    revalidatePublic()
-    revalidatePath('/admin/about/certifications')
+    const result = await db.query(
+      `INSERT INTO certifications (title, issuer, issuer_date, url, description, sort_order, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [title, issuer, issuer_date, url, description, sort_order, status ?? true]
+    )
+    revalidatePath('/admin/certifications')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error creating certification:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create certification' }
+    console.error('[cms] createCertification error:', error)
+    return { error: 'Failed to create certification' }
   }
 }
 
-export async function updateCertification(id: number, data: Partial<Certification>) {
+export async function updateCertification(id: number, data: any) {
   try {
     await requireAdmin()
+    const { title, issuer, issuer_date, url, description, sort_order, status } = data
 
-    const result = await db.query`
-      UPDATE certifications
-      SET
-        title = COALESCE(${data.title ?? null}, title),
-        issuer = COALESCE(${data.issuer ?? null}, issuer),
-        issue_date = COALESCE(${data.issue_date ?? null}, issue_date),
-        description = COALESCE(${data.description ?? null}, description),
-        credential_url = COALESCE(${data.credential_url ?? null}, credential_url),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
-    revalidatePublic()
-    revalidatePath('/admin/about/certifications')
+    const result = await db.query(
+      `UPDATE certifications SET 
+        title = $1, issuer = $2, issuer_date = $3, url = $4, description = $5, sort_order = $6,
+        status = $7, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8 RETURNING *`,
+      [title, issuer, issuer_date, url, description, sort_order, status, id]
+    )
+    revalidatePath('/admin/certifications')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error updating certification:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update certification' }
+    console.error('[cms] updateCertification error:', error)
+    return { error: 'Failed to update certification' }
   }
 }
 
-export async function deleteCertification(id: number) {
+// ==================== COLORS ====================
+
+export async function getColors() {
+  try {
+    const result = await db.query('SELECT * FROM colors ORDER BY id ASC')
+    return result || []
+  } catch (error) {
+    console.error('[cms] getColors error:', error)
+    return []
+  }
+}
+
+// ==================== STATS ====================
+
+export async function getStats() {
+  try {
+    const result = await db.query(
+      `SELECT s.*, c.code as color_code FROM stats s
+       LEFT JOIN colors c ON s.color_id = c.id
+       WHERE s.status = true
+       ORDER BY s.sort_order ASC`
+    )
+    return result || []
+  } catch (error) {
+    console.error('[cms] getStats error:', error)
+    return []
+  }
+}
+
+export async function createStat(data: any) {
   try {
     await requireAdmin()
-    await db.query`DELETE FROM certifications WHERE id = ${id}`
+    const { title, value, description, icon, color_id, sort_order, status } = data
 
+    const result = await db.query(
+      `INSERT INTO stats (title, value, description, icon, color_id, sort_order, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [title, value, description, icon, color_id ?? 1, sort_order, status ?? true]
+    )
+    revalidatePath('/admin/stats')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] createStat error:', error)
+    return { error: 'Failed to create stat' }
+  }
+}
+
+// ==================== SOCIAL MEDIA ====================
+
+export async function getSocialLinks() {
+  try {
+    const result = await db.query(
+      `SELECT s.*, c.code as color_code FROM social_media s
+       LEFT JOIN colors c ON s.color_id = c.id
+       ORDER BY s.sort_order ASC`
+    )
+    return result || []
+  } catch (error) {
+    console.error('[cms] getSocialLinks error:', error)
+    return []
+  }
+}
+
+export async function updateSocialLink(id: number, data: any) {
+  try {
+    await requireAdmin()
+    const { platform, url, color_id, sort_order } = data
+
+    const result = await db.query(
+      `UPDATE social_media SET platform = $1, url = $2, color_id = $3, sort_order = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $5 RETURNING *`,
+      [platform, url, color_id, sort_order, id]
+    )
+    revalidatePath('/admin/social')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] updateSocialLink error:', error)
+    return { error: 'Failed to update social link' }
+  }
+}
+
+// ==================== CLIENTS ====================
+
+export async function getClients() {
+  try {
+    const result = await db.query(
+      `SELECT * FROM clients
+       WHERE status = true
+       ORDER BY id ASC`
+    )
+    return result || []
+  } catch (error) {
+    console.error('[cms] getClients error:', error)
+    return []
+  }
+}
+
+export async function createClient(data: any) {
+  try {
+    await requireAdmin()
+    const { name, website, rating, logo, description, status } = data
+
+    const result = await db.query(
+      `INSERT INTO clients (name, website, rating, logo, description, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [name, website, rating ?? 5, logo, description, status ?? true]
+    )
+    revalidatePath('/admin/clients')
     revalidatePublic()
-    revalidatePath('/admin/about/certifications')
-    return { success: true }
+    return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error deleting certification:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete certification' }
+    console.error('[cms] createClient error:', error)
+    return { error: 'Failed to create client' }
   }
 }
 
-// ============= SITE SETTINGS CRUD =============
-
-export async function getSiteSettings(): Promise<Record<string, any>> {
-  try {
-    const result = await db.query`SELECT key, value, type FROM site_settings`
-
-    const settings: Record<string, any> = {}
-    result.forEach((row: any) => {
-      const v = row.value
-
-      if (row.type === "json") {
-        settings[row.key] = typeof v === "string" ? JSON.parse(v) : v
-      } else if (row.type === "boolean") {
-        if (typeof v === "boolean") settings[row.key] = v
-        else settings[row.key] = String(v).trim().toLowerCase() === "true"
-      } else if (row.type === "number") {
-        settings[row.key] = Number(v)
-      } else {
-        settings[row.key] = v
-      }
-    })
-
-    return settings
-  } catch (error) {
-    console.error("Error getting site settings:", error)
-    return {}
-  }
-}
-
-export async function updateSiteSettings(
-  key: string,
-  value: any,
-  type: 'string' | 'json' | 'boolean' = 'string'
-) {
+export async function updateClient(id: number, data: any) {
   try {
     await requireAdmin()
+    const { name, website, rating, logo, description, status } = data
 
-    const stringValue =
-      type === 'json'
-        ? JSON.stringify(value)
-        : type === 'boolean'
-          ? String(Boolean(value))
-          : String(value)
+    const result = await db.query(
+      `UPDATE clients SET name = $1, website = $2, rating = $3, logo = $4, description = $5, status = $6
+       WHERE id = $7 RETURNING *`,
+      [name, website, rating, logo, description, status, id]
+    )
+    revalidatePath('/admin/clients')
+    revalidatePublic()
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] updateClient error:', error)
+    return { error: 'Failed to update client' }
+  }
+}
 
-    const result = await db.query`
-      INSERT INTO site_settings (key, value, type, updated_at)
-      VALUES (${key}, ${stringValue}, ${type}, NOW())
-      ON CONFLICT (key)
-      DO UPDATE SET value = EXCLUDED.value, type = EXCLUDED.type, updated_at = NOW()
-      RETURNING *
-    `
+// ==================== SETTINGS ====================
 
+export async function getSettings() {
+  try {
+    const result = await db.query('SELECT * FROM settings LIMIT 1')
+    return result[0] || { admin_limit: 2, dashboard_status: true, open_to_work: true }
+  } catch (error) {
+    console.error('[cms] getSettings error:', error)
+    return { admin_limit: 2, dashboard_status: true, open_to_work: true }
+  }
+}
+
+export async function updateSettings(data: any) {
+  try {
+    await requireAdmin()
+    const { admin_limit, dashboard_status, open_to_work, official_color_id } = data
+
+    const result = await db.query(
+      `INSERT INTO settings (admin_limit, dashboard_status, open_to_work, official_color_id)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO UPDATE SET
+        admin_limit = $1, dashboard_status = $2, open_to_work = $3, official_color_id = $4, updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [admin_limit, dashboard_status, open_to_work, official_color_id ?? 1]
+    )
+    revalidatePath('/admin/settings')
+    return { success: true, data: result[0] }
+  } catch (error) {
+    console.error('[cms] updateSettings error:', error)
+    return { error: 'Failed to update settings' }
+  }
+}
+
+// ==================== PAGE STATUS ====================
+
+export async function getPageStatus() {
+  try {
+    const result = await db.query('SELECT * FROM page_status ORDER BY id ASC')
+    return result || []
+  } catch (error) {
+    console.error('[cms] getPageStatus error:', error)
+    return []
+  }
+}
+
+export async function updatePageStatus(id: number, status: boolean) {
+  try {
+    await requireAdmin()
+    const result = await db.query(
+      `UPDATE page_status SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+      [status, id]
+    )
     revalidatePublic()
     revalidatePath('/admin/settings')
     return { success: true, data: result[0] }
   } catch (error) {
-    console.error('Error updating site settings:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update site settings' }
+    console.error('[cms] updatePageStatus error:', error)
+    return { error: 'Failed to update page status' }
   }
 }
 
-// ============= PROJECT CATEGORIES CRUD =============
-
-export async function getProjectCategories() {
+export async function getSiteSettings() {
   try {
-    const result = await db.query`SELECT * FROM project_categories ORDER BY "order" ASC`
-    return result as Array<{ id: number; name: string; slug: string; description: string | null; order: number; enabled: boolean; created_at: string; updated_at: string }>
+    const settings = await getSettings()
+    const pageStatus = await getPageStatus()
+    return { settings, pageStatus }
   } catch (error) {
-    console.error('Error getting project categories:', error)
-    return []
+    console.error('[cms] getSiteSettings error:', error)
+    return { settings: {}, pageStatus: [] }
   }
 }
 
-export async function createProjectCategory(data: { name: string; description?: string | null; order?: number }) {
+// ==================== ADMINS ====================
+
+export async function getAdminsCount() {
   try {
-    await requireAdmin()
-
-    const slug = generateSlug(data.name)
-    const existing = await db.query`SELECT id FROM project_categories WHERE slug = ${slug} LIMIT 1`
-    if (existing.length > 0) return { error: 'A category with this name already exists' }
-
-    const result = await db.query`
-      INSERT INTO project_categories (name, slug, description, "order")
-      VALUES (${data.name}, ${slug}, ${data.description ?? null}, ${data.order ?? 0})
-      RETURNING *
-    `
-
-    revalidatePath('/admin/categories')
-    revalidatePublic()
-    return { success: true, data: result[0] }
+    const result = await db.query('SELECT COUNT(*) as count FROM admins')
+    return { count: result[0]?.count || 0 }
   } catch (error) {
-    console.error('Error creating project category:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to create category' }
+    console.error('[cms] getAdminsCount error:', error)
+    return { error: 'Failed to get admins count', count: 0 }
   }
 }
-
-export async function updateProjectCategory(id: number, data: { name?: string; description?: string | null; order?: number; enabled?: boolean }) {
-  try {
-    await requireAdmin()
-
-    const result = await db.query`
-      UPDATE project_categories
-      SET
-        name = COALESCE(${data.name ?? null}, name),
-        description = COALESCE(${data.description ?? null}, description),
-        "order" = COALESCE(${data.order ?? null}, "order"),
-        enabled = COALESCE(${data.enabled ?? null}, enabled),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `
-
-    revalidatePath('/admin/categories')
-    revalidatePublic()
-    return { success: true, data: result[0] }
-  } catch (error) {
-    console.error('Error updating project category:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to update category' }
-  }
-}
-
-export async function deleteProjectCategory(id: number) {
-  try {
-    await requireAdmin()
-    await db.query`DELETE FROM project_categories WHERE id = ${id}`
-
-    revalidatePath('/admin/categories')
-    revalidatePublic()
-    return { success: true }
-  } catch (error) {
-    console.error('Error deleting project category:', error)
-    return { error: error instanceof Error ? error.message : 'Failed to delete category' }
-  }
-}
-
-
-
-
