@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { initializeAdmin, loginAdmin, getAdminsCount } from '@/app/actions/auth'
@@ -16,7 +18,6 @@ export default function AdminSetupPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [dbConnected, setDbConnected] = useState<boolean | null>(null)
 
   // ✅ NEW
   const [adminsCount, setAdminsCount] = useState<number | null>(null)
@@ -24,16 +25,6 @@ export default function AdminSetupPage() {
 
   useEffect(() => {
     async function boot() {
-      // check db
-      try {
-        const response = await fetch('/api/test-db')
-        const data = await response.json()
-        setDbConnected(response.ok)
-        if (!response.ok) console.error('[v0] Database error:', data?.error)
-      } catch {
-        setDbConnected(false)
-      }
-
       // get admins count
       try {
         const res = await getAdminsCount()
@@ -92,16 +83,6 @@ export default function AdminSetupPage() {
           <p className="text-slate-400 text-center mb-6">
             {adminsCount === null ? 'Checking admins...' : `Admins: ${adminsCount}/2`}
           </p>
-
-          {dbConnected === false && (
-            <div className="bg-red-500/10 border border-red-500 rounded-md p-3 mb-6 flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-red-500 font-semibold text-sm">Database Connection Error</p>
-                <p className="text-red-400 text-sm">Unable to connect to the database. Please ensure DATABASE_URL is set.</p>
-              </div>
-            </div>
-          )}
 
           {limitReached && (
             <div className="bg-yellow-500/10 border border-yellow-500 rounded-md p-3 mb-6 flex items-start gap-2">

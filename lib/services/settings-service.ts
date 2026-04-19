@@ -15,9 +15,10 @@ export async function getSetting(key: string, defaultValue: any = null) {
   }
 
   try {
-    const result = await db.query`
-      SELECT value, type FROM site_settings WHERE key = $1
-    `, [key]
+    const result = await db.query(
+      'SELECT value, type FROM site_settings WHERE key = $1',
+      [key]
+    )
 
     if (result.length === 0) {
       return defaultValue
@@ -53,7 +54,7 @@ export async function getAllSettings() {
   }
 
   try {
-    const results = await db.query`SELECT key, value, type FROM site_settings`
+    const results = await db.query('SELECT key, value, type FROM site_settings')
     
     const settings: Record<string, any> = {}
     
@@ -88,14 +89,15 @@ export async function updateSetting(key: string, value: any, type: string = 'str
       stringValue = JSON.stringify(value)
     }
 
-    await db.query`
-      INSERT INTO site_settings (key, value, type)
+    await db.query(
+      `INSERT INTO site_settings (key, value, type)
       VALUES ($1, $2, $3)
       ON CONFLICT (key) DO UPDATE SET
         value = EXCLUDED.value,
         type = EXCLUDED.type,
-        updated_at = NOW()
-    `, [key, stringValue, type]
+        updated_at = NOW()`,
+      [key, stringValue, type]
+    )
 
     // Clear cache
     cachedSettings = {}
