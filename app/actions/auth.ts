@@ -5,10 +5,6 @@ import { hashPassword, verifyPassword, createAdminSession, setSessionCookie } fr
 import { redirect } from 'next/navigation'
 import { getAdminFromSession } from '@/lib/auth'
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set')
-}
-
 export async function loginAdmin(email: string, password: string) {
   try {
     // Validate input

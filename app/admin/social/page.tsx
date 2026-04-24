@@ -20,8 +20,8 @@ export default function AdminSocialPage() {
   const [formData, setFormData] = useState({
     platform: '',
     url: '',
-    enabled: true,
-    order: 0,
+    color_id: 1,
+    sort_order: 0,
   })
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function AdminSocialPage() {
       } else {
         const result = await createSocialLink({
           ...formData,
-          order: socialLinks.length,
+          sort_order: socialLinks.length,
         })
         if (result.error) {
           setError(result.error)
@@ -77,8 +77,8 @@ export default function AdminSocialPage() {
     setFormData({
       platform: '',
       url: '',
-      enabled: true,
-      order: 0,
+      color_id: 1,
+      sort_order: 0,
     })
   }
 
@@ -87,8 +87,8 @@ export default function AdminSocialPage() {
     setFormData({
       platform: socialLink.platform,
       url: socialLink.url,
-      enabled: socialLink.enabled,
-      order: socialLink.order,
+      color_id: socialLink.color_id || 1,
+      sort_order: socialLink.sort_order || 0,
     })
     setIsCreating(true)
   }

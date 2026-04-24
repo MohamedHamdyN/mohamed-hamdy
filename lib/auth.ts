@@ -3,10 +3,6 @@ import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set')
-}
-
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 const SESSION_TOKEN_LENGTH = 32
 

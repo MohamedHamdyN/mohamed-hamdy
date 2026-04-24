@@ -50,46 +50,55 @@ function toBoolean(v: unknown): boolean {
 
 // Dynamic metadata from database
 export async function generateMetadata(): Promise<Metadata> {
-  const [dynamicMetadata, profile] = await Promise.all([getDynamicMetadata(), getProfile()])
-  const authorName = profile?.name || "Author"
+  try {
+    const [dynamicMetadata, profile] = await Promise.all([getDynamicMetadata(), getProfile()])
+    const authorName = profile?.name || "Author"
 
-  return {
-    title: {
-      template: `%s | ${dynamicMetadata.title}`,
-      default: dynamicMetadata.title,
-    },
-    description: dynamicMetadata.description,
-    keywords: ["data analyst", "financial accountant", "data visualization", "analytics", authorName],
-    authors: [{ name: authorName }],
-    creator: authorName,
-    metadataBase: new URL(dynamicMetadata.siteUrl),
-    alternates: { canonical: "/" },
-    openGraph: {
-      type: "website",
-      locale: "en_US",
-      url: dynamicMetadata.siteUrl,
-      title: dynamicMetadata.title,
+    return {
+      title: {
+        template: `%s | ${dynamicMetadata.title}`,
+        default: dynamicMetadata.title,
+      },
       description: dynamicMetadata.description,
-      siteName: dynamicMetadata.title,
-      images: [{ url: dynamicMetadata.ogImage, width: 1200, height: 630, alt: dynamicMetadata.title }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: dynamicMetadata.title,
-      description: dynamicMetadata.description,
+      keywords: ["data analyst", "financial accountant", "data visualization", "analytics", authorName],
+      authors: [{ name: authorName }],
       creator: authorName,
-      images: [dynamicMetadata.ogImage],
-    },
-    icons: {
-      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    },
-    verification: { google: "google-site-verification-code" },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
-    },
-    generator: "v0.app",
+      metadataBase: new URL(dynamicMetadata.siteUrl),
+      alternates: { canonical: "/" },
+      openGraph: {
+        type: "website",
+        locale: "en_US",
+        url: dynamicMetadata.siteUrl,
+        title: dynamicMetadata.title,
+        description: dynamicMetadata.description,
+        siteName: dynamicMetadata.title,
+        images: [{ url: dynamicMetadata.ogImage, width: 1200, height: 630, alt: dynamicMetadata.title }],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: dynamicMetadata.title,
+        description: dynamicMetadata.description,
+        creator: authorName,
+        images: [dynamicMetadata.ogImage],
+      },
+      icons: {
+        icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+      },
+      verification: { google: "google-site-verification-code" },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+      },
+      generator: "v0.app",
+    }
+  } catch (error) {
+    console.error('[layout] generateMetadata error:', error)
+    // Return minimal default metadata if database fails
+    return {
+      title: "Portfolio",
+      description: "Professional portfolio website",
+    }
   }
 }
 
@@ -118,10 +127,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const isAdminRoute = path.startsWith("/admin")
 
+  // Fetch data with fallbacks if database is unavailable
   const [dbProfile, siteSettings, socialLinks] = await Promise.all([
-    getProfile(),
-    getSiteSettings(),
-    getSocialLinks(),
+    getProfile().catch(() => null),
+    getSiteSettings().catch(() => null),
+    getSocialLinks().catch(() => null),
   ])
 
   // ✅ IMPORTANT: toBoolean بدل Boolean() عشان "false" مايبقاش true

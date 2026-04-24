@@ -32,22 +32,22 @@ export default function AboutAdmin() {
   
   // Stats
   const [stats, setStats] = useState<any[]>([])
-  const [statForm, setStatForm] = useState({ label: '', value: '', description: '' })
+  const [statForm, setStatForm] = useState({ title: '', value: '', description: '', icon: '', color_id: 1, sort_order: 0, status: true })
   const [editingStatId, setEditingStatId] = useState<number | null>(null)
 
   // Education
   const [education, setEducation] = useState<any[]>([])
-  const [eduForm, setEduForm] = useState({ school: '', degree: '', field: '', year: '' })
+  const [eduForm, setEduForm] = useState({ title: '', university: '', degree: '', start_date: '', end_date: '', status: true })
   const [editingEduId, setEditingEduId] = useState<number | null>(null)
 
   // Experience
   const [experience, setExperience] = useState<any[]>([])
-  const [expForm, setExpForm] = useState({ title: '', company: '', description: '', year: '' })
+  const [expForm, setExpForm] = useState({ job_title: '', company: '', description: '', start_date: '', end_date: '', logo: '', status: true })
   const [editingExpId, setEditingExpId] = useState<number | null>(null)
 
   // Certifications
   const [certs, setCerts] = useState<any[]>([])
-  const [certForm, setCertForm] = useState({ title: '', issuer: '', year: '' })
+  const [certForm, setCertForm] = useState({ title: '', issuer: '', issuer_date: '', url: '', description: '', status: true, sort_order: 0 })
   const [editingCertId, setEditingCertId] = useState<number | null>(null)
 
   const [isLoading, setIsLoading] = useState(true)
@@ -85,7 +85,7 @@ export default function AboutAdmin() {
       } else {
         await createStat(statForm)
       }
-      setStatForm({ label: '', value: '', description: '' })
+      setStatForm({ title: '', value: '', description: '', icon: '', color_id: 1, sort_order: 0, status: true })
       await loadAllData()
     } catch (err) {
       console.error('Error saving stat:', err)
@@ -113,7 +113,7 @@ export default function AboutAdmin() {
       } else {
         await createEducationRecord(eduForm)
       }
-      setEduForm({ school: '', degree: '', field: '', year: '' })
+      setEduForm({ title: '', university: '', degree: '', start_date: '', end_date: '', status: true })
       await loadAllData()
     } catch (err) {
       console.error('Error saving education:', err)
@@ -141,7 +141,7 @@ export default function AboutAdmin() {
       } else {
         await createExperience(expForm)
       }
-      setExpForm({ title: '', company: '', description: '', year: '' })
+      setExpForm({ job_title: '', company: '', description: '', start_date: '', end_date: '', logo: '', status: true })
       await loadAllData()
     } catch (err) {
       console.error('Error saving experience:', err)

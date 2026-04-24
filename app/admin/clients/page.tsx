@@ -19,12 +19,11 @@ export default function AdminClientsPage() {
 
   const [formData, setFormData] = useState({
     name: '',
-    logo_url: '',
-    testimonial: '',
+    logo: '',
+    description: '',
     rating: 5,
     website: '',
-    enabled: true,
-    order: 0,
+    status: true,
   })
 
   useEffect(() => {
@@ -57,10 +56,7 @@ export default function AdminClientsPage() {
           resetForm()
         }
       } else {
-        const result = await createClient({
-          ...formData,
-          order: clients.length,
-        })
+        const result = await createClient(formData)
         if (result.error) {
           setError(result.error)
         } else {
@@ -79,12 +75,11 @@ export default function AdminClientsPage() {
     setIsCreating(false)
     setFormData({
       name: '',
-      logo_url: '',
-      testimonial: '',
+      logo: '',
+      description: '',
       rating: 5,
       website: '',
-      enabled: true,
-      order: 0,
+      status: true,
     })
   }
 
@@ -92,12 +87,11 @@ export default function AdminClientsPage() {
     setEditingId(client.id)
     setFormData({
       name: client.name,
-      logo_url: client.logo_url,
-      testimonial: client.testimonial || '',
-      rating: client.rating,
+      logo: client.logo || '',
+      description: client.description || '',
+      rating: client.rating || 5,
       website: client.website || '',
-      enabled: client.enabled,
-      order: client.order,
+      status: client.status !== false,
     })
     setIsCreating(true)
   }
