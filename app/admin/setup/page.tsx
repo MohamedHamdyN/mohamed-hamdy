@@ -2,153 +2,204 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { initializeAdmin, loginAdmin, getAdminsCount } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { AlertCircle } from 'lucide-react'
+import { createAdmin, getAdminsCount } from '@/app/actions/cms'
+import bcrypt from 'bcryptjs'
 
 export default function AdminSetupPage() {
   const router = useRouter()
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-
-  // ✅ NEW
+  const [step, setStep] = useState<'check' | 'create'>('check')
   const [adminsCount, setAdminsCount] = useState<number | null>(null)
-  const limitReached = (adminsCount ?? 0) >= 2
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    async function boot() {
-      // get admins count
-      try {
-        const res = await getAdminsCount()
-        if ('error' in res && res.error) {
-          console.error(res.error)
-          setAdminsCount(null)
-        } else {
-          setAdminsCount(res.count)
-        }
-      } catch (e) {
-        console.error('[v0] getAdminsCount failed:', e)
-        setAdminsCount(null)
-      }
-    }
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
 
-    boot()
-  }, [])
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
-
-    // ✅ UI Guard
-    if (limitReached) {
-      setError('Admin limit reached (max 2 admins).')
-      setIsLoading(false)
-      return
-    }
-
-    if (!email.trim()) return setIsLoading(false), setError('Email is required')
-    if (!email.includes('@')) return setIsLoading(false), setError('Please enter a valid email address')
-    if (password.length < 8) return setIsLoading(false), setError('Password must be at least 8 characters long')
-    if (password !== confirmPassword) return setIsLoading(false), setError('Passwords do not match')
-
+  // Check admin status on mount
+  async function checkAdmins() {
     try {
-      const initResult = await initializeAdmin(email, password)
-      if (initResult.error) return setError(initResult.error)
-
-      const loginResult = await loginAdmin(email, password)
-      if (loginResult.error) setError(loginResult.error)
-      else router.push('/admin/dashboard')
+      const count = await getAdminsCount()
+      setAdminsCount(count)
+      setStep(count === 0 ? 'create' : 'check')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setError(msg)
+      console.error('Error checking admins:', err)
+      setError('فشل التحقق من حالة المسؤولين')
     } finally {
       setIsLoading(false)
     }
   }
 
+  // Call check on mount
+  if (isLoading) {
+    checkAdmins()
+  }
+
+  async function handleCreateAdmin(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+
+    if (!formData.email || !formData.password) {
+      setError('البريد الإلكتروني وكلمة المرور مطلوبان')
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('كلمة المرور غير متطابقة')
+      return
+    }
+
+    if (formData.password.length < 8) {
+      setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(formData.password, salt)
+
+      // Create admin
+      const result = await createAdmin(formData.email, hashedPassword)
+
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+
+      // Redirect to login
+      router.push('/admin/login')
+    } catch (err) {
+      console.error('Error creating admin:', err)
+      setError('فشل إنشاء حساب المسؤول')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <p className="text-muted-foreground">جاري التحقق...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (step === 'check') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-full max-w-md p-8 bg-card border rounded-lg">
+          <h1 className="text-3xl font-bold mb-6">حالة النظام</h1>
+
+          {adminsCount && adminsCount > 0 ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-green-500/10 border border-green-500 text-green-600 rounded-lg">
+                <p className="font-semibold">النظام معد!</p>
+                <p className="text-sm mt-1">
+                  يوجد بالفعل {adminsCount} مسؤول في النظام
+                </p>
+              </div>
+              <Button onClick={() => router.push('/admin/login')} className="w-full">
+                الذهاب لتسجيل الدخول
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-500/10 border border-blue-500 text-blue-600 rounded-lg">
+                <p className="font-semibold">لا توجد حسابات مسؤول</p>
+                <p className="text-sm mt-1">
+                  قم بإنشاء حساب المسؤول الأول للبدء
+                </p>
+              </div>
+              <Button onClick={() => setStep('create')} className="w-full">
+                إنشاء حساب مسؤول
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
-        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg shadow-xl p-8">
-          <h1 className="text-3xl font-bold text-white mb-2 text-center">Create Admin Account</h1>
-          <p className="text-slate-400 text-center mb-6">
-            {adminsCount === null ? 'Checking admins...' : `Admins: ${adminsCount}/2`}
+        <div className="bg-card border rounded-lg p-8">
+          <h1 className="text-3xl font-bold mb-2">إنشاء حساب مسؤول</h1>
+          <p className="text-muted-foreground mb-6">
+            إنشاء حساب المسؤول الأول للموقع
           </p>
 
-          {limitReached && (
-            <div className="bg-yellow-500/10 border border-yellow-500 rounded-md p-3 mb-6 flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-yellow-400 font-semibold text-sm">Admin Limit Reached</p>
-                <p className="text-yellow-300 text-sm">You already have 2 admins. You can’t create more from setup.</p>
-              </div>
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-lg text-sm">
+              {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-200">Email</Label>
+          <form onSubmit={handleCreateAdmin} className="space-y-4">
+            <div>
+              <Label htmlFor="email">البريد الإلكتروني</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={limitReached}
-                className="bg-slate-900 border-slate-600 text-white placeholder-slate-500"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                disabled={isSubmitting}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-200">Password</Label>
+            <div>
+              <Label htmlFor="password">كلمة المرور</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={limitReached}
-                className="bg-slate-900 border-slate-600 text-white placeholder-slate-500"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                disabled={isSubmitting}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                يجب أن تكون 8 أحرف على الأقل
+              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-slate-200">Confirm Password</Label>
+            <div>
+              <Label htmlFor="confirmPassword">تأكيد كلمة المرور</Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={limitReached}
-                className="bg-slate-900 border-slate-600 text-white placeholder-slate-500"
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
+                disabled={isSubmitting}
               />
             </div>
 
-            {error && (
-              <div className="bg-red-500/10 border border-red-500 rounded-md p-3">
-                <p className="text-red-500 text-sm">{error}</p>
-              </div>
-            )}
-
             <Button
               type="submit"
-              disabled={isLoading || dbConnected === false || limitReached || adminsCount === null}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
+              className="w-full"
             >
-              {isLoading ? 'Creating Account...' : 'Create Admin Account'}
+              {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء حساب'}
             </Button>
           </form>
         </div>
