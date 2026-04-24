@@ -2,341 +2,175 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { getSiteSettings, updateSiteSettings } from '@/app/actions/cms'
-import { updateCurrentAdminCredentials } from '@/app/actions/auth'
+import { useState, useEffect } from 'react'
+import { getSettings, updateSettings, getColors } from '@/app/actions/cms'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function AdminSettingsPage() {
-  const [isLoading, setIsLoading] = useState(true)
-
-  // site settings states
-  const [settingsError, setSettingsError] = useState('')
-  const [settingsSuccess, setSettingsSuccess] = useState('')
-  const [isSavingSettings, setIsSavingSettings] = useState(false)
-
   const [formData, setFormData] = useState({
-    site_title: '',
-    site_description: '',
-    og_image: '',
-    site_url: '',
-    maintenance_mode: false,
+    admin_limit: 2,
+    dashboard_status: true,
+    open_to_work: true,
+    official_color_id: 1,
+    notifications: null as any,
   })
 
-  // admin credentials states
-  const [adminError, setAdminError] = useState('')
-  const [adminSuccess, setAdminSuccess] = useState('')
-  const [isSavingAdmin, setIsSavingAdmin] = useState(false)
-
-  const [adminForm, setAdminForm] = useState({
-    oldPassword: '',
-    newEmail: '',
-    newPassword: '',
-    confirmNewPassword: '',
-  })
+  const [colors, setColors] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   useEffect(() => {
-    loadSettings()
+    loadData()
   }, [])
 
-  async function loadSettings() {
+  async function loadData() {
     try {
-      const data = await getSiteSettings()
-
-      setFormData({
-        site_title: String(data.site_title ?? ''),
-        site_description: String(data.site_description ?? ''),
-        og_image: String(data.og_image ?? ''),
-        site_url: String(data.site_url ?? 'https://yourdomain.com'),
-        maintenance_mode: Boolean(data.maintenance_mode ?? false),
-      })
-    } catch (error) {
-      console.error('Error loading settings:', error)
-      setSettingsError('Failed to load settings')
+      const [settings, colorsList] = await Promise.all([
+        getSettings(),
+        getColors(),
+      ])
+      if (settings) {
+        setFormData(settings)
+      }
+      setColors(colorsList || [])
+    } catch (err) {
+      console.error('Error loading data:', err)
+      setError('فشل في تحميل البيانات')
     } finally {
       setIsLoading(false)
     }
   }
 
-  async function handleSubmitSettings(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSettingsError('')
-    setSettingsSuccess('')
-    setIsSavingSettings(true)
+    setError('')
+    setSuccess('')
 
     try {
-      await updateSiteSettings(formData)
-
-      setSettingsSuccess('Settings updated successfully!')
-      await loadSettings()
-    } catch (error) {
-      console.error('Error updating settings:', error)
-      setSettingsError('Failed to update settings')
+      setIsSaving(true)
+      const result = await updateSettings(formData)
+      if ((result as any)?.error) {
+        setError((result as any).error)
+      } else {
+        setSuccess('تم حفظ الإعدادات بنجاح')
+      }
+    } catch (err) {
+      console.error('Error saving settings:', err)
+      setError('خطأ في حفظ الإعدادات')
     } finally {
-      setIsSavingSettings(false)
+      setIsSaving(false)
     }
   }
 
-  async function handleSubmitAdmin(e: React.FormEvent) {
-    e.preventDefault()
-    setAdminError('')
-    setAdminSuccess('')
-    setIsSavingAdmin(true)
-
-    try {
-      const oldPassword = adminForm.oldPassword
-      const newEmail = adminForm.newEmail.trim()
-      const newPassword = adminForm.newPassword
-      const confirmNewPassword = adminForm.confirmNewPassword
-
-      if (!oldPassword) {
-        setAdminError('Old password is required')
-        return
-      }
-
-      if (!newEmail && !newPassword) {
-        setAdminError('Provide a new email or a new password')
-        return
-      }
-
-      if (newPassword) {
-        if (newPassword.length < 8) {
-          setAdminError('New password must be at least 8 characters')
-          return
-        }
-        if (newPassword !== confirmNewPassword) {
-          setAdminError('New passwords do not match')
-          return
-        }
-      }
-
-      const result = await updateCurrentAdminCredentials({
-        oldPassword,
-        newEmail: newEmail ? newEmail : undefined,
-        newPassword: newPassword ? newPassword : undefined,
-      })
-
-      if ((result as any)?.error) {
-        setAdminError((result as any).error)
-        return
-      }
-
-      setAdminSuccess('Admin credentials updated successfully!')
-      setAdminForm({
-        oldPassword: '',
-        newEmail: '',
-        newPassword: '',
-        confirmNewPassword: '',
-      })
-    } catch (error) {
-      console.error('Error updating admin credentials:', error)
-      setAdminError('Failed to update admin credentials')
-    } finally {
-      setIsSavingAdmin(false)
-    }
+  if (isLoading) {
+    return <div className="p-8 text-center">جاري التحميل...</div>
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <header className="border-b border-slate-700 bg-slate-800/50">
-        <div className="container mx-auto px-4 py-6">
-          <Link href="/admin/dashboard" className="text-slate-400 hover:text-slate-200 mb-4 inline-block">
-            ← Back to Dashboard
-          </Link>
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">الإعدادات</h1>
+        <p className="text-muted-foreground">إدارة إعدادات الموقع</p>
+      </div>
+
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-lg">
+          {error}
         </div>
-      </header>
+      )}
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl space-y-8">
-        {isLoading ? (
-          <div className="text-center text-slate-400">Loading settings...</div>
-        ) : (
-          <>
-            {/* ============= Site Settings ============= */}
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-8">
-              <h2 className="text-xl font-bold text-white mb-6">Site Settings</h2>
+      {success && (
+        <div className="p-4 bg-green-500/10 border border-green-500 text-green-600 rounded-lg">
+          {success}
+        </div>
+      )}
 
-              <form onSubmit={handleSubmitSettings} className="space-y-6">
-                {settingsError && (
-                  <div className="bg-red-500/10 border border-red-500 rounded-md p-3">
-                    <p className="text-red-500 text-sm">{settingsError}</p>
-                  </div>
-                )}
+      <form onSubmit={handleSubmit} className="bg-card border rounded-lg p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="admin_limit">عدد المشرفين المسموح</Label>
+            <Input
+              id="admin_limit"
+              type="number"
+              value={formData.admin_limit}
+              onChange={(e) => setFormData({ ...formData, admin_limit: parseInt(e.target.value) || 2 })}
+              min="1"
+              max="10"
+            />
+            <p className="text-xs text-muted-foreground mt-1">عدد حسابات المشرفين التي يمكن إنشاؤها</p>
+          </div>
 
-                {settingsSuccess && (
-                  <div className="bg-green-500/10 border border-green-500 rounded-md p-3">
-                    <p className="text-green-500 text-sm">{settingsSuccess}</p>
-                  </div>
-                )}
+          <div>
+            <Label htmlFor="official_color_id">اللون الافتراضي</Label>
+            <select
+              id="official_color_id"
+              value={formData.official_color_id}
+              onChange={(e) => setFormData({ ...formData, official_color_id: parseInt(e.target.value) })}
+              className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
+            >
+              {colors.map((color) => (
+                <option key={color.id} value={color.id}>
+                  {color.name} ({color.code})
+                </option>
+              ))}
+            </select>
+          </div>
 
-                <div>
-                  <Label htmlFor="site_title" className="text-slate-200">
-                    Site Title
-                  </Label>
-                  <Input
-                    id="site_title"
-                    value={formData.site_title}
-                    onChange={(e) => setFormData({ ...formData, site_title: e.target.value })}
-                    required
-                    className="bg-slate-900 border-slate-600 text-white"
-                  />
-                </div>
+          <div className="flex items-center space-x-3">
+            <input
+              id="dashboard_status"
+              type="checkbox"
+              checked={formData.dashboard_status}
+              onChange={(e) => setFormData({ ...formData, dashboard_status: e.target.checked })}
+              className="w-4 h-4"
+            />
+            <Label htmlFor="dashboard_status" className="cursor-pointer mb-0">
+              الموقع قيد التشغيل (إذا كانت مرة:False) ستظهر شاشة الصيانة
+            </Label>
+          </div>
 
-                <div>
-                  <Label htmlFor="site_description" className="text-slate-200">
-                    Site Description
-                  </Label>
-                  <textarea
-                    id="site_description"
-                    value={formData.site_description}
-                    onChange={(e) => setFormData({ ...formData, site_description: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-600 text-white rounded-md p-2"
-                    rows={4}
-                  />
-                </div>
+          <div className="flex items-center space-x-3">
+            <input
+              id="open_to_work"
+              type="checkbox"
+              checked={formData.open_to_work}
+              onChange={(e) => setFormData({ ...formData, open_to_work: e.target.checked })}
+              className="w-4 h-4"
+            />
+            <Label htmlFor="open_to_work" className="cursor-pointer mb-0">
+              مستعد للعمل
+            </Label>
+          </div>
+        </div>
 
-                <div>
-                  <Label htmlFor="og_image" className="text-slate-200">
-                    OG Image URL (for social sharing)
-                  </Label>
-                  <Input
-                    id="og_image"
-                    type="url"
-                    value={formData.og_image}
-                    onChange={(e) => setFormData({ ...formData, og_image: e.target.value })}
-                    className="bg-slate-900 border-slate-600 text-white"
-                  />
-                </div>
+        <div>
+          <Label htmlFor="notifications">الرسالة الفورية (إن وجدت)</Label>
+          <textarea
+            id="notifications"
+            value={formData.notifications ? JSON.stringify(formData.notifications) : ''}
+            onChange={(e) => {
+              try {
+                const parsed = e.target.value ? JSON.parse(e.target.value) : null
+                setFormData({ ...formData, notifications: parsed })
+              } catch {
+                setFormData({ ...formData, notifications: e.target.value })
+              }
+            }}
+            className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
+            placeholder='{"message": "رسالة مهمة", "type": "warning"}'
+            rows={4}
+          />
+          <p className="text-xs text-muted-foreground mt-1">JSON format - ستظهر في منتصف الصفحة مع خلفية شفافة</p>
+        </div>
 
-                <div>
-                  <Label htmlFor="site_url" className="text-slate-200">
-                    Site URL
-                  </Label>
-                  <Input
-                    id="site_url"
-                    type="url"
-                    value={formData.site_url}
-                    onChange={(e) => setFormData({ ...formData, site_url: e.target.value })}
-                    required
-                    className="bg-slate-900 border-slate-600 text-white"
-                  />
-                </div>
-
-                <div className="border-t border-slate-700 pt-6">
-                  <h3 className="text-lg font-bold text-white mb-4">Maintenance Mode</h3>
-                  <label className="flex items-center gap-3 text-slate-200">
-                    <input
-                      type="checkbox"
-                      checked={formData.maintenance_mode}
-                      onChange={(e) => setFormData({ ...formData, maintenance_mode: e.target.checked })}
-                      className="w-4 h-4"
-                    />
-                    <span>Enable Maintenance Mode</span>
-                  </label>
-                  <p className="text-sm text-slate-400 mt-2">
-                    When enabled, visitors will see a maintenance page instead of your site.
-                  </p>
-                </div>
-
-                <Button type="submit" disabled={isSavingSettings} className="w-full bg-blue-600 hover:bg-blue-700">
-                  {isSavingSettings ? 'Saving...' : 'Save Site Settings'}
-                </Button>
-              </form>
-            </div>
-
-            {/* ============= Admin Credentials ============= */}
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-8">
-              <h2 className="text-xl font-bold text-white mb-2">Admin Credentials</h2>
-              <p className="text-slate-400 text-sm mb-6">
-                Changing email/password requires your current (old) password.
-              </p>
-
-              <form onSubmit={handleSubmitAdmin} className="space-y-6">
-                {adminError && (
-                  <div className="bg-red-500/10 border border-red-500 rounded-md p-3">
-                    <p className="text-red-500 text-sm">{adminError}</p>
-                  </div>
-                )}
-
-                {adminSuccess && (
-                  <div className="bg-green-500/10 border border-green-500 rounded-md p-3">
-                    <p className="text-green-500 text-sm">{adminSuccess}</p>
-                  </div>
-                )}
-
-                <div>
-                  <Label htmlFor="oldPassword" className="text-slate-200">
-                    Old Password
-                  </Label>
-                  <Input
-                    id="oldPassword"
-                    type="password"
-                    value={adminForm.oldPassword}
-                    onChange={(e) => setAdminForm({ ...adminForm, oldPassword: e.target.value })}
-                    required
-                    className="bg-slate-900 border-slate-600 text-white"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="newEmail" className="text-slate-200">
-                    New Email (optional)
-                  </Label>
-                  <Input
-                    id="newEmail"
-                    type="email"
-                    value={adminForm.newEmail}
-                    onChange={(e) => setAdminForm({ ...adminForm, newEmail: e.target.value })}
-                    placeholder="new-admin@example.com"
-                    className="bg-slate-900 border-slate-600 text-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="newPassword" className="text-slate-200">
-                      New Password (optional)
-                    </Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={adminForm.newPassword}
-                      onChange={(e) => setAdminForm({ ...adminForm, newPassword: e.target.value })}
-                      className="bg-slate-900 border-slate-600 text-white"
-                    />
-                    <p className="text-xs text-slate-400 mt-2">Min 8 characters if provided.</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="confirmNewPassword" className="text-slate-200">
-                      Confirm New Password
-                    </Label>
-                    <Input
-                      id="confirmNewPassword"
-                      type="password"
-                      value={adminForm.confirmNewPassword}
-                      onChange={(e) => setAdminForm({ ...adminForm, confirmNewPassword: e.target.value })}
-                      className="bg-slate-900 border-slate-600 text-white"
-                      disabled={!adminForm.newPassword}
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isSavingAdmin}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {isSavingAdmin ? 'Saving...' : 'Update Admin Credentials'}
-                </Button>
-              </form>
-            </div>
-          </>
-        )}
-      </main>
+        <Button type="submit" disabled={isSaving} className="w-full">
+          {isSaving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+        </Button>
+      </form>
     </div>
   )
 }
