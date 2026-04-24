@@ -64,7 +64,7 @@ export default function FeaturedProjects() {
     ...categories.map((cat) => {
       return {
         id: cat.id,
-        label: cat.name,
+        label: cat.title || cat.name || 'Category',
         count: projectCounts[cat.id] || 0,
       }
     }),

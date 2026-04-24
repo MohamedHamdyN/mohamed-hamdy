@@ -212,7 +212,7 @@ export default function SocialLinks({
 
   const socialNetworks = useMemo(() => {
     return (items || [])
-      .filter((x) => x && x.enabled !== false && x.url && String(x.url).trim())
+      .filter((x) => x && x.status !== false && x.url && String(x.url).trim())
       .sort((a, b) => Number(a.order ?? 0) - Number(b.order ?? 0))
       .map((x) => {
         const host = getHostname(x.url)

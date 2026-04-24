@@ -81,7 +81,7 @@ export default function ProjectsGrid() {
     ...categories.map((cat) => {
       return {
         id: cat.id,
-        label: cat.name,
+        label: cat.title || cat.name || 'Category',
         count: projectCounts[cat.id] || 0,
       }
     }),

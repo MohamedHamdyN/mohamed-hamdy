@@ -117,7 +117,7 @@ export default function Clients() {
               >
                 <div className="relative w-20 h-20 mb-4 overflow-hidden rounded-lg bg-muted/30 flex items-center justify-center">
                   <Image
-                    src={client.logo_url || '/placeholder.svg'}
+                    src={client.logo || '/placeholder.svg'}
                     alt={client.name}
                     fill
                     className="object-contain group-hover:scale-110 transition-transform duration-300 p-2"

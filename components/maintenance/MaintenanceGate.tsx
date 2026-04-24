@@ -42,7 +42,7 @@ export default function MaintenanceGate({
     const sorted = [...(data.socialLinks ?? [])].sort(
       (a, b) => (a.order ?? 0) - (b.order ?? 0)
     )
-    return sorted.filter((x) => x?.enabled !== false && x?.url)
+    return sorted.filter((x) => x?.status !== false && x?.url)
   }, [data.socialLinks])
 
   const titleLine = data.shortTitle?.trim() ? data.shortTitle.trim() : data.title

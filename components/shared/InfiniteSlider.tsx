@@ -46,7 +46,7 @@ export default function InfiniteSlider({
   const [isPaused, setIsPaused] = useState(false)
   const isMobile = useMobile()
 
-  const enabledItems = items.filter((item) => item.enabled !== false)
+  const enabledItems = items.filter((item) => item.status !== false)
   const displayItems = [...enabledItems, ...enabledItems]
 
   useEffect(() => {

@@ -42,7 +42,7 @@ export default function DynamicSlider({
   const isInView = useInView(containerRef, { once: false, amount: 0.2 })
 
   // Filter enabled items
-  const enabledItems = items.filter((item) => item.enabled !== false)
+  const enabledItems = items.filter((item) => item.status !== false)
 
   // Duplicate items for infinite effect
   const displayItems = [...enabledItems, ...enabledItems]

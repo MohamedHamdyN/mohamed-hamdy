@@ -5,10 +5,13 @@ import { useProfileSafe } from "@/context/useProfileSafe"
 import { useTranslations } from "@/hooks/useTranslations"
 
 type EducationItem = {
+  id: number
   title?: string
-  institution?: string
-  year?: string
-  description?: string
+  university?: string
+  degree?: string
+  start_date?: string
+  end_date?: string
+  status?: boolean
 }
 
 export default function Education() {
@@ -68,12 +71,16 @@ export default function Education() {
               >
                 <div className="relative z-10 flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-foreground">{item.title || "Education Item"}</h3>
-                    <p className={color.text}>{item.institution || ""}</p>
+                    <h3 className="text-xl font-bold text-foreground">{item.degree || "Education Item"}</h3>
+                    <p className={color.text}>{item.university || ""}</p>
                   </div>
-                  {item.year && <span className={`text-sm font-medium whitespace-nowrap ${color.text}`}>{item.year}</span>}
+                  {item.start_date && (
+                    <span className={`text-sm font-medium whitespace-nowrap ${color.text}`}>
+                      {item.start_date} {item.end_date ? `- ${item.end_date}` : ''}
+                    </span>
+                  )}
                 </div>
-                {item.description && <p className="mt-4 text-muted-foreground">{item.description}</p>}
+                {item.title && <p className="mt-4 text-muted-foreground">{item.title}</p>}
                 
                 <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full ${color.icon} blur-2xl group-hover:blur-3xl transition-all duration-300`} />
               </motion.div>

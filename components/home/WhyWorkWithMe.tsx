@@ -8,7 +8,7 @@ export default function WhyWorkWithMe() {
   const t = useTranslations()
 
   // Filter enabled reasons
-  const enabledReasons = reasons.filter((reason) => reason.enabled !== false)
+  const enabledReasons = reasons.filter((reason) => reason.status !== false)
 
   return (
     <InfiniteSlider
