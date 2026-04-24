@@ -9,6 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export default function AdminSettingsPage() {
+  const [settings, setSettings] = useState<any>(null)
+  const [colors, setColors] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
   const [formData, setFormData] = useState({
     admin_limit: 2,
     dashboard_status: true,
@@ -17,29 +24,30 @@ export default function AdminSettingsPage() {
     notifications: null as any,
   })
 
-  const [colors, setColors] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-
   useEffect(() => {
     loadData()
   }, [])
 
   async function loadData() {
     try {
-      const [settings, colorsList] = await Promise.all([
+      const [settingsData, colorsData] = await Promise.all([
         getSettings(),
         getColors(),
       ])
-      if (settings) {
-        setFormData(settings)
+      if (settingsData) {
+        setSettings(settingsData)
+        setFormData({
+          admin_limit: settingsData.admin_limit || 2,
+          dashboard_status: settingsData.dashboard_status !== false,
+          open_to_work: settingsData.open_to_work !== false,
+          official_color_id: settingsData.official_color_id || 1,
+          notifications: settingsData.notifications,
+        })
       }
-      setColors(colorsList || [])
+      setColors(colorsData || [])
     } catch (err) {
-      console.error('Error loading data:', err)
-      setError('فشل في تحميل البيانات')
+      console.error('Error loading settings:', err)
+      setError('Failed to load settings')
     } finally {
       setIsLoading(false)
     }
@@ -52,123 +60,108 @@ export default function AdminSettingsPage() {
 
     try {
       setIsSaving(true)
-      const result = await updateSettings(formData)
-      if ((result as any)?.error) {
-        setError((result as any).error)
-      } else {
-        setSuccess('تم حفظ الإعدادات بنجاح')
-      }
+      await updateSettings(formData)
+      setSuccess('Settings saved successfully!')
+      await loadData()
     } catch (err) {
       console.error('Error saving settings:', err)
-      setError('خطأ في حفظ الإعدادات')
+      setError('Error saving settings')
     } finally {
       setIsSaving(false)
     }
   }
 
   if (isLoading) {
-    return <div className="p-8 text-center">جاري التحميل...</div>
+    return <div className="p-8 text-center">Loading settings...</div>
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-2">الإعدادات</h1>
-        <p className="text-muted-foreground">إدارة إعدادات الموقع</p>
+        <h1 className="text-3xl font-bold mb-2">Site Settings</h1>
+        <p className="text-muted-foreground">Manage global website settings</p>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-lg">
-          {error}
+      {error && <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-lg">{error}</div>}
+      {success && <div className="p-4 bg-green-500/10 border border-green-500 text-green-600 rounded-lg">{success}</div>}
+
+      <form onSubmit={handleSubmit} className="space-y-6 bg-card border rounded-lg p-6">
+        <div>
+          <Label htmlFor="admin_limit">Admin User Limit</Label>
+          <Input
+            id="admin_limit"
+            type="number"
+            value={formData.admin_limit}
+            onChange={(e) => setFormData({ ...formData, admin_limit: parseInt(e.target.value) || 2 })}
+            min="1"
+            max="10"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Maximum number of admin accounts allowed</p>
         </div>
-      )}
 
-      {success && (
-        <div className="p-4 bg-green-500/10 border border-green-500 text-green-600 rounded-lg">
-          {success}
+        <div>
+          <Label htmlFor="official_color_id">Default Color Theme</Label>
+          <select
+            id="official_color_id"
+            value={formData.official_color_id}
+            onChange={(e) => setFormData({ ...formData, official_color_id: parseInt(e.target.value) })}
+            className="w-full px-3 py-2 border rounded-md bg-background"
+          >
+            {colors.map((color) => (
+              <option key={color.id} value={color.id}>
+                {color.name}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="bg-card border rounded-lg p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="admin_limit">عدد المشرفين المسموح</Label>
-            <Input
-              id="admin_limit"
-              type="number"
-              value={formData.admin_limit}
-              onChange={(e) => setFormData({ ...formData, admin_limit: parseInt(e.target.value) || 2 })}
-              min="1"
-              max="10"
-            />
-            <p className="text-xs text-muted-foreground mt-1">عدد حسابات المشرفين التي يمكن إنشاؤها</p>
-          </div>
-
-          <div>
-            <Label htmlFor="official_color_id">اللون الافتراضي</Label>
-            <select
-              id="official_color_id"
-              value={formData.official_color_id}
-              onChange={(e) => setFormData({ ...formData, official_color_id: parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
-            >
-              {colors.map((color) => (
-                <option key={color.id} value={color.id}>
-                  {color.name} ({color.code})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center space-x-3">
+        <div className="space-y-4">
+          <h3 className="font-semibold">Website Status</h3>
+          
+          <div className="flex items-center gap-3">
             <input
-              id="dashboard_status"
               type="checkbox"
+              id="dashboard_status"
               checked={formData.dashboard_status}
               onChange={(e) => setFormData({ ...formData, dashboard_status: e.target.checked })}
-              className="w-4 h-4"
+              className="h-4 w-4 rounded border-gray-300"
             />
-            <Label htmlFor="dashboard_status" className="cursor-pointer mb-0">
-              الموقع قيد التشغيل (إذا كانت مرة:False) ستظهر شاشة الصيانة
-            </Label>
+            <div>
+              <Label htmlFor="dashboard_status" className="text-base cursor-pointer">Dashboard Active</Label>
+              <p className="text-sm text-muted-foreground">Allow access to admin dashboard</p>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <input
-              id="open_to_work"
               type="checkbox"
+              id="open_to_work"
               checked={formData.open_to_work}
               onChange={(e) => setFormData({ ...formData, open_to_work: e.target.checked })}
-              className="w-4 h-4"
+              className="h-4 w-4 rounded border-gray-300"
             />
-            <Label htmlFor="open_to_work" className="cursor-pointer mb-0">
-              مستعد للعمل
-            </Label>
+            <div>
+              <Label htmlFor="open_to_work" className="text-base cursor-pointer">Open to Work</Label>
+              <p className="text-sm text-muted-foreground">Show availability for new projects</p>
+            </div>
           </div>
         </div>
 
         <div>
-          <Label htmlFor="notifications">الرسالة الفورية (إن وجدت)</Label>
+          <Label htmlFor="notifications">Notification Message</Label>
           <textarea
             id="notifications"
-            value={formData.notifications ? JSON.stringify(formData.notifications) : ''}
-            onChange={(e) => {
-              try {
-                const parsed = e.target.value ? JSON.parse(e.target.value) : null
-                setFormData({ ...formData, notifications: parsed })
-              } catch {
-                setFormData({ ...formData, notifications: e.target.value })
-              }
-            }}
-            className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
-            placeholder='{"message": "رسالة مهمة", "type": "warning"}'
-            rows={4}
+            value={formData.notifications || ''}
+            onChange={(e) => setFormData({ ...formData, notifications: e.target.value || null })}
+            placeholder="Leave empty to disable notifications"
+            className="w-full px-3 py-2 border rounded-md bg-background"
+            rows={3}
           />
-          <p className="text-xs text-muted-foreground mt-1">JSON format - ستظهر في منتصف الصفحة مع خلفية شفافة</p>
+          <p className="text-xs text-muted-foreground mt-1">Message displayed in modal popup on website</p>
         </div>
 
-        <Button type="submit" disabled={isSaving} className="w-full">
-          {isSaving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save Settings'}
         </Button>
       </form>
     </div>

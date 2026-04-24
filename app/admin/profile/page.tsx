@@ -42,7 +42,7 @@ export default function AdminProfilePage() {
       }
     } catch (err) {
       console.error('Error loading profile:', err)
-      setError('فشل في تحميل البيانات')
+      setError('Failed to load profile data')
     } finally {
       setIsLoading(false)
     }
@@ -59,172 +59,165 @@ export default function AdminProfilePage() {
       if ((result as any)?.error) {
         setError((result as any).error)
       } else {
-        setSuccess('تم حفظ البيانات بنجاح')
+        setSuccess('Profile saved successfully!')
         await loadProfile()
       }
     } catch (err) {
       console.error('Error saving profile:', err)
-      setError('خطأ في حفظ البيانات')
+      setError('Error saving profile data')
     } finally {
       setIsSaving(false)
     }
   }
 
   if (isLoading) {
-    return <div className="p-8 text-center">جاري التحميل...</div>
+    return <div className="p-8 text-center">Loading profile...</div>
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-2">الملف الشخصي</h1>
-        <p className="text-muted-foreground">تحديث بيانات الملف الشخصي</p>
+        <h1 className="text-3xl font-bold mb-2">Profile Settings</h1>
+        <p className="text-muted-foreground">Edit your profile information</p>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-lg">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-4 bg-red-500/10 border border-red-500 text-red-600 rounded-lg">{error}</div>}
+      {success && <div className="p-4 bg-green-500/10 border border-green-500 text-green-600 rounded-lg">{success}</div>}
 
-      {success && (
-        <div className="p-4 bg-green-500/10 border border-green-500 text-green-600 rounded-lg">
-          {success}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="bg-card border rounded-lg p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-card border rounded-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="name">الاسم</Label>
+            <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="محمد حمدي"
+              placeholder="Your full name"
             />
           </div>
-
           <div>
-            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="email@example.com"
+              placeholder="your.email@example.com"
             />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="job_title_1">الوظيفة الأولى</Label>
+            <Label htmlFor="job_title_1">Primary Job Title</Label>
             <Input
               id="job_title_1"
               value={formData.job_title_1}
               onChange={(e) => setFormData({ ...formData, job_title_1: e.target.value })}
-              placeholder="مطور ويب"
+              placeholder="e.g., Data Analyst"
             />
           </div>
-
           <div>
-            <Label htmlFor="job_title_2">الوظيفة الثانية</Label>
+            <Label htmlFor="job_title_2">Secondary Job Title</Label>
             <Input
               id="job_title_2"
               value={formData.job_title_2}
               onChange={(e) => setFormData({ ...formData, job_title_2: e.target.value })}
-              placeholder="مصمم UI/UX"
+              placeholder="e.g., Financial Accountant"
             />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="phone_number">رقم الهاتف (أدخل 00 لإخفاءه)</Label>
+            <Label htmlFor="phone_number">Phone Number (leave 00 to hide)</Label>
             <Input
               id="phone_number"
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-              placeholder="+966..."
+              placeholder="+1 (555) 123-4567"
             />
           </div>
-
           <div>
-            <Label htmlFor="location">الموقع (أدخل 00 لإخفاءه)</Label>
+            <Label htmlFor="location">Location (leave 00 to hide)</Label>
             <Input
               id="location"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="الرياض، السعودية"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="resume_url">رابط السيرة الذاتية</Label>
-            <Input
-              id="resume_url"
-              value={formData.resume_url}
-              onChange={(e) => setFormData({ ...formData, resume_url: e.target.value })}
-              placeholder="https://..."
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="calendly_url">رابط Calendly (أدخل 00 لإخفاءه)</Label>
-            <Input
-              id="calendly_url"
-              value={formData.calendly_url}
-              onChange={(e) => setFormData({ ...formData, calendly_url: e.target.value })}
-              placeholder="https://calendly.com/..."
+              placeholder="City, Country"
             />
           </div>
         </div>
 
         <div>
-          <Label htmlFor="hero_description">الوصف في الصفحة الرئيسية</Label>
+          <Label htmlFor="hero_description">Hero Description</Label>
           <Textarea
             id="hero_description"
             value={formData.hero_description}
             onChange={(e) => setFormData({ ...formData, hero_description: e.target.value })}
-            placeholder="الوصف القصير في الصفحة الرئيسية"
+            placeholder="Short description shown on home page"
             rows={3}
           />
         </div>
 
         <div>
-          <Label htmlFor="special_description">الوصف الخاص (في صفحة About)</Label>
+          <Label htmlFor="special_description">Special Description (About page header)</Label>
           <Textarea
             id="special_description"
             value={formData.special_description}
             onChange={(e) => setFormData({ ...formData, special_description: e.target.value })}
-            placeholder="يظهر في أول صفحة About"
-            rows={4}
+            placeholder="Description shown at the top of About page"
+            rows={3}
           />
         </div>
 
         <div>
-          <Label htmlFor="description">الوصف العام (في صفحة About)</Label>
+          <Label htmlFor="description">Full Description (About page)</Label>
           <Textarea
             id="description"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="يظهر أسفل special_description"
-            rows={4}
+            placeholder="Full biography shown on About page"
+            rows={5}
           />
         </div>
 
         <div>
-          <Label htmlFor="quote">الاقتباس أو الرسالة</Label>
+          <Label htmlFor="quote">Quote</Label>
           <Textarea
             id="quote"
             value={formData.quote}
             onChange={(e) => setFormData({ ...formData, quote: e.target.value })}
-            placeholder="رسالة أو اقتباس يظهر بشكل مميز"
+            placeholder="Inspirational quote or motto"
+            rows={2}
             maxLength={150}
-            rows={3}
           />
           <p className="text-xs text-muted-foreground mt-1">{formData.quote.length}/150</p>
         </div>
 
-        <Button type="submit" disabled={isSaving} className="w-full">
-          {isSaving ? 'جاري الحفظ...' : 'حفظ البيانات'}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Label htmlFor="resume_url">Resume URL</Label>
+            <Input
+              id="resume_url"
+              value={formData.resume_url}
+              onChange={(e) => setFormData({ ...formData, resume_url: e.target.value })}
+              placeholder="https://example.com/resume.pdf"
+            />
+          </div>
+          <div>
+            <Label htmlFor="calendly_url">Calendly URL (leave 00 to hide)</Label>
+            <Input
+              id="calendly_url"
+              value={formData.calendly_url}
+              onChange={(e) => setFormData({ ...formData, calendly_url: e.target.value })}
+              placeholder="https://calendly.com/yourname"
+            />
+          </div>
+        </div>
+
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save Profile'}
         </Button>
       </form>
     </div>
