@@ -15,6 +15,8 @@ interface Category {
   slug: string
   description?: string
   sort_order?: number
+  color_id?: number
+  status?: boolean
 }
 
 export default function AdminCategoriesPage() {
@@ -29,6 +31,8 @@ export default function AdminCategoriesPage() {
     slug: '',
     description: '',
     sort_order: 0,
+    color_id: 1,
+    status: true,
   })
 
   useEffect(() => {
@@ -81,6 +85,8 @@ export default function AdminCategoriesPage() {
       slug: category.slug,
       description: category.description || '',
       sort_order: category.sort_order || 0,
+      color_id: category.color_id || 1,
+      status: category.status !== false,
     })
   }
 
@@ -163,7 +169,7 @@ export default function AdminCategoriesPage() {
                 variant="outline"
                 onClick={() => {
                   setEditingId(null)
-                  setFormData({ name: '', slug: '', description: '', sort_order: 0 })
+      setFormData({ name: '', slug: '', description: '', sort_order: 0, color_id: 1, status: true })
                 }}
               >
                 إلغاء

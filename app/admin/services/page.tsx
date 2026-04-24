@@ -22,10 +22,10 @@ export default function AdminServicesPage() {
     title: '',
     description: '',
     icon: '',
-    color: '',
+    color_id: 1,
     features: [] as string[],
-    enabled: true,
-    order: 0,
+    status: true,
+    sort_order: 0,
   })
 
   useEffect(() => {
@@ -82,10 +82,10 @@ export default function AdminServicesPage() {
       title: '',
       description: '',
       icon: '',
-      color: '',
+      color_id: 1,
       features: [],
-      enabled: true,
-      order: 0,
+      status: true,
+      sort_order: 0,
     })
     setFeatureInput('')
   }

@@ -20,8 +20,11 @@ export default function AdminSkillsPage() {
   const [success, setSuccess] = useState('')
 
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
+    description: '',
+    category_id: null,
     color_id: 1,
+    icon: '',
     status: true,
     sort_order: 0,
   })
@@ -80,8 +83,11 @@ export default function AdminSkillsPage() {
     setEditingId(null)
     setShowForm(false)
     setFormData({
-      name: '',
+      title: '',
+      description: '',
+      category_id: null,
       color_id: 1,
+      icon: '',
       status: true,
       sort_order: 0,
     })
