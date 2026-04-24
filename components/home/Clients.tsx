@@ -18,8 +18,8 @@ export default function Clients() {
     async function loadClients() {
       try {
         const data = await getClients()
-        // Filter enabled clients
-        const enabledClients = data.filter((client) => client.enabled !== false)
+        // Filter enabled clients by status
+        const enabledClients = data.filter((client) => client.status !== false)
         setClients(enabledClients)
       } catch (error) {
         console.error('Error loading clients:', error)

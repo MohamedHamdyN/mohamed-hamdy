@@ -8,33 +8,37 @@ import Link from "next/link"
 
 type Experience = {
   id: number
-  year: string
-  title: string
-  details: string
-  enabled?: boolean
-  order?: number
+  job_title: string
+  company: string
+  description: string
+  status?: boolean
+  sort_order?: number
+  start_date?: string
+  end_date?: string
+  logo?: string
 }
 
 type Education = {
   id: number
-  year: string
+  title: string
   degree: string
-  institution: string
-  details: string
-  enabled?: boolean
-  order?: number
+  university: string
+  status?: boolean
+  sort_order?: number
+  start_date?: string
+  end_date?: string
 }
 
 type Skill = {
   id: number
-  name: string
-  color?: string
-  enabled?: boolean
-  order?: number
+  title: string
+  color_id?: number
+  status?: boolean
+  sort_order?: number
 }
 
-function sortByOrder<T extends { order?: number; id: number }>(items: T[]) {
-  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id)
+function sortByOrder<T extends { sort_order?: number; id: number }>(items: T[]) {
+  return [...items].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id)
 }
 
 export default function AboutResume({
@@ -50,8 +54,8 @@ export default function AboutResume({
 }) {
   const t = useTranslations()
 
-  const exp = sortByOrder((experiences ?? []).filter((x) => x.enabled !== false))
-  const edu = sortByOrder((educations ?? []).filter((x) => x.enabled !== false))
+  const exp = sortByOrder((experiences ?? []).filter((x) => x.status !== false))
+  const edu = sortByOrder((educations ?? []).filter((x) => x.status !== false))
 
   return (
     <section className="py-16 bg-gradient-to-b from-background/50 to-background relative overflow-hidden">
@@ -134,12 +138,17 @@ export default function AboutResume({
               >
                 <div className="relative">
                   <div className="absolute w-3 h-3 bg-primary rounded-full -left-[1.4rem] top-1.5"></div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    <span className="text-primary font-medium">{x.year}</span>
-                  </div>
-                  <h4 className="text-xl font-bold">{x.title}</h4>
-                  <p className="text-muted-foreground mt-2">{x.details}</p>
+                  {x.start_date && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span className="text-primary font-medium">
+                        {x.start_date} {x.end_date ? `- ${x.end_date}` : ''}
+                      </span>
+                    </div>
+                  )}
+                  <h4 className="text-xl font-bold">{x.job_title}</h4>
+                  <p className="text-primary/80 font-medium">{x.company}</p>
+                  <p className="text-muted-foreground mt-2">{x.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -169,13 +178,17 @@ export default function AboutResume({
               >
                 <div className="relative">
                   <div className="absolute w-3 h-3 bg-blue-500 rounded-full -left-[1.4rem] top-1.5"></div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Calendar className="h-4 w-4 text-blue-500" />
-                    <span className="text-blue-500 font-medium">{x.year}</span>
-                  </div>
+                  {x.start_date && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar className="h-4 w-4 text-blue-500" />
+                      <span className="text-blue-500 font-medium">
+                        {x.start_date} {x.end_date ? `- ${x.end_date}` : ''}
+                      </span>
+                    </div>
+                  )}
                   <h4 className="text-xl font-bold text-white">{x.degree}</h4>
-                  <p className="text-blue-300 font-semibold mt-1">{x.institution}</p>
-                  <p className="text-muted-foreground mt-2">{x.details}</p>
+                  <p className="text-blue-300 font-semibold mt-1">{x.university}</p>
+                  <p className="text-muted-foreground mt-2">{x.title}</p>
                 </div>
               </motion.div>
             ))}
@@ -195,7 +208,7 @@ export default function AboutResume({
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-              {sortByOrder(skills.filter((s) => s.enabled !== false)).map((skill, idx) => (
+              {sortByOrder(skills.filter((s) => s.status !== false)).map((skill, idx) => (
                 <motion.div
                   key={skill.id}
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -206,17 +219,17 @@ export default function AboutResume({
                   <div
                     className={`p-4 rounded-lg text-center transition-all duration-300 hover:scale-105 cursor-default`}
                     style={{
-                      backgroundColor: skill.color ? `${skill.color}15` : undefined,
-                      borderLeft: `3px solid ${skill.color || '#3b82f6'}`,
+                      backgroundColor: '#3b82f6' + '15',
+                      borderLeft: `3px solid #3b82f6`,
                     }}
                   >
                     <span
                       className="font-semibold text-sm md:text-base"
                       style={{
-                        color: skill.color || '#3b82f6',
+                        color: '#3b82f6',
                       }}
                     >
-                      {skill.name}
+                      {skill.title}
                     </span>
                   </div>
                 </motion.div>

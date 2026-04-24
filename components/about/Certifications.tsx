@@ -9,18 +9,16 @@ type CertificationItem = {
   id: number
   title: string
   issuer: string
-  date?: string
-  issue_date?: string | null
+  issuer_date?: string | null
   description?: string | null
-  credentialUrl?: string | null
-  credential_url?: string | null
-  enabled?: boolean
+  url?: string | null
+  status?: boolean
 }
 
 export default function Certifications({ items }: { items: CertificationItem[] }) {
   const t = useTranslations()
 
-  const enabledItems = (items ?? []).filter((x) => x.enabled !== false)
+  const enabledItems = (items ?? []).filter((x) => x.status !== false)
   if (enabledItems.length === 0) return null
 
   return (
@@ -68,8 +66,8 @@ export default function Certifications({ items }: { items: CertificationItem[] }
 
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {enabledItems.map((cert, index) => {
-            const date = cert.date ?? (cert.issue_date ? String(cert.issue_date).slice(0, 4) : "")
-            const url = cert.credentialUrl ?? cert.credential_url ?? null
+            const date = cert.issuer_date ? String(cert.issuer_date).slice(0, 4) : ""
+            const url = cert.url ?? null
 
             return (
               <motion.div

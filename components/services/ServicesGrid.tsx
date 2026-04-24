@@ -16,9 +16,8 @@ export default function ServicesGrid() {
     async function loadServices() {
       try {
         const data = await getServices()
-        // تصفية الخدمات المفعلة
-        const enabledServices = data.filter((service) => service.enabled)
-        setServices(enabledServices)
+        // Filter enabled services
+        setServices(data)
       } catch (error) {
         console.error('Error loading services:', error)
         setServices([])
