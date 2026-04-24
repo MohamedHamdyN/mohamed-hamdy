@@ -68,13 +68,7 @@ export default function AdminSettingsPage() {
     setIsSavingSettings(true)
 
     try {
-      await Promise.all([
-        updateSiteSettings('site_title', formData.site_title, 'string'),
-        updateSiteSettings('site_description', formData.site_description, 'string'),
-        updateSiteSettings('og_image', formData.og_image, 'string'),
-        updateSiteSettings('site_url', formData.site_url, 'string'),
-        updateSiteSettings('maintenance_mode', formData.maintenance_mode, 'boolean'),
-      ])
+      await updateSiteSettings(formData)
 
       setSettingsSuccess('Settings updated successfully!')
       await loadSettings()

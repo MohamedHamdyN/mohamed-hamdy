@@ -918,3 +918,105 @@ export async function getAdminsCount() {
     return { error: 'Failed to get admins count', count: 0 }
   }
 }
+
+// ==================== MISSING DELETE FUNCTIONS ====================
+
+export async function deleteCategory(id: number) {
+  try {
+    await db.query('DELETE FROM categories WHERE id = $1', [id])
+    revalidatePath('/admin/categories')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] deleteCategory error:', error)
+    return { error: 'Failed to delete category' }
+  }
+}
+
+export async function deleteStat(id: number) {
+  try {
+    await db.query('DELETE FROM stats WHERE id = $1', [id])
+    revalidatePath('/admin/about')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] deleteStat error:', error)
+    return { error: 'Failed to delete stat' }
+  }
+}
+
+export async function updateStat(id: number, data: any) {
+  try {
+    const { label, value, description } = data
+    await db.query(
+      'UPDATE stats SET label = $1, value = $2, description = $3 WHERE id = $4',
+      [label, value, description || null, id]
+    )
+    revalidatePath('/admin/about')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] updateStat error:', error)
+    return { error: 'Failed to update stat' }
+  }
+}
+
+export async function deleteCertification(id: number) {
+  try {
+    await db.query('DELETE FROM certifications WHERE id = $1', [id])
+    revalidatePath('/admin/about')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] deleteCertification error:', error)
+    return { error: 'Failed to delete certification' }
+  }
+}
+
+export async function deleteClient(id: number) {
+  try {
+    await db.query('DELETE FROM clients WHERE id = $1', [id])
+    revalidatePath('/admin/clients')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] deleteClient error:', error)
+    return { error: 'Failed to delete client' }
+  }
+}
+
+export async function updateSiteSettings(data: any) {
+  try {
+    const { site_title, site_description, site_url } = data
+    await db.query(
+      'UPDATE settings SET site_title = $1, site_description = $2, site_url = $3 WHERE id = 1',
+      [site_title, site_description, site_url]
+    )
+    revalidatePath('/admin/settings')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] updateSiteSettings error:', error)
+    return { error: 'Failed to update settings' }
+  }
+}
+
+export async function createSocialLink(data: any) {
+  try {
+    const { platform, url, icon, sort_order } = data
+    await db.query(
+      'INSERT INTO social_media (platform, url, icon, sort_order) VALUES ($1, $2, $3, $4)',
+      [platform, url, icon || null, sort_order || 0]
+    )
+    revalidatePath('/admin/social')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] createSocialLink error:', error)
+    return { error: 'Failed to create social link' }
+  }
+}
+
+export async function deleteSocialLink(id: number) {
+  try {
+    await db.query('DELETE FROM social_media WHERE id = $1', [id])
+    revalidatePath('/admin/social')
+    return { success: true }
+  } catch (error) {
+    console.error('[cms] deleteSocialLink error:', error)
+    return { error: 'Failed to delete social link' }
+  }
+}

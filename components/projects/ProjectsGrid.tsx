@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getProjects, getProfile, getProjectCategories } from '@/app/actions/cms'
+import { getProjects, getProfile, getCategories } from '@/app/actions/cms'
 import ProjectCard from './ProjectCard'
 import ProjectModal from './ProjectModal'
 import { useTranslations } from '@/hooks/useTranslations'
@@ -33,9 +33,9 @@ export default function ProjectsGrid() {
     async function loadData() {
       try {
         const [projectsData, profileData, categoriesData] = await Promise.all([
-          getProjects(false),
+          getProjects(),
           getProfile(),
-          getProjectCategories(),
+          getCategories(),
         ])
 
         // ✅ Map DB shape -> UI shape expected by ProjectCard/ProjectModal

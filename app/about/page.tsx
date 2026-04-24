@@ -16,37 +16,30 @@ import {
   getProfile,
   getProjects,
   getSkills,
-  getAboutStats,
-  getAboutSectionFull,
+  getStats,
   getExperiences,
-  getEducations,
+  getEducation,
   getCertifications,
 } from "@/app/actions/cms"
 
-import type { AboutLang } from "@/app/actions/cms"
-
 export default async function AboutPage() {
   if (!toggleSettings.about_page) notFound()
-
-  const LANG: AboutLang = "en" // لاحقًا تربطه بالـ locale
 
   const [
     profile,
     projects,
     skills,
-    aboutStats,
-    longBio,
+    stats,
     experiences,
     educations,
     certifications,
   ] = await Promise.all([
     getProfile(),
-    getProjects(false),
+    getProjects(),
     getSkills(),
-    getAboutStats(),
-    getAboutSectionFull(LANG),
+    getStats(),
     getExperiences(),
-    getEducations(),
+    getEducation(),
     getCertifications(),
   ])
 
@@ -60,13 +53,7 @@ export default async function AboutPage() {
 
       <AboutHero
         profile={profile}
-        longBio={longBio}
-        stats={{
-          years: aboutStats?.years_of_experience ?? 0,
-          completedProjects: projects.length,
-          linkedinFollowers: aboutStats?.linkedin_followers ?? 0,
-          completedCourses: aboutStats?.completed_courses ?? 0,
-        }}
+        stats={stats || []}
       />
 
       <AboutResume

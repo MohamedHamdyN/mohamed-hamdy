@@ -31,8 +31,8 @@ export default function AdminProjectsPage() {
     title: '',
     description: '',
     category_id: 1,
-    image_url: '',
-    project_url: '',
+    image: '',
+    live_url: '',
     status: true,
     featured: false,
     sort_order: 0,
@@ -98,8 +98,8 @@ export default function AdminProjectsPage() {
       title: '',
       description: '',
       category_id: 1,
-      image_url: '',
-      project_url: '',
+      image: '',
+      live_url: '',
       status: true,
       featured: false,
       sort_order: 0,
@@ -166,10 +166,10 @@ export default function AdminProjectsPage() {
                 </div>
 
                 <div>
-                  <Label>Image URL</Label>
+                  <Label>Image</Label>
                   <Input
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   />
                 </div>
               </div>
@@ -177,8 +177,8 @@ export default function AdminProjectsPage() {
               <div>
                 <Label>Project URL</Label>
                 <Input
-                  value={formData.project_url}
-                  onChange={(e) => setFormData({ ...formData, project_url: e.target.value })}
+                  value={formData.live_url}
+                  onChange={(e) => setFormData({ ...formData, live_url: e.target.value })}
                 />
               </div>
 
@@ -263,8 +263,8 @@ export default function AdminProjectsPage() {
                           title: project.title,
                           description: project.description,
                           category_id: project.category_id,
-                          image_url: project.image_url,
-                          project_url: project.project_url,
+                          image: project.image,
+                          live_url: project.live_url,
                           status: project.status,
                           featured: project.featured,
                           sort_order: project.sort_order,

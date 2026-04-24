@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getProjects, getProjectCategories } from '@/app/actions/cms'
+import { getProjects, getCategories } from '@/app/actions/cms'
 import { useTranslations } from '@/hooks/useTranslations'
 import { useLanguage } from '@/context/language-context'
 import Link from 'next/link'
@@ -29,13 +29,13 @@ export default function FeaturedProjects() {
     async function loadProjects() {
       try {
         const [data, categoriesData] = await Promise.all([
-          getProjects(false),
-          getProjectCategories(),
+          getProjects(),
+          getCategories(),
         ])
         // Filter featured projects
-        const featured = data.filter((p) => p.featured && !p.draft)
+        const featured = (data || []).filter((p) => p.featured)
         setProjects(featured)
-        setCategories(categoriesData)
+        setCategories(categoriesData || [])
       } catch (error) {
         console.error('Error loading projects:', error)
         setProjects([])
